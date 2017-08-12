@@ -1,19 +1,23 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Date;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import net.petrabarus.java.record_dir_and_upload.App;
 import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotsFileReader.Snapshot;
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 
 public class AppAcceptanceTest {
@@ -32,39 +36,58 @@ public class AppAcceptanceTest {
 
         File newFile1 = zipFolder.newFile("test1.txt");
         FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
-        //TEST1
-        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Snapshot> snapshots = reader.getSnapshots();
-            Assert.assertEquals(snapshots.size(), 1);
-        }
+        
+        record(zipFolderPath, outputFilePath);
 
         FileUtils.writeStringToFile(newFile1, "TEST2", StandardCharsets.US_ASCII, true);
 
+        record(zipFolderPath, outputFilePath);
+
+        File newFile2 = zipFolder.newFile("test2.txt");
+        newFile2.delete();
+        FileUtils.moveFile(newFile1, newFile2);
+
+        record(zipFolderPath, outputFilePath);
+
+        newFile2.delete();
         try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
             List<Snapshot> snapshots = reader.getSnapshots();
-            Assert.assertEquals(snapshots.size(), 2);
-        }
+            Assert.assertEquals(4, snapshots.size());
 
-        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Snapshot> snapshots = reader.getSnapshots();
-            Assert.assertEquals(snapshots.size(), 3);
-        }
+            String content1 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(0).data);
+            Assert.assertEquals("TEST1", content1);
 
-        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Snapshot> snapshots = reader.getSnapshots();
-            Assert.assertEquals(snapshots.size(), 4);
-        }
+            String content2 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(1).data);
+            Assert.assertEquals("TEST1TEST2", content2);
 
-        //create thread for running app
-        //wait some second
-        //add file
-        //join thread
+            String content3 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(2).data);
+            Assert.assertNull(content3);
+
+            String content4 = getFileContentFromZipByteArray("/test2.txt", snapshots.get(2).data);
+            Assert.assertEquals("TEST1TEST2", content4);
+
+            String content5 = getFileContentFromZipByteArray("/test2.txt", snapshots.get(3).data);
+            Assert.assertNull(content5);
+        }
     }
 
     private SnapshotsFileReader recordSnapshotAndGetReader(String zipFolderPath, String outputFilePath) throws IOException, InterruptedException {
         record(zipFolderPath, outputFilePath);
         File outputFile = new File(outputFilePath);
         return new SnapshotsFileReader(outputFile);
+    }
+
+    private String getFileContentFromZipByteArray(String path, byte[] bytes) throws IOException {
+        ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes));
+        ZipEntry entry;
+        while ((entry = zip.getNextEntry()) != null) {
+            if (entry.getName().equals(path)) {
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                IOUtils.copy(zip, out);
+                return out.toString();
+            }
+        }
+        return null;
     }
 
     private void record(String zipFolderPath, String outputFilePath) throws IOException, InterruptedException {
