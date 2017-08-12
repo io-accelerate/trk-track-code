@@ -101,6 +101,12 @@ public class SnapshotsFileReader implements Iterator<SnapshotsFileReader.Snapsho
         return list;
     }
 
+    public List<Snapshot> getSnapshots() {
+        List<Snapshot> list = new ArrayList<>();
+        this.forEachRemaining(list::add);
+        return list;
+    }
+
     @Override
     public void close() {
         IOUtils.closeQuietly(inputStream);

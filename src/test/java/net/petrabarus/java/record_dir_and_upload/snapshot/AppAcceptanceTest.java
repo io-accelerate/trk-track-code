@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
 import net.petrabarus.java.record_dir_and_upload.App;
+import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotsFileReader.Snapshot;
 import org.junit.Assert;
 
 public class AppAcceptanceTest {
@@ -33,23 +34,25 @@ public class AppAcceptanceTest {
         FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
         //TEST1
         try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Date> dates = reader.getDates();
-            Assert.assertEquals(dates.size(), 1);
+            List<Snapshot> snapshots = reader.getSnapshots();
+            Assert.assertEquals(snapshots.size(), 1);
+        }
+
+        FileUtils.writeStringToFile(newFile1, "TEST2", StandardCharsets.US_ASCII, true);
+
+        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
+            List<Snapshot> snapshots = reader.getSnapshots();
+            Assert.assertEquals(snapshots.size(), 2);
         }
 
         try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Date> dates = reader.getDates();
-            Assert.assertEquals(dates.size(), 2);
+            List<Snapshot> snapshots = reader.getSnapshots();
+            Assert.assertEquals(snapshots.size(), 3);
         }
 
         try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Date> dates = reader.getDates();
-            Assert.assertEquals(dates.size(), 3);
-        }
-
-        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Date> dates = reader.getDates();
-            Assert.assertEquals(dates.size(), 4);
+            List<Snapshot> snapshots = reader.getSnapshots();
+            Assert.assertEquals(snapshots.size(), 4);
         }
 
         //create thread for running app
