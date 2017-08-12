@@ -30,9 +30,13 @@ public final class SnapshotsFileWriter implements AutoCloseable {
         this.dirPath = dirPath;
         outputStream = new FileOutputStream(outputFile, append);
 
-        if (!append) {
+        if (!append || !isValidFile(outputFile)) {
             initFile();
         }
+    }
+
+    private boolean isValidFile(File file) {
+        return (file.exists() && file.length() > 0);
     }
 
     public void initFile() throws IOException {
@@ -42,8 +46,10 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     public void takeSnapshot() {
         try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            writeIntAsBytes(buff.size());
-            writeIntAsBytes(getTimestamp());
+            int size = buff.size();
+            writeIntAsBytes(size);
+            int timestamp = getTimestamp();
+            writeIntAsBytes(timestamp);
             IOUtils.write(buff.toByteArray(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);

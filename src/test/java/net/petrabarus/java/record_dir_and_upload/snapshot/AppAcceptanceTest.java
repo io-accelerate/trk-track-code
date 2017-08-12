@@ -1,11 +1,19 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import net.petrabarus.java.record_dir_and_upload.App;
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Date;
+import java.util.List;
+import net.petrabarus.java.record_dir_and_upload.App;
+import org.junit.Assert;
 
 public class AppAcceptanceTest {
 
@@ -21,20 +29,39 @@ public class AppAcceptanceTest {
         String outputFilePath = outputFolder.newFile("output.bin").getPath();
         String zipFolderPath = zipFolder.getRoot().getPath();
 
-        record(zipFolderPath, outputFilePath);
-        
-        record(zipFolderPath, outputFilePath);
-        
-        record(zipFolderPath, outputFilePath);
-        
-        record(zipFolderPath, outputFilePath);
-        
-        record(zipFolderPath, outputFilePath);
+        File newFile1 = zipFolder.newFile("test1.txt");
+        FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
+        //TEST1
+        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
+            List<Date> dates = reader.getDates();
+            Assert.assertEquals(dates.size(), 1);
+        }
+
+        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
+            List<Date> dates = reader.getDates();
+            Assert.assertEquals(dates.size(), 2);
+        }
+
+        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
+            List<Date> dates = reader.getDates();
+            Assert.assertEquals(dates.size(), 3);
+        }
+
+        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
+            List<Date> dates = reader.getDates();
+            Assert.assertEquals(dates.size(), 4);
+        }
 
         //create thread for running app
         //wait some second
         //add file
         //join thread
+    }
+
+    private SnapshotsFileReader recordSnapshotAndGetReader(String zipFolderPath, String outputFilePath) throws IOException, InterruptedException {
+        record(zipFolderPath, outputFilePath);
+        File outputFile = new File(outputFilePath);
+        return new SnapshotsFileReader(outputFile);
     }
 
     private void record(String zipFolderPath, String outputFilePath) throws IOException, InterruptedException {

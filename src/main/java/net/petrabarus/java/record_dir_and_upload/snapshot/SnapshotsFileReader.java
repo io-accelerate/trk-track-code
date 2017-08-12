@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.function.Consumer;
 import org.apache.commons.io.IOUtils;
 
@@ -87,6 +90,15 @@ public class SnapshotsFileReader implements Iterator<SnapshotsFileReader.Snapsho
         byte[] bytes = new byte[4];
         inputStream.read(bytes);
         return ByteHelper.byteArrayToLittleEndianInt(bytes);
+    }
+
+    public List<Date> getDates() {
+        //TODO: need to do manual skip
+        List<Date> list = new ArrayList<>();
+        this.forEachRemaining((Snapshot snapshot) -> {
+            list.add(new Date(snapshot.timestamp * 1000L));
+        });
+        return list;
     }
 
     @Override
