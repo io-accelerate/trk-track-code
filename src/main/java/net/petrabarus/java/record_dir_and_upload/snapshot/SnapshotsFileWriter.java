@@ -25,8 +25,8 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private final FileOutputStream outputStream;
 
-    public SnapshotsFileWriter(Path path, Path dirPath, boolean append) throws IOException {
-        this.outputFile = path.toFile();
+    public SnapshotsFileWriter(Path outputPath, Path dirPath, boolean append) throws IOException {
+        this.outputFile = outputPath.toFile();
         this.dirPath = dirPath;
         outputStream = new FileOutputStream(outputFile, append);
 
@@ -40,7 +40,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
         IOUtils.write("TEST", outputStream, CHARSET);
     }
 
-    public void snapshot() {
+    public void takeSnapshot() {
         try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
             writeIntAsBytes(buff.size());
             writeIntAsBytes(getTimestamp());

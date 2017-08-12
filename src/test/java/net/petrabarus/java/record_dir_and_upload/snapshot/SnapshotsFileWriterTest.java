@@ -12,9 +12,9 @@ public class SnapshotsFileWriterTest {
         Path output = Paths.get("tmp/snapshot.bin");
         Path dirPath = Paths.get("src/test/resources/directory_snapshot/dir1");
         try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, dirPath, false)) {
-            writer.snapshot();
-            writer.snapshot();
-            writer.snapshot();
+            writer.takeSnapshot();
+            writer.takeSnapshot();
+            writer.takeSnapshot();
         }
     }
 }
