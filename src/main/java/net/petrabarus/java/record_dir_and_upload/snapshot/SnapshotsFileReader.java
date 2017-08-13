@@ -85,7 +85,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotsFileReader.Snapsho
         inputStream.skip(4);
         inputStream.skip(size);
     }
-
+    
     private int readIntegerBytes() throws IOException {
         byte[] bytes = new byte[4];
         inputStream.read(bytes);
