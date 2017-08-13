@@ -10,16 +10,16 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.util.Random;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.UUID;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import net.petrabarus.java.record_dir_and_upload.App;
@@ -118,7 +118,7 @@ public class AppAcceptanceTest {
         Path zipFolderPath = zipFolder.getRoot().toPath();
         File outputFile = outputFilePath.toFile();
         createRandomSnapshot(zipFolderPath.toString(), outputFilePath.toString());
-        
+
         long size1 = outputFile.length();
         SnapshotsFileReader reader1 = new SnapshotsFileReader(outputFile);
         List<Snapshot> list1 = reader1.getSnapshots();
@@ -126,14 +126,14 @@ public class AppAcceptanceTest {
         byte[] data1 = list1.get(4).data;
         boolean isAllIntact = list1.stream().allMatch(this::isSnapshotIntact);
         assertTrue(isAllIntact);
-        
+
         //Truncate to the zip header. If the zip header is intact, the file
         //is still considered valid.
-        truncateFile(outputFile, 1000); 
-        
+        truncateFile(outputFile, 1000);
+
         long size2 = outputFile.length();
         assertNotEquals(size1, size2);
-        
+
         SnapshotsFileReader reader2 = new SnapshotsFileReader(outputFile);
         List<Snapshot> list2 = reader2.getSnapshots();
         assertEquals(5, list2.size());
@@ -175,20 +175,70 @@ public class AppAcceptanceTest {
     }
 
     private boolean isSnapshotIntact(Snapshot snapshot) {
+        int count = 0;
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(snapshot.data))) {
-            while (zip.getNextEntry() != null) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                if (entry.getName().isEmpty()) {
+                    return false;
+                }
+                count++;
                 zip.read();
             }
         } catch (IOException ex) {
             return false;
         }
-        return true;
+        return count > 0;
     }
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    public void should_be_resilient_to_data_corruption() throws IOException {
+    @Test
+    public void should_be_resilient_to_data_corruption() throws IOException, InterruptedException {
         Path outputFilePath = outputFolder.newFile("output.bin").toPath();
         Path zipFolderPath = zipFolder.getRoot().toPath();
+        File outputFile = outputFilePath.toFile();
+
+        createRandomSnapshot(zipFolderPath.toString(), outputFilePath.toString());
+
+        long size1 = outputFile.length();
+        SnapshotsFileReader reader1 = new SnapshotsFileReader(outputFile);
+        List<Snapshot> list1 = reader1.getSnapshots();
+        assertEquals(5, list1.size());
+        byte[] data1 = list1.get(4).data;
+        boolean isAllIntact = list1.stream().allMatch(this::isSnapshotIntact);
+        assertTrue(isAllIntact);
+
+        int start = 4 //magit number
+                + 8 //snapshot1header
+                + list1.get(0).size
+                + 8 //snapshot2header
+                + 10 //random
+                ;
+
+        corruptFile(outputFile, start, 1000);
+
+        long size2 = outputFile.length();
+        assertEquals(size1, size2);
+
+        SnapshotsFileReader reader2 = new SnapshotsFileReader(outputFile);
+        List<Snapshot> list2 = reader2.getSnapshots();
+        assertEquals(5, list2.size());
+        byte[] data2 = list2.get(4).data;
+        assertTrue(isSnapshotIntact(list2.get(0)));
+        boolean isSnapshot2Intact = isSnapshotIntact(list2.get(1));
+        assertFalse(isSnapshot2Intact);
+        boolean isTheRestIntact = list2.subList(2, 5).stream().allMatch(this::isSnapshotIntact);
+        assertTrue(isTheRestIntact);
+        assertNotEquals(data2, data1);
+    }
+
+    private void corruptFile(File file, int start, int size) throws FileNotFoundException, IOException {
+        try (RandomAccessFile accessFile = new RandomAccessFile(file, "rw")) {
+            byte[] bytes = new byte[size];
+            Arrays.fill(bytes, (byte) 99);
+            accessFile.seek(start);
+            accessFile.write(bytes);
+        }
     }
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
