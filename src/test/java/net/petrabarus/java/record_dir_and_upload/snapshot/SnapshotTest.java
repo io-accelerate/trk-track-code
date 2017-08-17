@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -23,11 +24,12 @@ public class SnapshotTest {
         snapshot.size = stringBytes.length;
         snapshot.timestamp = new Date().getTime();
 
-        System.out.println(new String(Hex.encodeHex(snapshot.asBytes())));
+        byte[] bytes = snapshot.asBytes();
+        assertEquals(Snapshot.HEADER_SIZE + stringBytes.length, bytes.length);
     }
     
     @Test
-    public void getHeaderAsBytes() {
+    public void getHeaderAsBytesAndCreateFromHeaderBytes() {
         String string = "Lorem Ipsum Dolor Sit Amet";
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
 
@@ -40,6 +42,12 @@ public class SnapshotTest {
 
         byte[] header = snapshot.getHeaderAsBytes();
         assertEquals(Snapshot.HEADER_SIZE, header.length);
+        
+        Snapshot snapshot2 = Snapshot.createFromHeaderBytes(header);
+        assertEquals(snapshot2.type, snapshot.type);
+        Assert.assertArrayEquals(snapshot2.checksum, snapshot.checksum);
+        assertEquals(snapshot2.size, snapshot.size);
+        assertEquals(snapshot2.timestamp, snapshot.timestamp);
     }
 
     @Test

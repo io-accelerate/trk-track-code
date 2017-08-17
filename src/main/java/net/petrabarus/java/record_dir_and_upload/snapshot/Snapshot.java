@@ -74,10 +74,10 @@ public class Snapshot {
 
     public static Snapshot createFromHeaderBytes(byte[] bytes) {
         Snapshot snapshot = new Snapshot();
-        snapshot.type = ByteHelper.byteArrayToLittleEndianInt(Arrays.copyOfRange(bytes, 1, 2));
+        snapshot.type = bytes[1];
         snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 2, 10));
         snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 10, 18));
-        snapshot.checksum = Arrays.copyOfRange(bytes, 18, 50);
+        snapshot.checksum = Arrays.copyOfRange(bytes, 18, 38);
         return snapshot;
     }
 }
