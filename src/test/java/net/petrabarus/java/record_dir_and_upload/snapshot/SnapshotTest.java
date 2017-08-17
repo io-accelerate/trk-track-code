@@ -1,6 +1,7 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import static org.junit.Assert.assertEquals;
@@ -12,17 +13,43 @@ public class SnapshotTest {
 
     @Test
     public void asBytes() {
+        String string = "Lorem Ipsum Dolor Sit Amet";
+        byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
 
+        Snapshot snapshot = new Snapshot();
+        snapshot.data = stringBytes;
+        snapshot.checksum = snapshot.generateChecksum();
+        snapshot.type = Snapshot.TYPE_KEY;
+        snapshot.size = stringBytes.length;
+        snapshot.timestamp = new Date().getTime();
+
+        System.out.println(new String(Hex.encodeHex(snapshot.asBytes())));
+    }
+    
+    @Test
+    public void getHeaderAsBytes() {
+        String string = "Lorem Ipsum Dolor Sit Amet";
+        byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
+
+        Snapshot snapshot = new Snapshot();
+        snapshot.data = stringBytes;
+        snapshot.checksum = snapshot.generateChecksum();
+        snapshot.type = Snapshot.TYPE_KEY;
+        snapshot.size = stringBytes.length;
+        snapshot.timestamp = new Date().getTime();
+
+        byte[] header = snapshot.getHeaderAsBytes();
+        assertEquals(Snapshot.HEADER_SIZE, header.length);
     }
 
     @Test
-    public void generateChecksumFromData() {
+    public void generateChecksum() {
         String string = "Lorem Ipsum Dolor Sit Amet";
         String expected = "887a5b6d458b496633a01451ae7370025f4e7ceb";
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
         Snapshot snapshot = new Snapshot();
         snapshot.data = stringBytes;
-        byte[] checksum = snapshot.generateChecksumFromData();
+        byte[] checksum = snapshot.generateChecksum();
         assertEquals(checksum.length, 20);
         String checksumString = new String(Hex.encodeHex(checksum));
         assertEquals(checksumString.length(), 40);

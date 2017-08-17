@@ -1,6 +1,7 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
-import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -8,9 +9,9 @@ import java.util.Arrays;
 public class Snapshot {
 
     /**
-     * 1 magic number 1 type key/diff 8 timestamp 8 size 32 checksum
+     * 1 magic number 1 type key/diff 8 timestamp 8 size 20 checksum
      */
-    public static final int HEADER_SIZE = 50;
+    public static final int HEADER_SIZE = 38;
 
     public static final int MAGIC_NUMBER = 99;
 
@@ -33,7 +34,7 @@ public class Snapshot {
 
     public byte[] data;
 
-    public byte[] generateChecksumFromData() {
+    public byte[] generateChecksum() {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
             return md.digest(data);
@@ -43,23 +44,40 @@ public class Snapshot {
     }
 
     public boolean isDataValid() {
-        byte[] checksumChallenge = generateChecksumFromData();
+        byte[] checksumChallenge = generateChecksum();
         return Arrays.equals(checksumChallenge, checksum);
     }
 
     public byte[] asBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE);
-        buffer.put(ByteHelper.littleEndianIntToByteArray(MAGIC_NUMBER, 1));
-        buffer.put(ByteHelper.littleEndianIntToByteArray(type, 1));
-        buffer.put(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
-        buffer.put(ByteHelper.littleEndianLongToByteArray(size, 8));
-        buffer.put(checksum);
-        return buffer.array();
+        try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream()) {
+            byte[] header = getHeaderAsBytes();
+            byteArray.write(header);
+            byteArray.write(data);
+            return byteArray.toByteArray();
+        } catch (IOException ex) {
+            return new byte[0];
+        }
+    }
+
+    public byte[] getHeaderAsBytes() {
+        try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream(HEADER_SIZE)) {
+            byteArray.write((byte) MAGIC_NUMBER);
+            byteArray.write((byte) type);
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(size, 8));
+            byteArray.write(checksum);
+            return byteArray.toByteArray();
+        } catch (IOException ex) {
+            return new byte[0];
+        }
     }
 
     public static Snapshot createFromHeaderBytes(byte[] bytes) {
         Snapshot snapshot = new Snapshot();
-
+        snapshot.type = ByteHelper.byteArrayToLittleEndianInt(Arrays.copyOfRange(bytes, 1, 2));
+        snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 2, 10));
+        snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 10, 18));
+        snapshot.checksum = Arrays.copyOfRange(bytes, 18, 50);
         return snapshot;
     }
 }
