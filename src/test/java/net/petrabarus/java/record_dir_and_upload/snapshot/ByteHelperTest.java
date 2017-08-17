@@ -33,4 +33,29 @@ public class ByteHelperTest {
         int number2 = ByteHelper.byteArrayToLittleEndianInt(actuals);
         Assert.assertEquals(number, number2);
     }
+    
+    @DataProvider
+    public static Object[][] dataProvider_littleEndianLongToByteArray() {
+        // @formatter:off
+        return new Object[][]{
+            {1L, new byte[]{1, 0, 0, 0, 0, 0, 0, 0}},
+            {2L, new byte[]{2, 0, 0, 0, 0, 0, 0, 0}},
+            {127L, new byte[]{127, 0, 0, 0, 0, 0, 0, 0}},
+            {128L, new byte[]{-128, 0, 0, 0, 0, 0, 0, 0}},
+            {129L, new byte[]{-127, 0, 0, 0, 0, 0, 0, 0}},
+            {256L, new byte[]{0, 1, 0, 0, 0, 0, 0, 0}},
+            {1024L, new byte[]{0, 4, 0, 0, 0, 0, 0, 0}},
+            {65536L, new byte[]{0, 0, 1, 0, 0, 0, 0, 0}},
+            {16777216L, new byte[]{0, 0, 0, 1, 0, 0, 0, 0}}
+        };
+    }
+    
+    @Test
+    @UseDataProvider("dataProvider_littleEndianLongToByteArray")
+    public void littleEndianLongToByteArray(long number, byte[] expected) {
+        byte[] actuals = ByteHelper.littleEndianLongToByteArray(number, 8);
+        Assert.assertArrayEquals(expected, actuals);
+        long number2 = ByteHelper.byteArrayToLittleEndianLong(actuals);
+        Assert.assertEquals(number, number2);
+    }
 }

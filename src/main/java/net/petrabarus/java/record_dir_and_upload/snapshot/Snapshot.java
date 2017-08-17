@@ -8,9 +8,9 @@ import java.util.Arrays;
 public class Snapshot {
 
     /**
-     * 1 magic number 1 type key/diff 4 timestamp 4 size 32 checksum
+     * 1 magic number 1 type key/diff 8 timestamp 8 size 32 checksum
      */
-    public static final int HEADER_SIZE = 42;
+    public static final int HEADER_SIZE = 50;
 
     public static final int MAGIC_NUMBER = 99;
 
@@ -51,15 +51,15 @@ public class Snapshot {
         ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE);
         buffer.put(ByteHelper.littleEndianIntToByteArray(MAGIC_NUMBER, 1));
         buffer.put(ByteHelper.littleEndianIntToByteArray(type, 1));
-        buffer.put(ByteHelper.littleEndianLongToByteArray(timestamp, 4));
-        buffer.put(ByteHelper.littleEndianLongToByteArray(size, 4));
+        buffer.put(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
+        buffer.put(ByteHelper.littleEndianLongToByteArray(size, 8));
         buffer.put(checksum);
         return buffer.array();
     }
 
     public static Snapshot createFromHeaderBytes(byte[] bytes) {
         Snapshot snapshot = new Snapshot();
-        
+
         return snapshot;
     }
 }
