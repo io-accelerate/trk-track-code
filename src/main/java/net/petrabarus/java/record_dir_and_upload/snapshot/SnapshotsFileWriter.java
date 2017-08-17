@@ -1,18 +1,14 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 public final class SnapshotsFileWriter implements AutoCloseable {
@@ -46,19 +42,14 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     public void takeSnapshot() {
         try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            int size = buff.size();
-            writeIntAsBytes(size);
-            int timestamp = getTimestamp();
-            writeIntAsBytes(timestamp);
-            IOUtils.write(buff.toByteArray(), outputStream);
+            Snapshot snapshot = new Snapshot();
+            snapshot.type = Snapshot.TYPE_KEY;
+            snapshot.timestamp = getTimestamp();
+            snapshot.setData(buff.toByteArray());
+            IOUtils.write(snapshot.asBytes(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    private void writeIntAsBytes(int i) throws IOException {
-        byte[] bytes = ByteHelper.littleEndianIntToByteArray(i, 4);
-        IOUtils.write(bytes, outputStream);
     }
 
     public ByteArrayOutputStream createSnapshotAndStoreToByteArray() throws IOException {

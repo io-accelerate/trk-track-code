@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import net.petrabarus.java.record_dir_and_upload.App;
-import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotsFileReader.Snapshot;
 import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
@@ -175,6 +174,9 @@ public class AppAcceptanceTest {
     }
 
     private boolean isSnapshotIntact(Snapshot snapshot) {
+        if (!snapshot.isDataValid()) {
+            return false;
+        }
         int count = 0;
         try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(snapshot.data))) {
             ZipEntry entry;
@@ -209,9 +211,9 @@ public class AppAcceptanceTest {
         assertTrue(isAllIntact);
 
         int start = 4 //magit number
-                + 8 //snapshot1header
-                + list1.get(0).size
-                + 8 //snapshot2header
+                + Snapshot.HEADER_SIZE
+                + (int) list1.get(0).size
+                + Snapshot.HEADER_SIZE
                 + 10 //random
                 ;
 

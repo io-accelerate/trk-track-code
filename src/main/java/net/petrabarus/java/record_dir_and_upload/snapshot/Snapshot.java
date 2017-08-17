@@ -72,6 +72,18 @@ public class Snapshot {
         }
     }
 
+    /**
+     * This should only be called when checksum and size is not set. I.e. on
+     * writing data instead of reading.
+     *
+     * @param data
+     */
+    public void setData(byte[] data) {
+        this.data = data;
+        this.size = data.length;
+        this.checksum = generateChecksum();
+    }
+
     public static Snapshot createFromHeaderBytes(byte[] bytes) {
         Snapshot snapshot = new Snapshot();
         snapshot.type = bytes[1];
@@ -79,5 +91,18 @@ public class Snapshot {
         snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 10, 18));
         snapshot.checksum = Arrays.copyOfRange(bytes, 18, 38);
         return snapshot;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Snapshot)) {
+            return false;
+        }
+        Snapshot snapshot = (Snapshot) obj;
+
+        return type == snapshot.type
+                && timestamp == snapshot.timestamp
+                && Arrays.equals(checksum, snapshot.checksum)
+                && Arrays.equals(data, snapshot.data);
     }
 }

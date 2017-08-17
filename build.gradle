@@ -48,7 +48,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     testCompile 'com.tngtech.java:junit-dataprovider:1.9.3'
     testCompile 'commons-codec:commons-codec:1.10'
-
 }
 
 apply plugin: 'com.github.johnrengelman.shadow'

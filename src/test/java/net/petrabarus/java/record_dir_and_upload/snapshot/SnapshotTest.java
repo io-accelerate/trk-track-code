@@ -13,36 +13,42 @@ import org.junit.Test;
 public class SnapshotTest {
 
     @Test
+    public void setData() {
+        String string = "Lorem Ipsum Dolor Sit Amet";
+        byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
+        Snapshot snapshot = new Snapshot();
+        snapshot.type = Snapshot.TYPE_KEY;
+        snapshot.setData(stringBytes);
+        assertEquals(snapshot.size, stringBytes.length);
+    }
+
+    @Test
     public void asBytes() {
         String string = "Lorem Ipsum Dolor Sit Amet";
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
 
         Snapshot snapshot = new Snapshot();
-        snapshot.data = stringBytes;
-        snapshot.checksum = snapshot.generateChecksum();
         snapshot.type = Snapshot.TYPE_KEY;
-        snapshot.size = stringBytes.length;
+        snapshot.setData(stringBytes);
         snapshot.timestamp = new Date().getTime();
 
         byte[] bytes = snapshot.asBytes();
         assertEquals(Snapshot.HEADER_SIZE + stringBytes.length, bytes.length);
     }
-    
+
     @Test
     public void getHeaderAsBytesAndCreateFromHeaderBytes() {
         String string = "Lorem Ipsum Dolor Sit Amet";
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
 
         Snapshot snapshot = new Snapshot();
-        snapshot.data = stringBytes;
-        snapshot.checksum = snapshot.generateChecksum();
         snapshot.type = Snapshot.TYPE_KEY;
-        snapshot.size = stringBytes.length;
+        snapshot.setData(stringBytes);
         snapshot.timestamp = new Date().getTime();
 
         byte[] header = snapshot.getHeaderAsBytes();
         assertEquals(Snapshot.HEADER_SIZE, header.length);
-        
+
         Snapshot snapshot2 = Snapshot.createFromHeaderBytes(header);
         assertEquals(snapshot2.type, snapshot.type);
         Assert.assertArrayEquals(snapshot2.checksum, snapshot.checksum);
