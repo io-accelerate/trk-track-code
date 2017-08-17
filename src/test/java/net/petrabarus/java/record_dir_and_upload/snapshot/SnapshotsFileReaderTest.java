@@ -1,68 +1,90 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotsFileReader.Snapshot;
+import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 public class SnapshotsFileReaderTest {
 
+    @Rule
+    public TemporaryFolder outputFolder = new TemporaryFolder();
+
+    @Rule
+    public TemporaryFolder zipFolder = new TemporaryFolder();
+
+    private Path outputFilePath;
+
+    @Before
+    public void createSnapshotFile() throws IOException {
+        outputFilePath = outputFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = zipFolder.getRoot().toPath();
+
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(outputFilePath, zipFolderPath, true)) {
+
+            File newFile1 = zipFolder.newFile("test1.txt");
+            FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
+
+            writer.takeSnapshot();
+
+            FileUtils.writeStringToFile(newFile1, "TEST2", StandardCharsets.US_ASCII, true);
+
+            writer.takeSnapshot();
+
+            File newFile2 = zipFolder.newFile("test2.txt");
+            newFile2.delete();
+            FileUtils.moveFile(newFile1, newFile2);
+
+            writer.takeSnapshot();
+        }
+    }
+
     @Test
     public void next() throws IOException {
-        Path path = Paths.get("src/test/resources/snapshot.bin");
-
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(path.toFile())) {
+        try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
             Snapshot snapshot1 = reader.next();
-            byte[] data1 = snapshot1.data;
-            assertEquals(1502318398, snapshot1.timestamp);
-            assertEquals(1091, snapshot1.size);
-            assertEquals(snapshot1.size, data1.length);
+            assertTrue(getTimestamp() - snapshot1.timestamp < 60);
 
             assertTrue(reader.hasNext());
-
             Snapshot snapshot2 = reader.next();
-            byte[] data2 = snapshot2.data;
-            assertEquals(1502318408, snapshot2.timestamp);
-            assertEquals(1091, snapshot2.size);
-            assertEquals(snapshot2.size, data2.length);
+            assertTrue(getTimestamp() - snapshot2.timestamp < 60);
 
             assertTrue(reader.hasNext());
-
             Snapshot snapshot3 = reader.next();
-            byte[] data3 = snapshot3.data;
-            assertEquals(1502318418, snapshot3.timestamp);
-            assertEquals(1091, snapshot3.size);
-            assertEquals(snapshot3.size, data3.length);
+            assertTrue(getTimestamp() - snapshot3.timestamp < 60);
 
             assertFalse(reader.hasNext());
         }
     }
 
+    public int getTimestamp() {
+        Long unixTimestamp = System.currentTimeMillis() / 1000L;
+        return unixTimestamp.intValue();
+    }
+
     @Test
     public void skip() throws IOException {
-        Path path = Paths.get("src/test/resources/snapshot.bin");
 
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(path.toFile())) {
+        try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
+            Snapshot snapshot1 = reader.next();
+            assertTrue(getTimestamp() - snapshot1.timestamp < 60);
 
+            assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-
-            Snapshot snapshot2 = reader.next();
-            byte[] data2 = snapshot2.data;
-            assertEquals(1502318408, snapshot2.timestamp);
-            assertEquals(1091, snapshot2.size);
-            assertEquals(snapshot2.size, data2.length);
-
-            assertTrue(reader.hasNext());
-
-            reader.skip();
+            Snapshot snapshot3 = reader.next();
+            assertTrue(getTimestamp() - snapshot3.timestamp < 60);
 
             assertFalse(reader.hasNext());
         }
@@ -70,35 +92,23 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void reset() throws IOException {
-        Path path = Paths.get("src/test/resources/snapshot.bin");
-
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(path.toFile())) {
+        try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
             Snapshot snapshot1 = reader.next();
-            byte[] data1 = snapshot1.data;
-            assertEquals(1502318398, snapshot1.timestamp);
-            assertEquals(1091, snapshot1.size);
-            assertEquals(snapshot1.size, data1.length);
 
             assertTrue(reader.hasNext());
-
             reader.skip();
 
             assertTrue(reader.hasNext());
-
             reader.skip();
 
             assertFalse(reader.hasNext());
-
             reader.reset();
-
             assertTrue(reader.hasNext());
 
             Snapshot snapshot2 = reader.next();
-            byte[] data2 = snapshot2.data;
-            assertEquals(1502318398, snapshot2.timestamp);
-            assertEquals(1091, snapshot2.size);
-            assertEquals(snapshot2.size, data2.length);
+
+            assertEquals(snapshot1, snapshot2);
         }
     }
 

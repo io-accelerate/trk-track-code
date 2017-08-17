@@ -11,23 +11,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import org.apache.commons.io.IOUtils;
 
-public class SnapshotsFileReader implements Iterator<SnapshotsFileReader.Snapshot>, AutoCloseable {
-
-    public static class Snapshot {
-
-        public int timestamp;
-
-        public int size;
-
-        public byte[] data;
-
-        public Snapshot(int timestamp, int size, byte[] data) {
-            this.timestamp = timestamp;
-            this.size = size;
-            this.data = data;
-        }
-
-    }
+public class SnapshotsFileReader implements Iterator<Snapshot>, AutoCloseable {
 
     private final File file;
 
@@ -55,11 +39,12 @@ public class SnapshotsFileReader implements Iterator<SnapshotsFileReader.Snapsho
     @Override
     public Snapshot next() {
         try {
-            int size = readIntegerBytes();
-            int timestamp = readIntegerBytes();
-            byte[] data = new byte[size];
-            inputStream.read(data);
-            return new Snapshot(timestamp, size, data);
+            byte[] header = readHeader();
+            Snapshot snapshot = Snapshot.createFromHeaderBytes(header);
+            byte[] data = readData((int) snapshot.size);
+            snapshot.data = data;
+
+            return snapshot;
         } catch (IOException ex) {
             return null;
         }
@@ -81,15 +66,19 @@ public class SnapshotsFileReader implements Iterator<SnapshotsFileReader.Snapsho
     }
 
     public void skip() throws IOException {
-        int size = readIntegerBytes();
-        inputStream.skip(4);
-        inputStream.skip(size);
+        byte[] header = readHeader();
+        Snapshot snapshot = Snapshot.createFromHeaderBytes(header);
+        inputStream.skip(snapshot.size);
     }
-    
-    private int readIntegerBytes() throws IOException {
-        byte[] bytes = new byte[4];
-        inputStream.read(bytes);
-        return ByteHelper.byteArrayToLittleEndianInt(bytes);
+
+    public byte[] readHeader() throws IOException {
+        return readData(Snapshot.HEADER_SIZE);
+    }
+
+    public byte[] readData(int size) throws IOException {
+        byte[] data = new byte[size];
+        inputStream.read(data);
+        return data;
     }
 
     public List<Date> getDates() {
