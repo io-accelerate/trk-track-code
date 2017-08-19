@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotsFileWriter;
+import net.petrabarus.java.record_dir_and_upload.io.SnapshotsFileWriter;
 
 @Parameters
 public class RecordCommand {

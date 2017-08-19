@@ -1,5 +1,6 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.snapshot.io;
 
+import net.petrabarus.java.record_dir_and_upload.io.SnapshotsFileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;

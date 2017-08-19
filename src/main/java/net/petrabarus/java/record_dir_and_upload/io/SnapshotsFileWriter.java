@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -9,6 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.petrabarus.java.record_dir_and_upload.snapshot.DirectorySnapshot;
+import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
 import org.apache.commons.io.IOUtils;
 
 public final class SnapshotsFileWriter implements AutoCloseable {

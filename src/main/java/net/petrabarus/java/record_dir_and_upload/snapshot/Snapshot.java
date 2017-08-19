@@ -1,5 +1,6 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot;
 
+import net.petrabarus.java.record_dir_and_upload.helpers.ByteHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;

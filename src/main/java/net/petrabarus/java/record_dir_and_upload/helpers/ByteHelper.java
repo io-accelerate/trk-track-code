@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.helpers;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.io;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
 import org.apache.commons.io.IOUtils;
 
 public class SnapshotsFileReader implements Iterator<Snapshot>, AutoCloseable {

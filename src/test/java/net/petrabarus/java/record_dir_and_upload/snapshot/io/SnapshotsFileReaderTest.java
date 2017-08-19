@@ -1,9 +1,12 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.snapshot.io;
 
+import net.petrabarus.java.record_dir_and_upload.io.SnapshotsFileReader;
+import net.petrabarus.java.record_dir_and_upload.io.SnapshotsFileWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
