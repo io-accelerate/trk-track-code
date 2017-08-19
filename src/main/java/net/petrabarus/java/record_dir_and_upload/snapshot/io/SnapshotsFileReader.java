@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.io;
+package net.petrabarus.java.record_dir_and_upload.snapshot.io;
 
 import java.io.File;
 import java.io.FileInputStream;

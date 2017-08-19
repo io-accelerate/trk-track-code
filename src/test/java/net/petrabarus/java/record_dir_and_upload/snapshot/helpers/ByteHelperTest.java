@@ -1,6 +1,5 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot.helpers;
 
-import net.petrabarus.java.record_dir_and_upload.helpers.ByteHelper;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;

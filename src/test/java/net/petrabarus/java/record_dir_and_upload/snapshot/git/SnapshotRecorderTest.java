@@ -1,9 +1,12 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot.git;
 
 import java.io.File;
-import net.petrabarus.java.record_dir_and_upload.git.SnapshotRecorder;
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import org.eclipse.jgit.util.FileUtils;
+import java.util.Arrays;
+import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
@@ -18,12 +21,17 @@ public class SnapshotRecorderTest {
     @Test
     public void initWontCreateGitDirectory() throws Exception {
         Path gitDir;
-        try (SnapshotRecorder recorder = new SnapshotRecorder(folder.getRoot().toPath())) {
+        Path directory = folder.getRoot().toPath();
+        File existingGitDir = directory.resolve(".git").toFile();
+        assertFalse(existingGitDir.exists());
+        try (SnapshotRecorder recorder = new SnapshotRecorder(directory)) {
             gitDir = recorder.getGitDirectory();
-            assertFalse(gitDir.resolve(".git").toFile().exists());
+            assertTrue(existingGitDir.exists());
+            assertTrue(existingGitDir.isFile());
+            //assertTrue(isDirEmpty(directory));
             assertTrue(gitDir.toFile().exists());
         }
-        assertFalse(gitDir.resolve(".git").toFile().exists());
+        assertFalse(existingGitDir.exists());
         assertFalse(gitDir.toFile().exists());
     }
 
@@ -32,7 +40,10 @@ public class SnapshotRecorderTest {
         Path gitDir;
         Path directory = folder.getRoot().toPath();
         File existingGitDir = directory.resolve(".git").toFile();
-        FileUtils.mkdir(existingGitDir);
+        FileUtils.forceMkdir(existingGitDir);
+        assertTrue(existingGitDir.exists());
+
+        assertFalse(isDirEmpty(directory));
         try (SnapshotRecorder recorder = new SnapshotRecorder(directory)) {
             gitDir = recorder.getGitDirectory();
             assertTrue(existingGitDir.exists());
@@ -40,5 +51,11 @@ public class SnapshotRecorderTest {
         }
         assertTrue(existingGitDir.exists());
         assertFalse(gitDir.toFile().exists());
+    }
+
+    private static boolean isDirEmpty(final Path directory) throws IOException {
+        try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(directory)) {
+            return !dirStream.iterator().hasNext();
+        }
     }
 }
