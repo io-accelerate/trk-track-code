@@ -2,6 +2,7 @@ package net.petrabarus.java.record_dir_and_upload.diff;
 
 import difflib.DiffUtils;
 import difflib.Patch;
+import difflib.PatchFailedException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 
-public class DirectoryDiff {
+public class DirectoryDiffUtils {
 
     public static List<String> getRelativeFilePathList(Path directory) {
         File dir = directory.toFile();
@@ -97,5 +98,35 @@ public class DirectoryDiff {
         if (!isValid) {
             throw new IOException("Path " + file.getName() + " is not file");
         }
+    }
+
+    public static void patch(Path directory, Map<String, Patch> patches) {
+        patches.forEach((String path, Patch patch) -> {
+            File file = directory.resolve(path).toFile();
+            List<String> lines;
+            if (file.isFile()) {
+                try {
+                    lines = FileUtils.readLines(file, StandardCharsets.US_ASCII);
+                } catch (IOException ex) {
+                    throw new RuntimeException("Cannot read file: " + file.getName(), ex);
+                }
+            } else if (!file.exists()) {
+                lines = new ArrayList<>();
+            } else {
+                throw new RuntimeException("File " + file.getName() + "is a directory");
+            }
+            try {
+                List<String> newLines = (List<String>) DiffUtils.patch(lines, patch);
+                if (newLines.size() == 0) {
+                    file.delete();
+                } else {
+                    FileUtils.writeLines(file, newLines, false);
+                }
+            } catch (PatchFailedException ex) {
+                throw new RuntimeException("Cannot patch file: " + file.getName(), ex);
+            } catch (IOException ex) {
+                throw new RuntimeException("Cannot write file: " + file.getName(), ex);
+            }
+        });
     }
 }
