@@ -26,6 +26,7 @@ public class DirectoryDiffUtilsTest {
         List<String> expected = Arrays.asList(
                 "file1.txt",
                 "file2.txt",
+                "file4.txt",
                 "subdir1/file1.txt",
                 "subdir1/subfile1.txt"
         );
@@ -43,6 +44,7 @@ public class DirectoryDiffUtilsTest {
                 "file1.txt",
                 "file2.txt",
                 "file3.txt",
+                "file4.txt",
                 "subdir1/file1.txt",
                 "subdir1/subfile1.txt"
         );
