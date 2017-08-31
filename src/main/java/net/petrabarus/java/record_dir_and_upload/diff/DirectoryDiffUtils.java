@@ -117,7 +117,7 @@ public class DirectoryDiffUtils {
             }
             try {
                 List<String> newLines = (List<String>) DiffUtils.patch(lines, patch);
-                if (newLines.size() == 0) {
+                if (newLines.isEmpty()) {
                     file.delete();
                 } else {
                     FileUtils.writeLines(file, newLines, false);
