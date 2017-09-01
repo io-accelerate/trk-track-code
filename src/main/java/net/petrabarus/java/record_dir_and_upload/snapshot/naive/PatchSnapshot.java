@@ -11,18 +11,22 @@ import net.petrabarus.java.record_dir_and_upload.diff.DirectoryDiffUtils;
 
 public class PatchSnapshot extends Snapshot {
 
-    public static PatchSnapshot takeFromRecorder(SnapshotRecorder recorder) throws IOException {
+    public static PatchSnapshot takeSnapshotFromDirectories(Path previous, Path current) throws IOException {
         PatchSnapshot snapshot = new PatchSnapshot();
-        snapshot.takeSnapshot(recorder.previousDirectorySnapshot, recorder.currentDirectorySnapshot);
-        return snapshot;
-    }
-
-    private void takeSnapshot(Path previous, Path current) throws IOException {
         Map<String, Patch> patches = DirectoryDiffUtils.diffDirectories(previous, current);
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 ObjectOutput out = new ObjectOutputStream(bos)) {
             out.writeObject(patches);
-            data = bos.toByteArray();
+            snapshot.data = bos.toByteArray();
         }
+        return snapshot;
+    }
+
+    public static PatchSnapshot createSnapshotFromBytes(byte[] data) {
+        return null;
+    }
+
+    public void restoreSnapshot(Path destinationDirectory) {
+
     }
 }

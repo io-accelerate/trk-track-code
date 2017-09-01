@@ -10,11 +10,11 @@ public class SnapshotRecorder implements AutoCloseable {
 
     protected final Path directory;
 
-    protected Path currentDirectorySnapshot;
+    private Path currentDirectorySnapshot;
 
-    protected Path previousDirectorySnapshot;
+    private Path previousDirectorySnapshot;
 
-    protected int counter = 0;
+    private int counter = 0;
 
     public SnapshotRecorder(Path directory) {
         this.directory = directory;
@@ -53,11 +53,14 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     public KeySnapshot takeKeySnapshot() throws IOException {
-        return KeySnapshot.takeFromRecorder(this);
+        return KeySnapshot.takeSnapshotFromDirectory(currentDirectorySnapshot);
     }
 
     public PatchSnapshot takePatchSnapshot() throws IOException {
-        return PatchSnapshot.takeFromRecorder(this);
+        return PatchSnapshot.takeSnapshotFromDirectories(
+                previousDirectorySnapshot,
+                currentDirectorySnapshot
+        );
     }
 
     @Override

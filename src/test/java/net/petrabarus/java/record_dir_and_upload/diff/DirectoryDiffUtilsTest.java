@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import net.petrabarus.java.record_dir_and_upload.test.FileTestHelper;
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -93,5 +94,7 @@ public class DirectoryDiffUtilsTest {
                 patchDest.toPath().resolve("file3.txt").toFile()
         ));
         assertFalse(patchDestPath.resolve("file4.txt").toFile().exists());
+
+        assertTrue(FileTestHelper.isDirectoryEquals(revised, patchDestPath));
     }
 }
