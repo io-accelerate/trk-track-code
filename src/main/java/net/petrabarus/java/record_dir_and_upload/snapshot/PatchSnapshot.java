@@ -3,8 +3,6 @@ package net.petrabarus.java.record_dir_and_upload.snapshot;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import difflib.Delta;
-import difflib.DiffUtils;
-import difflib.Patch;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,12 +10,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
-import java.util.Map;
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DeltaSerializerDeserializer;
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryDiffUtils;
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryPatch;
 
-public class PatchSnapshot extends BaseSnapshot {
+public class PatchSnapshot extends Snapshot {
 
     public static PatchSnapshot takeSnapshotFromDirectories(Path previous, Path current) throws IOException {
         PatchSnapshot snapshot = new PatchSnapshot();

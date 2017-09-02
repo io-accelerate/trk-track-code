@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import net.petrabarus.java.record_dir_and_upload.test.FileTestHelper;
 import org.apache.commons.io.FileUtils;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,7 +32,6 @@ public class PatchSnapshotTest {
                 StandardCharsets.US_ASCII,
                 true
         );
-        //assertFalse(FileTestHelper.isDirectoryEquals(originalCopy.toPath(), revisedCopy.toPath()));
         PatchSnapshot snapshot = PatchSnapshot.takeSnapshotFromDirectories(originalCopy.toPath(), revisedCopy.toPath());
         snapshot.restoreSnapshot(originalCopy.toPath());
         assertTrue(FileTestHelper.isDirectoryEquals(originalCopy.toPath(), revisedCopy.toPath()));

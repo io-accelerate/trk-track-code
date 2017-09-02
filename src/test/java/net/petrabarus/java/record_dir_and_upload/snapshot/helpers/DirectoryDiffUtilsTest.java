@@ -1,5 +1,6 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot.helpers;
 
+import difflib.ChangeDelta;
 import difflib.Delta;
 import difflib.InsertDelta;
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryDiffUtils;

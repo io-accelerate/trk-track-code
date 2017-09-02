@@ -60,7 +60,10 @@ public class DirectoryDiffUtils {
                         p -> p,
                         p -> diffFilesByRelativePath(p, original, revised)
                 ));
-        return new DirectoryPatch(map);
+        Map<String, Patch> filteredMap = map.entrySet().stream()
+                .filter(p -> !p.getValue().getDeltas().isEmpty())
+                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+        return new DirectoryPatch(filteredMap);
     }
 
     public static Patch diffFiles(Path original, Path revised) throws IOException {

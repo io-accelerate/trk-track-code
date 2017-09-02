@@ -20,8 +20,8 @@ public class SnapshotRecorder implements AutoCloseable {
         this.directory = directory;
     }
 
-    public BaseSnapshot takeSnapshot() throws IOException {
-        BaseSnapshot snapshot;
+    public Snapshot takeSnapshot() throws IOException {
+        Snapshot snapshot;
         createCurrentDirectorySnapshot();
         if (shouldTakeSnapshot()) {
             counter = 0;
@@ -43,7 +43,9 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     private void moveCurrentDirectoryAsPrevious() {
-        previousDirectorySnapshot.toFile().deleteOnExit();
+        if (previousDirectorySnapshot != null) {
+            previousDirectorySnapshot.toFile().deleteOnExit();
+        }
         previousDirectorySnapshot = currentDirectorySnapshot;
     }
 

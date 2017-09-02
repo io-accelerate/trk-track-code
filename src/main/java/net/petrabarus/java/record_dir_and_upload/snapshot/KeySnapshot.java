@@ -11,7 +11,7 @@ import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryZip;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-public class KeySnapshot extends BaseSnapshot {
+public class KeySnapshot extends Snapshot {
 
     public static KeySnapshot takeSnapshotFromDirectory(Path directory) throws IOException {
         KeySnapshot keySnapshot = new KeySnapshot();
