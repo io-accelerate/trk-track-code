@@ -1,6 +1,5 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot.file;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -9,8 +8,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.petrabarus.java.record_dir_and_upload.snapshot.KeySnapshot;
+import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
 import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotRecorder;
-import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryZip;
 import org.apache.commons.io.IOUtils;
 
 public final class SnapshotsFileWriter implements AutoCloseable {
@@ -45,22 +45,17 @@ public final class SnapshotsFileWriter implements AutoCloseable {
     }
 
     public void takeSnapshot() {
-        try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            SnapshotFileSegment snapshot = new SnapshotFileSegment();
-            snapshot.type = SnapshotFileSegment.TYPE_KEY;
-            snapshot.timestamp = getTimestamp();
-            snapshot.setData(buff.toByteArray());
-            IOUtils.write(snapshot.asBytes(), outputStream);
+        try {
+            Snapshot snapshot = recorder.takeSnapshot();
+            //try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
+            SnapshotFileSegment segment = new SnapshotFileSegment();
+            segment.type = (snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_DIFF;
+            segment.timestamp = getTimestamp();
+            segment.setData(snapshot.getData());
+            IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-
-    public ByteArrayOutputStream createSnapshotAndStoreToByteArray() throws IOException {
-        ByteArrayOutputStream buff = new ByteArrayOutputStream();
-        DirectoryZip snapshot = new DirectoryZip(dirPath, buff);
-        snapshot.compress();
-        return buff;
     }
 
     public int getTimestamp() {
