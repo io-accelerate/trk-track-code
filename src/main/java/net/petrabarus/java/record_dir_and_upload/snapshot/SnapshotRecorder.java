@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.naive;
+package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,8 +20,8 @@ public class SnapshotRecorder implements AutoCloseable {
         this.directory = directory;
     }
 
-    public Snapshot takeSnapshot() throws IOException {
-        Snapshot snapshot;
+    public BaseSnapshot takeSnapshot() throws IOException {
+        BaseSnapshot snapshot;
         createCurrentDirectorySnapshot();
         if (shouldTakeSnapshot()) {
             counter = 0;

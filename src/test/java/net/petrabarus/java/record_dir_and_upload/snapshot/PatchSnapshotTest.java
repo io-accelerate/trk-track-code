@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.naive;
+package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import org.junit.Test;
 

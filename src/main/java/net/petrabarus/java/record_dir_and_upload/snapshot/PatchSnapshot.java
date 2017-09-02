@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.naive;
+package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import difflib.Patch;
 import java.io.ByteArrayOutputStream;
@@ -7,9 +7,9 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.nio.file.Path;
 import java.util.Map;
-import net.petrabarus.java.record_dir_and_upload.diff.DirectoryDiffUtils;
+import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryDiffUtils;
 
-public class PatchSnapshot extends Snapshot {
+public class PatchSnapshot extends BaseSnapshot {
 
     public static PatchSnapshot takeSnapshotFromDirectories(Path previous, Path current) throws IOException {
         PatchSnapshot snapshot = new PatchSnapshot();

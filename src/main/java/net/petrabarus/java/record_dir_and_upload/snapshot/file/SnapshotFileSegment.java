@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.snapshot.file;
 
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.ByteHelper;
 import java.io.ByteArrayOutputStream;
@@ -7,7 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
-public class Snapshot {
+public class SnapshotFileSegment {
 
     /**
      * 1 magic number 1 type key/diff 8 timestamp 8 size 20 checksum
@@ -85,8 +85,8 @@ public class Snapshot {
         this.checksum = generateChecksum();
     }
 
-    public static Snapshot createFromHeaderBytes(byte[] bytes) {
-        Snapshot snapshot = new Snapshot();
+    public static SnapshotFileSegment createFromHeaderBytes(byte[] bytes) {
+        SnapshotFileSegment snapshot = new SnapshotFileSegment();
         snapshot.type = bytes[1];
         snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 2, 10));
         snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 10, 18));
@@ -96,10 +96,10 @@ public class Snapshot {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Snapshot)) {
+        if (!(obj instanceof SnapshotFileSegment)) {
             return false;
         }
-        Snapshot snapshot = (Snapshot) obj;
+        SnapshotFileSegment snapshot = (SnapshotFileSegment) obj;
 
         return type == snapshot.type
                 && timestamp == snapshot.timestamp

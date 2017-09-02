@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.naive;
+package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -7,16 +7,16 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import net.petrabarus.java.record_dir_and_upload.snapshot.DirectorySnapshot;
+import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryZip;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
-public class KeySnapshot extends Snapshot {
+public class KeySnapshot extends BaseSnapshot {
 
     public static KeySnapshot takeSnapshotFromDirectory(Path directory) throws IOException {
         KeySnapshot keySnapshot = new KeySnapshot();
         try (ByteArrayOutputStream os = new ByteArrayOutputStream();
-                DirectorySnapshot directorySnapshot = new DirectorySnapshot(directory, os);) {
+                DirectoryZip directorySnapshot = new DirectoryZip(directory, os);) {
             directorySnapshot.compress();
             keySnapshot.data = os.toByteArray();
         }

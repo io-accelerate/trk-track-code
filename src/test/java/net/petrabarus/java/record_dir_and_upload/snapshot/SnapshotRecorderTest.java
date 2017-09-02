@@ -1,7 +1,8 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.naive;
+package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotRecorder;
 import org.junit.Test;
 
 public class SnapshotRecorderTest {

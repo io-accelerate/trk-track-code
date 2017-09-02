@@ -1,5 +1,6 @@
-package net.petrabarus.java.record_dir_and_upload.diff;
+package net.petrabarus.java.record_dir_and_upload.snapshot.helpers;
 
+import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryDiffUtils;
 import difflib.Patch;
 import java.io.File;
 import java.io.IOException;

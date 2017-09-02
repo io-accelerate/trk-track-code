@@ -1,9 +1,10 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.naive;
+package net.petrabarus.java.record_dir_and_upload.snapshot;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import net.petrabarus.java.record_dir_and_upload.snapshot.KeySnapshot;
 import net.petrabarus.java.record_dir_and_upload.test.FileTestHelper;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;

@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot.io;
+package net.petrabarus.java.record_dir_and_upload.snapshot.file;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -9,8 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.petrabarus.java.record_dir_and_upload.snapshot.DirectorySnapshot;
-import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
+import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryZip;
 import org.apache.commons.io.IOUtils;
 
 public final class SnapshotsFileWriter implements AutoCloseable {
@@ -44,8 +43,8 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     public void takeSnapshot() {
         try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            Snapshot snapshot = new Snapshot();
-            snapshot.type = Snapshot.TYPE_KEY;
+            SnapshotFileSegment snapshot = new SnapshotFileSegment();
+            snapshot.type = SnapshotFileSegment.TYPE_KEY;
             snapshot.timestamp = getTimestamp();
             snapshot.setData(buff.toByteArray());
             IOUtils.write(snapshot.asBytes(), outputStream);
@@ -56,7 +55,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     public ByteArrayOutputStream createSnapshotAndStoreToByteArray() throws IOException {
         ByteArrayOutputStream buff = new ByteArrayOutputStream();
-        DirectorySnapshot snapshot = new DirectorySnapshot(dirPath, buff);
+        DirectoryZip snapshot = new DirectoryZip(dirPath, buff);
         snapshot.compress();
         return buff;
     }
