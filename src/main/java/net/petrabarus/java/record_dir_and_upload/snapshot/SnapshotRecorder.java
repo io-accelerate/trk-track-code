@@ -36,7 +36,10 @@ public class SnapshotRecorder implements AutoCloseable {
 
     private void createCurrentDirectorySnapshot() throws IOException {
         currentDirectorySnapshot = createTmpDirectory();
-        FileUtils.copyDirectory(directory.toFile(), currentDirectorySnapshot.toFile());
+        FileUtils.copyDirectory(
+                directory.toFile(),
+                currentDirectorySnapshot.toFile()
+        );
     }
 
     private void moveCurrentDirectoryAsPrevious() {

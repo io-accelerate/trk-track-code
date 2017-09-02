@@ -18,7 +18,11 @@ public class FileTestHelper {
 
     public static boolean isDirectoryEquals(Path dir1, Path dir2) {
         try {
+//            System.out.println(dir1);
+//            System.out.println("===========================");
             String checksum1 = createDirectoryChecksum(dir1);
+//            System.out.println(dir2);
+//            System.out.println("===========================");
             String checksum2 = createDirectoryChecksum(dir2);
             return checksum1.equals(checksum2);
         } catch (IOException ex) {
@@ -45,6 +49,7 @@ public class FileTestHelper {
     }
 
     private static String createFileDigest(Path file) {
+        //System.out.println(file);
         try {
             String content = FileUtils.readFileToString(
                     file.toFile(),

@@ -1,5 +1,7 @@
 package net.petrabarus.java.record_dir_and_upload.snapshot.helpers;
 
+import difflib.Delta;
+import difflib.InsertDelta;
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryDiffUtils;
 import difflib.Patch;
 import java.io.File;
@@ -60,7 +62,11 @@ public class DirectoryDiffUtilsTest {
         Path path2 = Paths.get("./src/test/resources/diff/test1/dir1/file2.txt");
         Patch patch = DirectoryDiffUtils.diffFiles(path1, path2);
         assertEquals(1, patch.getDeltas().size());
-        String line = patch.getDelta(0).getRevised().getLines().get(0).toString();
+        //String line = patch.getDelta(0).getRevised().getLines().get(0).toString();
+        
+        Delta delta = (Delta) patch.getDeltas().get(0);
+        assertTrue(delta instanceof InsertDelta);
+        String line = (String) delta.getRevised().getLines().get(0);
         assertEquals("XXX", line);
     }
 
@@ -68,10 +74,10 @@ public class DirectoryDiffUtilsTest {
     public void diffDirectories() throws IOException {
         Path path1 = Paths.get("./src/test/resources/diff/test1/dir1");
         Path path2 = Paths.get("./src/test/resources/diff/test1/dir2");
-        Map<String, Patch> diff = DirectoryDiffUtils.diffDirectories(path1, path2);
+        DirectoryPatch patches = DirectoryDiffUtils.diffDirectories(path1, path2);
         //System.out.println(diff.keySet());
-        Patch patchFile3 = diff.get("file3.txt");
-        assertEquals(3, patchFile3.getDeltas().get(0).getRevised().getSize());
+        Patch patchFile3 = patches.getPatches().get("file3.txt");
+        assertEquals(3, ((Delta) patchFile3.getDeltas().get(0)).getRevised().size());
     }
 
     @Rule
@@ -82,7 +88,7 @@ public class DirectoryDiffUtilsTest {
         Path original = Paths.get("./src/test/resources/diff/test1/dir1");
         Path revised = Paths.get("./src/test/resources/diff/test1/dir2");
 
-        Map<String, Patch> patches = DirectoryDiffUtils.diffDirectories(original, revised);
+        DirectoryPatch patches = DirectoryDiffUtils.diffDirectories(original, revised);
 
         File patchDest = temp.newFolder("original");
         Path patchDestPath = patchDest.toPath();

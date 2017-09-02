@@ -53,14 +53,14 @@ public class DirectoryDiffUtils {
         return result;
     }
 
-    public static Map<String, Patch> diffDirectories(Path original, Path revised) {
+    public static DirectoryPatch diffDirectories(Path original, Path revised) {
         List<String> fileList = getUnionRelativeFilePathList(original, revised);
         Map<String, Patch> map = fileList.stream()
                 .collect(Collectors.toMap(
                         p -> p,
                         p -> diffFilesByRelativePath(p, original, revised)
                 ));
-        return map;
+        return new DirectoryPatch(map);
     }
 
     public static Patch diffFiles(Path original, Path revised) throws IOException {
@@ -100,33 +100,41 @@ public class DirectoryDiffUtils {
         }
     }
 
-    public static void patch(Path directory, Map<String, Patch> patches) {
-        patches.forEach((String path, Patch patch) -> {
+    public static void patch(Path directory, DirectoryPatch directoryPatch) {
+        directoryPatch.getPatches().forEach((String path, Patch patch) -> {
             File file = directory.resolve(path).toFile();
-            List<String> lines;
-            if (file.isFile()) {
-                try {
-                    lines = FileUtils.readLines(file, StandardCharsets.US_ASCII);
-                } catch (IOException ex) {
-                    throw new RuntimeException("Cannot read file: " + file.getName(), ex);
-                }
-            } else if (!file.exists()) {
-                lines = new ArrayList<>();
-            } else {
-                throw new RuntimeException("File " + file.getName() + "is a directory");
-            }
-            try {
-                List<String> newLines = (List<String>) DiffUtils.patch(lines, patch);
-                if (newLines.isEmpty()) {
-                    file.delete();
-                } else {
-                    FileUtils.writeLines(file, newLines, false);
-                }
-            } catch (PatchFailedException ex) {
-                throw new RuntimeException("Cannot patch file: " + file.getName(), ex);
-            } catch (IOException ex) {
-                throw new RuntimeException("Cannot write file: " + file.getName(), ex);
-            }
+            patchFile(file, patch);
         });
+    }
+
+    private static void patchFile(File file, Patch patch) {
+        List<String> lines = tryReadLinesFromFile(file);
+        try {
+            List<String> newLines = (List<String>) DiffUtils.patch(lines, patch);
+            if (newLines.isEmpty()) {
+                file.delete();
+            } else {
+                FileUtils.writeLines(file, newLines, false);
+            }
+        } catch (PatchFailedException ex) {
+            throw new RuntimeException("Cannot patch file: " + file.getName(), ex);
+        } catch (IOException ex) {
+            throw new RuntimeException("Cannot write file: " + file.getName(), ex);
+        }
+    }
+
+    private static List<String> tryReadLinesFromFile(File file) {
+        if (!file.exists()) {
+            return new ArrayList<>();
+        }
+
+        if (file.isFile()) {
+            try {
+                return FileUtils.readLines(file, StandardCharsets.US_ASCII);
+            } catch (IOException ex) {
+                throw new RuntimeException("Cannot read file: " + file.getName(), ex);
+            }
+        }
+        throw new RuntimeException("File " + file.getName() + "is a directory");
     }
 }

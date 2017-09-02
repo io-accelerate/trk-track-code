@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import net.petrabarus.java.record_dir_and_upload.snapshot.SnapshotRecorder;
 import net.petrabarus.java.record_dir_and_upload.snapshot.helpers.DirectoryZip;
 import org.apache.commons.io.IOUtils;
 
@@ -22,11 +23,13 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private final FileOutputStream outputStream;
 
+    private final SnapshotRecorder recorder;
+
     public SnapshotsFileWriter(Path outputPath, Path dirPath, boolean append) throws IOException {
         this.outputFile = outputPath.toFile();
         this.dirPath = dirPath;
         outputStream = new FileOutputStream(outputFile, append);
-
+        recorder = new SnapshotRecorder(dirPath);
         if (!append || !isValidFile(outputFile)) {
             initFile();
         }
