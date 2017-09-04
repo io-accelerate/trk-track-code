@@ -19,7 +19,7 @@ public class ToGitConverterTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void run() throws IOException, GitAPIException {
+    public void run() throws IOException, GitAPIException, InterruptedException {
         Path original = Paths.get("src/test/resources/directory_snapshot/dir1");
         File snapshotFile = folder.newFile();
         Path workDir = folder.newFolder().toPath();
@@ -31,36 +31,42 @@ public class ToGitConverterTest {
         //System.out.println(Hex.encodeHex(FileUtils.readFileToByteArray(snapshotFile)));
         ToGitConverter converter = new ToGitConverter(snapshotFile.toPath(), gitDir);
         converter.convert();
-        //FileUtils.copyDirectory(gitDir.toFile(), new File("/tmp/test"));
+        FileUtils.copyDirectory(gitDir.toFile(), new File("/tmp/test"));
         assertTrue(gitDir.resolve(".git").toFile().exists());
     }
 
-    private void createRandomSnapshot(Path snapshotFile, Path workDir) throws IOException {
-        SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, workDir, false);
-        writer.takeSnapshot();
-
-        appendString(workDir, "file1.txt", "Test 1");
-        writer.takeSnapshot();
-
-        appendString(workDir, "file2.txt", "Test 2");
-        writer.takeSnapshot();
-
-        appendString(workDir, "file1.txt", "Test 3");
-        writer.takeSnapshot();
-
-        appendString(workDir, "file2.txt", "Test 4");
-        writer.takeSnapshot();
-
-        appendString(workDir, "file1.txt", "Test 1");
-        writer.takeSnapshot();
-
-        appendString(workDir, "file3.txt", "Test 4");
-        writer.takeSnapshot();
-
-        appendString(workDir, "file1.txt", "Test 4");
-        writer.takeSnapshot();
-
-        writer.close();
+    private void createRandomSnapshot(Path snapshotFile, Path workDir) throws IOException, InterruptedException {
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, workDir, false)) {
+            writer.takeSnapshot();
+            Thread.sleep(1000);
+            
+            appendString(workDir, "file1.txt", "Test 1");
+            writer.takeSnapshot();
+            Thread.sleep(1000);
+            
+            appendString(workDir, "file2.txt", "Test 2");
+            writer.takeSnapshot();
+            //Thread.sleep(1000);
+            
+            appendString(workDir, "file1.txt", "Test 3");
+            writer.takeSnapshot();
+            //Thread.sleep(1000);
+            
+            appendString(workDir, "file2.txt", "Test 4");
+            writer.takeSnapshot();
+            Thread.sleep(1000);
+            
+            appendString(workDir, "file1.txt", "Test 1");
+            writer.takeSnapshot();
+            //Thread.sleep(1000);
+            
+            appendString(workDir, "file3.txt", "Test 4");
+            writer.takeSnapshot();
+            //Thread.sleep(1000);
+            
+            appendString(workDir, "file1.txt", "Test 4");
+            writer.takeSnapshot();
+        }
     }
 
     private static void appendString(Path dir, String path, String data) throws IOException {

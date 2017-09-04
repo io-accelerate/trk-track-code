@@ -8,6 +8,7 @@ import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.PersonIdent;
 
 public class ToGitConverter {
 
@@ -31,7 +32,7 @@ public class ToGitConverter {
         while (reader.hasNext()) {
             SnapshotFileSegment segment = reader.next();
             writeDirFromSnapshot(segment);
-            commitDirectory(segment.getTimestampAsDate());
+            commitDirectory(segment);
         }
     }
 
@@ -41,10 +42,16 @@ public class ToGitConverter {
         snapshot.restoreSnapshot(outputDir);
     }
 
-    private void commitDirectory(Date timestamp) throws GitAPIException {
+    private void commitDirectory(SnapshotFileSegment segment) throws GitAPIException {
+        Date timestamp = segment.getTimestampAsDate();
+        PersonIdent origIdent = new PersonIdent(git.getRepository());
+        PersonIdent ident = new PersonIdent(origIdent, timestamp);
         String message = timestamp.toString();
         git.add().addFilepattern(".").call();
-        git.commit().setMessage(message).call();
+        git.commit()
+                .setAuthor(ident)
+                .setMessage(message)
+                .call();
     }
 
     private void initGit() throws GitAPIException {
