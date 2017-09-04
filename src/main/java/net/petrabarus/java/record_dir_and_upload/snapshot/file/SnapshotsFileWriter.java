@@ -49,7 +49,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
             Snapshot snapshot = recorder.takeSnapshot();
             //try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
             SnapshotFileSegment segment = new SnapshotFileSegment();
-            segment.type = (snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_DIFF;
+            segment.type = (snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_PATCH;
             segment.timestamp = getTimestamp();
             segment.setData(snapshot.getData());
             IOUtils.write(segment.asBytes(), outputStream);

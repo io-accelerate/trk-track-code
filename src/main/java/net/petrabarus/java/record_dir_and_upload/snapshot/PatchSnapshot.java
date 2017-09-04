@@ -35,12 +35,14 @@ public class PatchSnapshot extends Snapshot {
         return snapshot;
     }
 
-    public void restoreSnapshot(Path destinationDirectory) throws IOException, ClassNotFoundException {
+    public void restoreSnapshot(Path destinationDirectory) throws IOException {
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data))) {
             String json = (String) ois.readObject();
             Gson gson = buildGson();
             DirectoryPatch patches = gson.fromJson(json, DirectoryPatch.class);
             DirectoryDiffUtils.patch(destinationDirectory, patches);
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
         }
     }
 

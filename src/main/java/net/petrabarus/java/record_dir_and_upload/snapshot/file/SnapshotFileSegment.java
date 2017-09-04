@@ -6,6 +6,10 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Date;
+import net.petrabarus.java.record_dir_and_upload.snapshot.KeySnapshot;
+import net.petrabarus.java.record_dir_and_upload.snapshot.PatchSnapshot;
+import net.petrabarus.java.record_dir_and_upload.snapshot.Snapshot;
 
 public class SnapshotFileSegment {
 
@@ -17,7 +21,7 @@ public class SnapshotFileSegment {
     public static final int MAGIC_NUMBER = 99;
 
     public static final int TYPE_KEY = 0;
-    public static final int TYPE_DIFF = 1;
+    public static final int TYPE_PATCH = 1;
 
     public int type;
 
@@ -92,6 +96,20 @@ public class SnapshotFileSegment {
         snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 10, 18));
         snapshot.checksum = Arrays.copyOfRange(bytes, 18, 38);
         return snapshot;
+    }
+
+    public Snapshot getSnapshot() {
+        switch (type) {
+            case TYPE_KEY:
+                return KeySnapshot.createSnapshotFromBytes(data);
+            case TYPE_PATCH:
+                return PatchSnapshot.createSnapshotFromBytes(data);
+        }
+        throw new RuntimeException("Cannot recognize type");
+    }
+    
+    public Date getTimestampAsDate() {
+        return new Date(timestamp * 1000L);
     }
 
     @Override
