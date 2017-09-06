@@ -12,37 +12,40 @@ import org.junit.rules.TemporaryFolder;
 public class SnapshotsFileWriterTest {
 
     @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    public TemporaryFolder sourceFolder = new TemporaryFolder();
+
+    @Rule
+    public TemporaryFolder destinationFolder = new TemporaryFolder();
 
     @Test
     public void run() throws IOException {
-        Path output = Paths.get("tmp/snapshot.bin");
+        Path output = destinationFolder.newFile("snapshot.bin").toPath();
         Path dirPath = Paths.get("src/test/resources/directory_snapshot/dir1");
-        Path tmpDir = folder.getRoot().toPath();
-        FileUtils.copyDirectory(dirPath.toFile(), tmpDir.toFile());
+        Path sourceDir = sourceFolder.getRoot().toPath();
+        FileUtils.copyDirectory(dirPath.toFile(), sourceDir.toFile());
 
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, tmpDir, false)) {
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceDir, false)) {
             writer.takeSnapshot();
 
-            appendString(tmpDir, "file1.txt", "\nLOREM");
+            appendString(sourceDir, "file1.txt", "\nLOREM");
             writer.takeSnapshot();
 
-            appendString(tmpDir, "file1.txt", "\nIPSUM");
+            appendString(sourceDir, "file1.txt", "\nIPSUM");
             writer.takeSnapshot();
 
-            appendString(tmpDir, "file1.txt", "\nDOLOR");
+            appendString(sourceDir, "file1.txt", "\nDOLOR");
             writer.takeSnapshot();
 
-            appendString(tmpDir, "file1.txt", "\nSIT");
+            appendString(sourceDir, "file1.txt", "\nSIT");
             writer.takeSnapshot();
             
-            appendString(tmpDir, "file2.txt", "\nLOREM");
+            appendString(sourceDir, "file2.txt", "\nLOREM");
             writer.takeSnapshot();
             
-            appendString(tmpDir, "file4.txt", "\nIPSUM");
+            appendString(sourceDir, "file4.txt", "\nIPSUM");
             writer.takeSnapshot();
             
-            appendString(tmpDir, "file5.txt", "\nDOLOR");
+            appendString(sourceDir, "file5.txt", "\nDOLOR");
             writer.takeSnapshot();
         }
     }
