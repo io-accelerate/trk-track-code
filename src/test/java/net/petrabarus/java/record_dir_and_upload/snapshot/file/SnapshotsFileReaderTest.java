@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.snapshot.file;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,15 +51,15 @@ public class SnapshotsFileReaderTest {
     public void next() throws IOException {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
-            Snapshot snapshot1 = reader.next();
+            SnapshotFileSegment snapshot1 = reader.next();
             assertTrue(getTimestamp() - snapshot1.timestamp < 60);
 
             assertTrue(reader.hasNext());
-            Snapshot snapshot2 = reader.next();
+            SnapshotFileSegment snapshot2 = reader.next();
             assertTrue(getTimestamp() - snapshot2.timestamp < 60);
 
             assertTrue(reader.hasNext());
-            Snapshot snapshot3 = reader.next();
+            SnapshotFileSegment snapshot3 = reader.next();
             assertTrue(getTimestamp() - snapshot3.timestamp < 60);
 
             assertFalse(reader.hasNext());
@@ -76,14 +76,14 @@ public class SnapshotsFileReaderTest {
 
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
-            Snapshot snapshot1 = reader.next();
+            SnapshotFileSegment snapshot1 = reader.next();
             assertTrue(getTimestamp() - snapshot1.timestamp < 60);
 
             assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-            Snapshot snapshot3 = reader.next();
+            SnapshotFileSegment snapshot3 = reader.next();
             assertTrue(getTimestamp() - snapshot3.timestamp < 60);
 
             assertFalse(reader.hasNext());
@@ -94,7 +94,7 @@ public class SnapshotsFileReaderTest {
     public void reset() throws IOException {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
-            Snapshot snapshot1 = reader.next();
+            SnapshotFileSegment snapshot1 = reader.next();
 
             assertTrue(reader.hasNext());
             reader.skip();
@@ -106,7 +106,7 @@ public class SnapshotsFileReaderTest {
             reader.reset();
             assertTrue(reader.hasNext());
 
-            Snapshot snapshot2 = reader.next();
+            SnapshotFileSegment snapshot2 = reader.next();
 
             assertEquals(snapshot1, snapshot2);
         }

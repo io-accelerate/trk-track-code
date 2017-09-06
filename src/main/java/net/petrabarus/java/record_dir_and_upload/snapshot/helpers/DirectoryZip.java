@@ -1,4 +1,4 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload.snapshot.helpers;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,7 +9,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.IOUtils;
 
-public class DirectorySnapshot implements AutoCloseable {
+public class DirectoryZip implements AutoCloseable {
 
     private final Path path;
 
@@ -17,7 +17,7 @@ public class DirectorySnapshot implements AutoCloseable {
 
     private final ZipOutputStream zip;
 
-    public DirectorySnapshot(Path path, OutputStream out) {
+    public DirectoryZip(Path path, OutputStream out) {
         this.path = path;
         this.out = out;
         this.zip = new ZipOutputStream(out);

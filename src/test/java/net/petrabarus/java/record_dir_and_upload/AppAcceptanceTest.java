@@ -1,5 +1,7 @@
-package net.petrabarus.java.record_dir_and_upload.snapshot;
+package net.petrabarus.java.record_dir_and_upload;
 
+import net.petrabarus.java.record_dir_and_upload.snapshot.file.SnapshotFileSegment;
+import net.petrabarus.java.record_dir_and_upload.snapshot.file.SnapshotsFileReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import org.apache.commons.io.FileUtils;
@@ -61,7 +63,7 @@ public class AppAcceptanceTest {
 
         newFile2.delete();
         try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
-            List<Snapshot> snapshots = reader.getSnapshots();
+            List<SnapshotFileSegment> snapshots = reader.getSnapshots();
             Assert.assertEquals(4, snapshots.size());
 
             String content1 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(0).data);
@@ -120,7 +122,7 @@ public class AppAcceptanceTest {
 
         long size1 = outputFile.length();
         SnapshotsFileReader reader1 = new SnapshotsFileReader(outputFile);
-        List<Snapshot> list1 = reader1.getSnapshots();
+        List<SnapshotFileSegment> list1 = reader1.getSnapshots();
         assertEquals(5, list1.size());
         byte[] data1 = list1.get(4).data;
         boolean isAllIntact = list1.stream().allMatch(this::isSnapshotIntact);
@@ -134,7 +136,7 @@ public class AppAcceptanceTest {
         assertNotEquals(size1, size2);
 
         SnapshotsFileReader reader2 = new SnapshotsFileReader(outputFile);
-        List<Snapshot> list2 = reader2.getSnapshots();
+        List<SnapshotFileSegment> list2 = reader2.getSnapshots();
         assertEquals(5, list2.size());
         byte[] data2 = list2.get(4).data;
         boolean isAllButLastIntact = list2.subList(0, 4).stream().allMatch(this::isSnapshotIntact);
@@ -173,7 +175,7 @@ public class AppAcceptanceTest {
         }
     }
 
-    private boolean isSnapshotIntact(Snapshot snapshot) {
+    private boolean isSnapshotIntact(SnapshotFileSegment snapshot) {
         if (!snapshot.isDataValid()) {
             return false;
         }
@@ -204,16 +206,16 @@ public class AppAcceptanceTest {
 
         long size1 = outputFile.length();
         SnapshotsFileReader reader1 = new SnapshotsFileReader(outputFile);
-        List<Snapshot> list1 = reader1.getSnapshots();
+        List<SnapshotFileSegment> list1 = reader1.getSnapshots();
         assertEquals(5, list1.size());
         byte[] data1 = list1.get(4).data;
         boolean isAllIntact = list1.stream().allMatch(this::isSnapshotIntact);
         assertTrue(isAllIntact);
 
         int start = 4 //magit number
-                + Snapshot.HEADER_SIZE
+                + SnapshotFileSegment.HEADER_SIZE
                 + (int) list1.get(0).size
-                + Snapshot.HEADER_SIZE
+                + SnapshotFileSegment.HEADER_SIZE
                 + 10 //random
                 ;
 
@@ -223,7 +225,7 @@ public class AppAcceptanceTest {
         assertEquals(size1, size2);
 
         SnapshotsFileReader reader2 = new SnapshotsFileReader(outputFile);
-        List<Snapshot> list2 = reader2.getSnapshots();
+        List<SnapshotFileSegment> list2 = reader2.getSnapshots();
         assertEquals(5, list2.size());
         byte[] data2 = list2.get(4).data;
         assertTrue(isSnapshotIntact(list2.get(0)));
