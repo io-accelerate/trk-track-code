@@ -58,7 +58,7 @@ dependencies {
 
 apply plugin: 'com.github.johnrengelman.shadow'
 
-mainClassName = "net.petrabarus.java.record_dir_and_upload.App"
+mainClassName = "tdl.record.sourcecode.App"
 jar {
     manifest {
         attributes "Main-Class": "$mainClassName"
