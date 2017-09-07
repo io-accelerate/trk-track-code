@@ -14,14 +14,16 @@ import tdl.record.sourcecode.snapshot.Snapshot;
 public class SnapshotFileSegment {
 
     /**
-     * 1 magic number 1 type key/diff 8 timestamp 8 size 20 checksum
+     * 6 magic bytes 8 timestamp 8 size 20 checksum
      */
-    public static final int HEADER_SIZE = 38;
-
-    public static final int MAGIC_NUMBER = 99;
+    public static final int HEADER_SIZE = 42;
 
     public static final int TYPE_KEY = 0;
     public static final int TYPE_PATCH = 1;
+
+    public static final byte[] MAGIC_BYTES_KEY = new byte[]{0x53, 0x52, 0x43, 0x4b, 0x45, 0x59};
+
+    public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53, 0x52, 0x43, 0x50, 0x54, 0x43};
 
     public int type;
 
@@ -66,8 +68,7 @@ public class SnapshotFileSegment {
 
     public byte[] getHeaderAsBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream(HEADER_SIZE)) {
-            byteArray.write((byte) MAGIC_NUMBER);
-            byteArray.write((byte) type);
+            byteArray.write(getMagicBytesByType(type));
             byteArray.write(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
             byteArray.write(ByteHelper.littleEndianLongToByteArray(size, 8));
             byteArray.write(checksum);
@@ -75,6 +76,24 @@ public class SnapshotFileSegment {
         } catch (IOException ex) {
             return new byte[0];
         }
+    }
+
+    public static byte[] getMagicBytesByType(int type) {
+        if (type == TYPE_KEY) {
+            return MAGIC_BYTES_KEY;
+        } else if (type == TYPE_PATCH) {
+            return MAGIC_BYTES_PATCH;
+        }
+        throw new RuntimeException("Unknown type: " + type);
+    }
+
+    public static int getTypeByteBytes(byte[] bytes) {
+        if (Arrays.equals(bytes, MAGIC_BYTES_KEY)) {
+            return TYPE_KEY;
+        } else if (Arrays.equals(bytes, MAGIC_BYTES_PATCH)) {
+            return TYPE_PATCH;
+        }
+        throw new RuntimeException("Unknown bytes: " + new String(bytes));
     }
 
     /**
@@ -91,10 +110,10 @@ public class SnapshotFileSegment {
 
     public static SnapshotFileSegment createFromHeaderBytes(byte[] bytes) {
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.type = bytes[1];
-        snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 2, 10));
-        snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 10, 18));
-        snapshot.checksum = Arrays.copyOfRange(bytes, 18, 38);
+        snapshot.type = getTypeByteBytes(Arrays.copyOfRange(bytes, 0, MAGIC_BYTES_KEY.length));
+        snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
+        snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 14, 22));
+        snapshot.checksum = Arrays.copyOfRange(bytes, 22, 42);
         return snapshot;
     }
 
@@ -107,7 +126,7 @@ public class SnapshotFileSegment {
         }
         throw new RuntimeException("Cannot recognize type");
     }
-    
+
     public Date getTimestampAsDate() {
         return new Date(timestamp * 1000L);
     }
