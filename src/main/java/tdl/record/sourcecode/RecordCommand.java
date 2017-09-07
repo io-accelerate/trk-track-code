@@ -11,10 +11,10 @@ import tdl.record.sourcecode.snapshot.file.SnapshotsFileWriter;
 @Parameters
 public class RecordCommand {
 
-    @Parameter(names = "--dir")
+    @Parameter(names = "--dir", description = "The target directory that you want to record")
     public String dirPath;
 
-    @Parameter(names = "--out")
+    @Parameter(names = "--out", description = "The destination file")
     public String outputPath;
 
     @Parameter(names = "--delay", description = "In seconds")

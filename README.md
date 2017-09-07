@@ -12,5 +12,5 @@
 ## Running
 
 ```
-java -jar build/libs/record-dir-and-upload-all.jar <dir> <output>
+java -jar build/libs/dev-sourcecode-record-all.jar <dir> <output>
 ```

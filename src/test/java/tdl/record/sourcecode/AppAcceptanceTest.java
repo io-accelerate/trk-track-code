@@ -34,18 +34,18 @@ import static org.junit.Assert.assertTrue;
 public class AppAcceptanceTest {
 
     @Rule
-    public TemporaryFolder outputFolder = new TemporaryFolder();
+    public TemporaryFolder sourceFolder = new TemporaryFolder();
 
     @Rule
-    public TemporaryFolder zipFolder = new TemporaryFolder();
+    public TemporaryFolder destinationFolder = new TemporaryFolder();
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
     public void should_be_able_to_reproduce_history() throws IOException, InterruptedException {
-        String outputFilePath = outputFolder.newFile("output.bin").getPath();
-        String zipFolderPath = zipFolder.getRoot().getPath();
+        String outputFilePath = destinationFolder.newFile("output.bin").getPath();
+        String zipFolderPath = sourceFolder.getRoot().getPath();
 
-        File newFile1 = zipFolder.newFile("test1.txt");
+        File newFile1 = sourceFolder.newFile("test1.txt");
         FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
 
         record(zipFolderPath, outputFilePath);
@@ -54,7 +54,7 @@ public class AppAcceptanceTest {
 
         record(zipFolderPath, outputFilePath);
 
-        File newFile2 = zipFolder.newFile("test2.txt");
+        File newFile2 = sourceFolder.newFile("test2.txt");
         newFile2.delete();
         FileUtils.moveFile(newFile1, newFile2);
 
@@ -114,8 +114,8 @@ public class AppAcceptanceTest {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
     public void should_be_resilient_to_premature_termination() throws IOException, InterruptedException {
-        Path outputFilePath = outputFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = zipFolder.getRoot().toPath();
+        Path outputFilePath = destinationFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = sourceFolder.getRoot().toPath();
         File outputFile = outputFilePath.toFile();
         createRandomSnapshot(zipFolderPath.toString(), outputFilePath.toString());
 
@@ -197,8 +197,8 @@ public class AppAcceptanceTest {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
     public void should_be_resilient_to_data_corruption() throws IOException, InterruptedException {
-        Path outputFilePath = outputFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = zipFolder.getRoot().toPath();
+        Path outputFilePath = destinationFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = sourceFolder.getRoot().toPath();
         File outputFile = outputFilePath.toFile();
 
         createRandomSnapshot(zipFolderPath.toString(), outputFilePath.toString());
@@ -246,7 +246,7 @@ public class AppAcceptanceTest {
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     public void should_minimize_the_size_of_the_stream() throws IOException {
-        Path outputFilePath = outputFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = zipFolder.getRoot().toPath();
+        Path outputFilePath = destinationFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = sourceFolder.getRoot().toPath();
     }
 }

@@ -8,10 +8,10 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 
 public class ConvertToGitCommand {
 
-    @Parameter(names = "--in")
+    @Parameter(names = "--in", description = "The SRCS input file")
     public String inputFilePath;
 
-    @Parameter(names = "--out")
+    @Parameter(names = "--out", description = "The destination directory. Warning! It will be cleared if exists.")
     public String outputDirectoryPath;
 
     public void run() throws IOException, GitAPIException {

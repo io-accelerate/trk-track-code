@@ -18,11 +18,17 @@ public class App {
                 .addCommand("convert-to-git", open)
                 .build();
         jc.parse(argv);
-        switch (jc.getParsedCommand()) {
+        String command = jc.getParsedCommand();
+        if(command == null) {
+            jc.usage();
+            return;
+        }
+
+        switch (command) {
             case "record":
                 record.run();
                 return;
-            case "open":
+            case "convert-to-git":
                 try {
                     open.run();
                 } catch (GitAPIException ex) {
@@ -30,7 +36,7 @@ public class App {
                 }
                 return;
             default:
-                throw new RuntimeException("Unrecognized command");
+                jc.usage();
         }
     }
 

@@ -16,21 +16,21 @@ import org.junit.rules.TemporaryFolder;
 public class SnapshotsFileReaderTest {
 
     @Rule
-    public TemporaryFolder outputFolder = new TemporaryFolder();
+    public TemporaryFolder sourceFolder = new TemporaryFolder();
 
     @Rule
-    public TemporaryFolder zipFolder = new TemporaryFolder();
+    public TemporaryFolder destinationFolder = new TemporaryFolder();
 
     private Path outputFilePath;
 
     @Before
     public void createSnapshotFile() throws IOException {
-        outputFilePath = outputFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = zipFolder.getRoot().toPath();
+        outputFilePath = sourceFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = destinationFolder.getRoot().toPath();
 
         try (SnapshotsFileWriter writer = new SnapshotsFileWriter(outputFilePath, zipFolderPath, true)) {
 
-            File newFile1 = zipFolder.newFile("test1.txt");
+            File newFile1 = destinationFolder.newFile("test1.txt");
             FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
 
             writer.takeSnapshot();
@@ -39,7 +39,7 @@ public class SnapshotsFileReaderTest {
 
             writer.takeSnapshot();
 
-            File newFile2 = zipFolder.newFile("test2.txt");
+            File newFile2 = destinationFolder.newFile("test2.txt");
             newFile2.delete();
             FileUtils.moveFile(newFile1, newFile2);
 
