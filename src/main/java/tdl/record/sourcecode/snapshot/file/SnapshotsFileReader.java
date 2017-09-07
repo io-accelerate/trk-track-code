@@ -20,11 +20,6 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     public SnapshotsFileReader(File file) throws FileNotFoundException, IOException {
         this.file = file;
         this.inputStream = new FileInputStream(file);
-        skipMagicNumber();
-    }
-
-    private void skipMagicNumber() throws IOException {
-        inputStream.skip(4);
     }
 
     @Override
@@ -62,7 +57,6 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     public void reset() throws IOException {
         inputStream.getChannel().position(0);
-        skipMagicNumber();
     }
 
     public void skip() throws IOException {

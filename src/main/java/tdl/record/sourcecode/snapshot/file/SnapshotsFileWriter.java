@@ -30,18 +30,6 @@ public final class SnapshotsFileWriter implements AutoCloseable {
         this.dirPath = dirPath;
         outputStream = new FileOutputStream(outputFile, append);
         recorder = new SnapshotRecorder(dirPath);
-        if (!append || !isValidFile(outputFile)) {
-            initFile();
-        }
-    }
-
-    private boolean isValidFile(File file) {
-        return (file.exists() && file.length() > 0);
-    }
-
-    public void initFile() throws IOException {
-        //TODO: Magic number
-        IOUtils.write("TEST", outputStream, CHARSET);
     }
 
     public void takeSnapshot() {
