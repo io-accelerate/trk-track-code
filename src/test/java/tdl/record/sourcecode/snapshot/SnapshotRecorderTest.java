@@ -2,6 +2,7 @@ package tdl.record.sourcecode.snapshot;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -96,6 +97,14 @@ public class SnapshotRecorderTest {
             recorder.syncToGitDirectory();
             assertTrue(gitDir.resolve("subdir").toFile().isDirectory());
             assertTrue(gitDir.resolve("subdir/file1.txt").toFile().exists());
+            
+            Files.delete(tmpDir.resolve("file1.txt"));
+            recorder.syncToGitDirectory();
+            assertFalse(gitDir.resolve("file1.txt").toFile().exists());
+            
+            Files.delete(tmpDir.resolve("subdir/file1.txt"));
+            recorder.syncToGitDirectory();
+            assertFalse(gitDir.resolve("subdir/file1.txt").toFile().exists());
         }
     }
 

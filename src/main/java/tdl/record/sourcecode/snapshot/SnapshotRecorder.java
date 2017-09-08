@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 
 public class SnapshotRecorder implements AutoCloseable {
 
@@ -50,6 +52,11 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     public void syncToGitDirectory() throws IOException {
+        copyToGitDirectory();
+        removeDeletedFileInOriginal();
+    }
+
+    private void copyToGitDirectory() throws IOException {
         FileFilter filter = (file) -> {
             Path relative = directory.relativize(file.toPath());
             return !((file.isDirectory() && relative.equals(".git"))
@@ -58,8 +65,24 @@ public class SnapshotRecorder implements AutoCloseable {
         FileUtils.copyDirectory(directory.toFile(), gitDirectory.toFile(), filter);
     }
 
+    private void removeDeletedFileInOriginal() {
+        List<String> files = DirectoryDiffUtils.getRelativeFilePathList(gitDirectory);
+        files.stream().forEach((path) -> {
+            if (path.startsWith(".git")) {
+                return;
+            }
+            File file = gitDirectory.resolve(path).toFile();
+            boolean isExists = file.exists()
+                    && !directory.resolve(path).toFile().exists();
+            if (isExists) {
+                file.delete();
+            }
+        });
+    }
+
     public Snapshot takeSnapshot() throws IOException {
         Snapshot snapshot;
+
         createCurrentDirectorySnapshot();
         if (shouldTakeSnapshot()) {
             counter = 0;
