@@ -1,6 +1,7 @@
 package tdl.record.sourcecode.test;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,5 +59,9 @@ public class FileTestHelper {
         } catch (IOException ex) {
             return "";
         }
+    }
+
+    public static void appendStringToFile(Path dir, String path, String text) throws IOException {
+        FileUtils.writeStringToFile(dir.resolve(path).toFile(), text, Charset.defaultCharset(), true);
     }
 }
