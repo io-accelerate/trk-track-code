@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
+import java.util.Date;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -42,9 +43,14 @@ public class SnapshotRecorder implements AutoCloseable {
                     getClass().getSimpleName()
             );
             git = Git.init().setDirectory(gitDirectory.toFile()).call();
+            commitAllChanges();
         } catch (IOException | GitAPIException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public Git getGit() {
+        return git;
     }
 
     public Path getGitDirectory() {
@@ -78,6 +84,18 @@ public class SnapshotRecorder implements AutoCloseable {
                 file.delete();
             }
         });
+    }
+
+    public void commitAllChanges() {
+        try {
+            String message = new Date().toString();
+            git.commit()
+                    .setMessage(message)
+                    .setAll(true)
+                    .call();
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Snapshot takeSnapshot() throws IOException {

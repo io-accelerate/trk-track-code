@@ -5,10 +5,14 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.revwalk.RevCommit;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
@@ -97,11 +101,11 @@ public class SnapshotRecorderTest {
             recorder.syncToGitDirectory();
             assertTrue(gitDir.resolve("subdir").toFile().isDirectory());
             assertTrue(gitDir.resolve("subdir/file1.txt").toFile().exists());
-            
+
             Files.delete(tmpDir.resolve("file1.txt"));
             recorder.syncToGitDirectory();
             assertFalse(gitDir.resolve("file1.txt").toFile().exists());
-            
+
             Files.delete(tmpDir.resolve("subdir/file1.txt"));
             recorder.syncToGitDirectory();
             assertFalse(gitDir.resolve("subdir/file1.txt").toFile().exists());
@@ -127,7 +131,7 @@ public class SnapshotRecorderTest {
         Path tmpDir = folder.getRoot().toPath();
         try (SnapshotRecorder recorder = new SnapshotRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
-            
+
             assertFalse(tmpDir.resolve(".git").toFile().exists());
             Git.init().setDirectory(tmpDir.toFile()).call();
             FileTestHelper.appendStringToFile(tmpDir, ".git/randomfile", "TEST");
@@ -137,5 +141,35 @@ public class SnapshotRecorderTest {
             assertTrue(gitDir.resolve(".git").toFile().exists());
             assertFalse(gitDir.resolve(".git/randomfile").toFile().exists());
         }
+    }
+
+    @Test
+    public void commitAllChanges() throws Exception {
+        Path tmpDir = folder.getRoot().toPath();
+        try (SnapshotRecorder recorder = new SnapshotRecorder(tmpDir)) {
+            Git git = recorder.getGit();
+
+            assertEquals(1, getCommitCount(git));
+            FileTestHelper.appendStringToFile(tmpDir, "file1.txt", "Hello World!");
+            FileTestHelper.appendStringToFile(tmpDir, "file2.txt", "Lorem Ipsum!");
+
+            recorder.syncToGitDirectory();
+            recorder.commitAllChanges();
+            assertEquals(2, getCommitCount(git));
+            
+            recorder.commitAllChanges();
+            assertEquals(3, getCommitCount(git));
+        }
+    }
+
+    private static int getCommitCount(Git git) throws GitAPIException {
+        Iterable<RevCommit> commits = git.log().call();
+        int count = 0;
+        Iterator it = commits.iterator();
+        while (it.hasNext()) {
+            it.next();
+            count++;
+        }
+        return count;
     }
 }
