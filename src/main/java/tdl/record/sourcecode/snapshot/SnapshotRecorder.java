@@ -9,7 +9,6 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
