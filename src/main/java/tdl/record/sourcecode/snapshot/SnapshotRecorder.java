@@ -88,6 +88,9 @@ public class SnapshotRecorder implements AutoCloseable {
     public void commitAllChanges() {
         try {
             String message = new Date().toString();
+            git.add()
+                    .addFilepattern(".")
+                    .call();
             git.commit()
                     .setMessage(message)
                     .setAll(true)

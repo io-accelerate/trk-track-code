@@ -25,13 +25,15 @@ public class GitHelper {
         return builder.getGitDir() != null;
     }
 
-    public static void exportGitArchive(Git git, OutputStream outputStream) throws GitAPIException, IOException {
+    public static void exportGitArchive(Git git, OutputStream outputStream)
+            throws GitAPIException, IOException {
         ArchiveFormats.registerAll();
-        ObjectId tree = git.getRepository().resolve("master");
+        ObjectId tree = git.getRepository().resolve("HEAD");
         git.archive()
-                .setTree(tree)
+                .setTree(git.getRepository().resolve("master"))
                 .setFormat(ARCHIVE_FORMAT_ZIP)
                 .setOutputStream(outputStream)
                 .call();
+        ArchiveFormats.unregisterAll();
     }
 }

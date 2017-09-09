@@ -162,7 +162,7 @@ public class SnapshotRecorderTest {
         }
     }
 
-    private static int getCommitCount(Git git) throws GitAPIException {
+    public static int getCommitCount(Git git) throws GitAPIException {
         Iterable<RevCommit> commits = git.log().call();
         int count = 0;
         Iterator it = commits.iterator();
