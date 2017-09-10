@@ -8,6 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.Snapshot;
 import tdl.record.sourcecode.snapshot.SnapshotRecorder;
@@ -19,17 +21,17 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private final File outputFile;
 
-    private final Path dirPath;
+    private final SourceCodeProvider sourceCodeProvider;
 
     private final FileOutputStream outputStream;
 
     private final SnapshotRecorder recorder;
 
-    public SnapshotsFileWriter(Path outputPath, Path dirPath, boolean append) throws IOException {
+    public SnapshotsFileWriter(Path outputPath, SourceCodeProvider sourceCodeProvider, int keySnapshotPacing, boolean append) throws IOException {
         this.outputFile = outputPath.toFile();
-        this.dirPath = dirPath;
+        this.sourceCodeProvider = sourceCodeProvider;
         outputStream = new FileOutputStream(outputFile, append);
-        recorder = new SnapshotRecorder(dirPath);
+        recorder = new SnapshotRecorder(sourceCodeProvider, keySnapshotPacing);
     }
 
     public void takeSnapshot() {
@@ -46,7 +48,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
         }
     }
 
-    public int getTimestamp() {
+    private int getTimestamp() {
         Long unixTimestamp = System.currentTimeMillis() / 1000L;
         return unixTimestamp.intValue();
     }

@@ -1,5 +1,10 @@
-package tdl.record.sourcecode;
+package acceptance;
 
+import support.content.MultiStepSourceCodeProvider;
+import support.time.FakeTimeSource;
+import tdl.record.sourcecode.App;
+import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
 import java.io.ByteArrayInputStream;
@@ -13,6 +18,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Random;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +27,7 @@ import java.util.UUID;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -34,34 +42,38 @@ import static org.junit.Assert.assertTrue;
 public class AppAcceptanceTest {
 
     @Rule
-    public TemporaryFolder sourceFolder = new TemporaryFolder();
+    public TemporaryFolder sourceCodeFolder = new TemporaryFolder();
 
     @Rule
-    public TemporaryFolder destinationFolder = new TemporaryFolder();
+    public TemporaryFolder outputFolder = new TemporaryFolder();
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
-    public void should_be_able_to_reproduce_history() throws IOException, InterruptedException {
-        String outputFilePath = destinationFolder.newFile("output.bin").getPath();
-        String zipFolderPath = sourceFolder.getRoot().getPath();
+    public void should_be_able_to_record_history() throws Exception {
+        Path outputFilePath = outputFolder.newFile("output.srcs").toPath();
 
-        File newFile1 = sourceFolder.newFile("test1.txt");
-        FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
+        SourceCodeProvider source0 = destinationFolder ->
+                writeString(destinationFolder, "test1.txt", "TEST1");
+        SourceCodeProvider source1 = destinationFolder ->
+                writeString(destinationFolder, "test1.txt", "TEST1TEST2");
+        SourceCodeProvider source2 = destinationFolder ->
+                writeString(destinationFolder, "test2.txt", "TEST1TEST2");
+        SourceCodeProvider source3 = destinationFolder ->
+                { /* Empty folder */ };
 
-        record(zipFolderPath, outputFilePath);
+        MultiStepSourceCodeProvider sourceCodeProvider =
+                new MultiStepSourceCodeProvider(source0, source1, source2, source3);
+        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputFilePath)
+                .withTimeSource(new FakeTimeSource())
+                .withSnapshotEvery(1, TimeUnit.SECONDS)
+                .withKeySnapshotSpacing(1) // Only key snapshots, no patches
+                .build();
 
-        FileUtils.writeStringToFile(newFile1, "TEST2", StandardCharsets.US_ASCII, true);
+        sourceCodeRecorder.start(Duration.of(4, ChronoUnit.SECONDS));
+        sourceCodeRecorder.close();
 
-        record(zipFolderPath, outputFilePath);
-
-        File newFile2 = sourceFolder.newFile("test2.txt");
-        newFile2.delete();
-        FileUtils.moveFile(newFile1, newFile2);
-
-        record(zipFolderPath, outputFilePath);
-
-        newFile2.delete();
-        try (SnapshotsFileReader reader = recordSnapshotAndGetReader(zipFolderPath, outputFilePath)) {
+        // Verify snapshot content
+        try (SnapshotsFileReader reader = getReader(outputFilePath)) {
             List<SnapshotFileSegment> snapshots = reader.getSnapshots();
             Assert.assertEquals(4, snapshots.size());
 
@@ -82,10 +94,14 @@ public class AppAcceptanceTest {
         }
     }
 
-    private SnapshotsFileReader recordSnapshotAndGetReader(String zipFolderPath, String outputFilePath) throws IOException, InterruptedException {
-        record(zipFolderPath, outputFilePath);
-        File outputFile = new File(outputFilePath);
-        return new SnapshotsFileReader(outputFile);
+    private void writeString(Path destinationFolder, String childFile, String content) throws IOException {
+        File newFile1 = destinationFolder.resolve(childFile).toFile();
+        FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
+    }
+
+
+    private SnapshotsFileReader getReader(Path outputFilePath) throws IOException, InterruptedException {
+        return new SnapshotsFileReader(outputFilePath.toFile());
     }
 
     private String getFileContentFromZipByteArray(String path, byte[] bytes) throws IOException {
@@ -114,8 +130,8 @@ public class AppAcceptanceTest {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
     public void should_be_resilient_to_premature_termination() throws IOException, InterruptedException {
-        Path outputFilePath = destinationFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = sourceFolder.getRoot().toPath();
+        Path outputFilePath = outputFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = sourceCodeFolder.getRoot().toPath();
         File outputFile = outputFilePath.toFile();
         createRandomSnapshot(zipFolderPath.toString(), outputFilePath.toString());
 
@@ -168,7 +184,7 @@ public class AppAcceptanceTest {
         FileUtils.writeByteArrayToFile(newfile, random, true);
     }
 
-    private void truncateFile(File file, int size) throws FileNotFoundException, IOException {
+    private void truncateFile(File file, int size) throws IOException {
         try (FileChannel outChan = new FileOutputStream(file, true).getChannel()) {
             outChan.truncate(file.length() - size);
         }
@@ -197,8 +213,8 @@ public class AppAcceptanceTest {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
     public void should_be_resilient_to_data_corruption() throws IOException, InterruptedException {
-        Path outputFilePath = destinationFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = sourceFolder.getRoot().toPath();
+        Path outputFilePath = outputFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = sourceCodeFolder.getRoot().toPath();
         File outputFile = outputFilePath.toFile();
 
         createRandomSnapshot(zipFolderPath.toString(), outputFilePath.toString());
@@ -235,7 +251,7 @@ public class AppAcceptanceTest {
         assertNotEquals(data2, data1);
     }
 
-    private void corruptFile(File file, int start, int size) throws FileNotFoundException, IOException {
+    private void corruptFile(File file, int start, int size) throws IOException {
         try (RandomAccessFile accessFile = new RandomAccessFile(file, "rw")) {
             byte[] bytes = new byte[size];
             Arrays.fill(bytes, (byte) 99);
@@ -246,7 +262,7 @@ public class AppAcceptanceTest {
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     public void should_minimize_the_size_of_the_stream() throws IOException {
-        Path outputFilePath = destinationFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = sourceFolder.getRoot().toPath();
+        Path outputFilePath = outputFolder.newFile("output.bin").toPath();
+        Path zipFolderPath = sourceCodeFolder.getRoot().toPath();
     }
 }

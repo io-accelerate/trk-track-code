@@ -12,6 +12,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 
 public class SnapshotsFileReaderTest {
 
@@ -26,9 +27,9 @@ public class SnapshotsFileReaderTest {
     @Before
     public void createSnapshotFile() throws IOException {
         outputFilePath = sourceFolder.newFile("output.bin").toPath();
-        Path zipFolderPath = destinationFolder.getRoot().toPath();
-
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(outputFilePath, zipFolderPath, true)) {
+        Path destinationFolderPath = destinationFolder.getRoot().toPath();
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(destinationFolderPath);
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(outputFilePath, sourceCodeProvider, 5, true)) {
 
             File newFile1 = destinationFolder.newFile("test1.txt");
             FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
@@ -66,7 +67,7 @@ public class SnapshotsFileReaderTest {
         }
     }
 
-    public int getTimestamp() {
+    private int getTimestamp() {
         Long unixTimestamp = System.currentTimeMillis() / 1000L;
         return unixTimestamp.intValue();
     }

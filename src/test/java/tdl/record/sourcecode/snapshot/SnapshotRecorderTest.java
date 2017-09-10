@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 
 public class SnapshotRecorderTest {
 
@@ -21,7 +22,7 @@ public class SnapshotRecorderTest {
         Path directory = Paths.get("./src/test/resources/diff/test1/dir1/");
         Path tmpDir = folder.getRoot().toPath();
         FileUtils.copyDirectory(directory.toFile(), tmpDir.toFile());
-        SnapshotRecorder recorder = new SnapshotRecorder(tmpDir);
+        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
 
         Snapshot snapshot1 = recorder.takeSnapshot();
         assertTrue(snapshot1 instanceof KeySnapshot);
