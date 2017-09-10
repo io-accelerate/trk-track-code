@@ -15,6 +15,13 @@ import org.apache.commons.io.FileUtils;
 
 public class FileTestHelper {
 
+    public static boolean isDirectoryEqualsWithoutGit(Path dir1, Path dir2) {
+        FileFilter filter = (file) -> {
+            return !file.getAbsolutePath().contains(".git/");
+        };
+        return isDirectoryEquals(dir1, dir2, filter);
+    }
+
     public static boolean isDirectoryEquals(Path dir1, Path dir2, FileFilter filter) {
         try {
 //            System.out.println(dir1);

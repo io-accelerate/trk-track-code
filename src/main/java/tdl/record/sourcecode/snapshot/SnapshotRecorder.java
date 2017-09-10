@@ -139,14 +139,11 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     public KeySnapshot takeKeySnapshot() throws IOException {
-        return KeySnapshot.takeSnapshotFromDirectory(currentDirectorySnapshot);
+        return KeySnapshot.takeSnapshotFromGit(git);
     }
 
     public PatchSnapshot takePatchSnapshot() throws IOException {
-        return PatchSnapshot.takeSnapshotFromDirectories(
-                previousDirectorySnapshot,
-                currentDirectorySnapshot
-        );
+        return PatchSnapshot.takeSnapshotFromGit(git);
     }
 
     @Override
