@@ -5,7 +5,6 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
@@ -22,10 +21,6 @@ public class SnapshotRecorder implements AutoCloseable {
     private Path gitDirectory;
 
     private Git git;
-
-    private Path currentDirectorySnapshot;
-
-    private Path previousDirectorySnapshot;
 
     private int counter = 0;
 
@@ -103,7 +98,8 @@ public class SnapshotRecorder implements AutoCloseable {
     public Snapshot takeSnapshot() throws IOException {
         Snapshot snapshot;
 
-        createCurrentDirectorySnapshot();
+        syncToGitDirectory();
+        commitAllChanges();
         if (shouldTakeSnapshot()) {
             counter = 0;
             snapshot = takeKeySnapshot();
@@ -111,27 +107,7 @@ public class SnapshotRecorder implements AutoCloseable {
             snapshot = takePatchSnapshot();
         }
         counter++;
-        moveCurrentDirectoryAsPrevious();
         return snapshot;
-    }
-
-    private void createCurrentDirectorySnapshot() throws IOException {
-        currentDirectorySnapshot = createTmpDirectory();
-        FileUtils.copyDirectory(
-                directory.toFile(),
-                currentDirectorySnapshot.toFile()
-        );
-    }
-
-    private void moveCurrentDirectoryAsPrevious() {
-        if (previousDirectorySnapshot != null) {
-            previousDirectorySnapshot.toFile().deleteOnExit();
-        }
-        previousDirectorySnapshot = currentDirectorySnapshot;
-    }
-
-    private static Path createTmpDirectory() throws IOException {
-        return Files.createTempDirectory("tmp", new FileAttribute<?>[]{});
     }
 
     private boolean shouldTakeSnapshot() {
@@ -148,8 +124,6 @@ public class SnapshotRecorder implements AutoCloseable {
 
     @Override
     public void close() {
-//        currentDirectorySnapshot.toFile().deleteOnExit();
-//        previousDirectorySnapshot.toFile().deleteOnExit();
         git.close();
         gitDirectory.toFile().deleteOnExit();
     }
