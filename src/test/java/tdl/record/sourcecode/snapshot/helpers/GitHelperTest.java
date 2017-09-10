@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -71,25 +73,43 @@ public class GitHelperTest {
         assertNotNull(ze);
         assertEquals(ze.getName(), "file1.txt");
     }
-    
+
     @Test
-    public void exportPatch() throws IOException, GitAPIException, Exception {
+    public void exportPatchAndApply() throws IOException, GitAPIException, Exception {
         File directory = folder.newFolder();
         Git git = Git.init().setDirectory(directory).call();
-        git.commit().setAll(true).setMessage("Commit").call();
-        List<DiffEntry> entries1 = GitHelper.exportDiff(git);
-        
-        assertEquals(0, entries1.size());
+        addAndCommit(git);
 
-        FileTestHelper.appendStringToFile(directory.toPath(), "file1.txt", "Test");
-        FileTestHelper.appendStringToFile(directory.toPath(), "file2.txt", "Test");
-        FileTestHelper.appendStringToFile(directory.toPath(), "file3.txt", "Test");
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            GitHelper.exportDiff(git, os);
+            assertTrue(os.toByteArray().length == 0);
+        }
+
+        FileTestHelper.appendStringToFile(directory.toPath(), "file1.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory.toPath(), "file2.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory.toPath(), "file3.txt", "Test\n");
+        addAndCommit(git);
+
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            GitHelper.exportDiff(git, os);
+            assertTrue(os.toByteArray().length > 0);
+        }
+
+        FileTestHelper.appendStringToFile(directory.toPath(), "file1.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory.toPath(), "file2.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory.toPath(), "file3.txt", "Test\n");
+        addAndCommit(git);
+
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            GitHelper.exportDiff(git, os);
+            assertTrue(os.toByteArray().length > 0);
+        }
+    }
+
+    private static void addAndCommit(Git git) throws GitAPIException {
         git.add()
                 .addFilepattern(".")
                 .call();
         git.commit().setAll(true).setMessage("Commit").call();
-
-        List<DiffEntry> entries2 = GitHelper.exportDiff(git);
-        assertEquals(3, entries2.size());
     }
 }
