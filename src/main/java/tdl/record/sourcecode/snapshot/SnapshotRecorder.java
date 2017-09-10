@@ -4,20 +4,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
-import org.apache.commons.io.FileUtils;
+
+import tdl.record.sourcecode.content.SourceCodeProvider;
 
 public class SnapshotRecorder implements AutoCloseable {
 
-    protected final Path directory;
+    protected final SourceCodeProvider sourceCodeProvider;
 
     private Path currentDirectorySnapshot;
 
     private Path previousDirectorySnapshot;
 
     private int counter = 0;
+    private int keySnapshotPacing;
 
-    public SnapshotRecorder(Path directory) {
-        this.directory = directory;
+    public SnapshotRecorder(SourceCodeProvider sourceCodeProvider, int keySnapshotPacing) {
+        this.sourceCodeProvider = sourceCodeProvider;
+        this.keySnapshotPacing = keySnapshotPacing;
     }
 
     public Snapshot takeSnapshot() throws IOException {
@@ -36,10 +39,7 @@ public class SnapshotRecorder implements AutoCloseable {
 
     private void createCurrentDirectorySnapshot() throws IOException {
         currentDirectorySnapshot = createTmpDirectory();
-        FileUtils.copyDirectory(
-                directory.toFile(),
-                currentDirectorySnapshot.toFile()
-        );
+        sourceCodeProvider.retrieveAndSaveTo(currentDirectorySnapshot);
     }
 
     private void moveCurrentDirectoryAsPrevious() {
@@ -50,18 +50,18 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     private static Path createTmpDirectory() throws IOException {
-        return Files.createTempDirectory("tmp", new FileAttribute<?>[]{});
+        return Files.createTempDirectory("tmp");
     }
 
     private boolean shouldTakeSnapshot() {
-        return counter % 5 == 0;
+        return counter % keySnapshotPacing == 0;
     }
 
-    public KeySnapshot takeKeySnapshot() throws IOException {
+    private KeySnapshot takeKeySnapshot() throws IOException {
         return KeySnapshot.takeSnapshotFromDirectory(currentDirectorySnapshot);
     }
 
-    public PatchSnapshot takePatchSnapshot() throws IOException {
+    private PatchSnapshot takePatchSnapshot() throws IOException {
         return PatchSnapshot.takeSnapshotFromDirectories(
                 previousDirectorySnapshot,
                 currentDirectorySnapshot
