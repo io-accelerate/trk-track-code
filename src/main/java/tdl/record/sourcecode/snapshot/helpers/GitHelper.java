@@ -2,6 +2,7 @@ package tdl.record.sourcecode.snapshot.helpers;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import org.eclipse.jgit.api.Git;
@@ -55,5 +56,11 @@ public class GitHelper {
                     .setOutputStream(outputStream)
                     .call();
         }
+    }
+
+    public static void applyDiff(Git git, InputStream inputStream) throws Exception {
+        git.apply()
+                .setPatch(inputStream)
+                .call();
     }
 }

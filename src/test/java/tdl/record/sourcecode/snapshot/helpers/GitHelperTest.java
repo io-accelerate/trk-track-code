@@ -1,7 +1,9 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -111,5 +113,47 @@ public class GitHelperTest {
                 .addFilepattern(".")
                 .call();
         git.commit().setAll(true).setMessage("Commit").call();
+    }
+
+    @Test
+    public void applyPatch() throws IOException, GitAPIException, Exception {
+        File directory1 = folder.newFolder();
+        File directory2 = folder.newFolder();
+
+        Git git1 = Git.init().setDirectory(directory1).call();
+        addAndCommit(git1);
+
+        Git git2 = Git.init().setDirectory(directory2).call();
+        addAndCommit(git2);
+
+        FileTestHelper.appendStringToFile(directory1.toPath(), "file1.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory1.toPath(), "file2.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory1.toPath(), "file3.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory2.toPath(), "file1.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory2.toPath(), "file2.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory2.toPath(), "file3.txt", "Test\n");
+
+        addAndCommit(git1);
+        addAndCommit(git2);
+
+        FileTestHelper.appendStringToFile(directory1.toPath(), "file1.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory1.toPath(), "file2.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory1.toPath(), "file3.txt", "Test\n");
+
+        addAndCommit(git1);
+
+        byte[] diff;
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            GitHelper.exportDiff(git1, os);
+            diff = os.toByteArray();
+        }
+
+        try (ByteArrayInputStream is = new ByteArrayInputStream(diff)) {
+            GitHelper.applyDiff(git2, is);
+        }
+        FileFilter filter = (file) -> {
+            return !file.getAbsolutePath().contains(".git/");
+        };
+        assertTrue(FileTestHelper.isDirectoryEquals(directory1.toPath(), directory2.toPath(), filter));
     }
 }

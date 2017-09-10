@@ -1,5 +1,6 @@
 package tdl.record.sourcecode.test;
 
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -14,25 +15,34 @@ import org.apache.commons.io.FileUtils;
 
 public class FileTestHelper {
 
-    public static boolean isDirectoryEquals(Path dir1, Path dir2) {
+    public static boolean isDirectoryEquals(Path dir1, Path dir2, FileFilter filter) {
         try {
 //            System.out.println(dir1);
 //            System.out.println("===========================");
-            String checksum1 = createDirectoryChecksum(dir1);
+            String checksum1 = createDirectoryChecksum(dir1, filter);
 //            System.out.println(dir2);
 //            System.out.println("===========================");
-            String checksum2 = createDirectoryChecksum(dir2);
+            String checksum2 = createDirectoryChecksum(dir2, filter);
             return checksum1.equals(checksum2);
         } catch (IOException ex) {
             return false;
         }
     }
 
+    public static boolean isDirectoryEquals(Path dir1, Path dir2) {
+        return isDirectoryEquals(dir1, dir2, null);
+    }
+
     public static String createDirectoryChecksum(Path directory) throws IOException {
+        return createDirectoryChecksum(directory, null);
+    }
+
+    public static String createDirectoryChecksum(Path directory, FileFilter filter) throws IOException {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             String aggregateChecksum = Files.walk(directory)
                     .filter(file -> file.toFile().isFile())
+                    .filter(file -> filter == null ? true : filter.accept(file.toFile()))
                     .sorted((file1, file2)
                             -> file1.toAbsolutePath()
                             .compareTo(file2.toAbsolutePath())
