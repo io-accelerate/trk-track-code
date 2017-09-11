@@ -11,6 +11,12 @@
 
 ## Running
 
+Recording a folder
 ```
-java -jar build/libs/dev-sourcecode-record-all.jar <dir> <output>
+java -jar build/libs/dev-sourcecode-record-all.jar record --source xyz --output snapshot.srcs
+```
+
+Converting to Git
+```
+java -jar build/libs/dev-sourcecode-record-all.jar convert-to-git --in snapshot.srcs --out ./xyz
 ```

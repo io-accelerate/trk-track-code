@@ -1,6 +1,6 @@
 package tdl.record.sourcecode.record;
 
-class SourceCodeRecorderException extends Exception {
+public class SourceCodeRecorderException extends Exception {
     SourceCodeRecorderException(String message, Throwable cause) {
         super(message, cause);
     }

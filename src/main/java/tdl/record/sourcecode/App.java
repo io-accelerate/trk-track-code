@@ -5,10 +5,11 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
 
 public class App {
 
-    public static void main(final String[] argv) throws IOException, InterruptedException {
+    public static void main(final String[] argv) throws IOException, InterruptedException, SourceCodeRecorderException {
         RecordCommand record = new RecordCommand();
         ConvertToGitCommand open = new ConvertToGitCommand();
         App app = new App();
