@@ -23,15 +23,13 @@ public class DirectoryDiffUtils {
     public static List<String> getRelativeFilePathList(Path directory) {
         File dir = directory.toFile();
         if (!dir.isDirectory()) {
-            throw new RuntimeException("Path " + dir.getName() + " is not directory");
+            throw new RuntimeException("Path " + dir.getName() + " is not sourceCodeProvider");
         }
         Collection<File> files = FileUtils.listFiles(dir, TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
 
         List<String> result = files
                 .stream()
-                .map(file -> {
-                    return createRelativeUrl(dir, file);
-                })
+                .map(file -> createRelativeUrl(dir, file))
                 .collect(Collectors.toList());
 
         Collections.sort(result);
@@ -42,7 +40,7 @@ public class DirectoryDiffUtils {
         return base.toURI().relativize(file.toURI()).getPath();
     }
 
-    public static List<String> getUnionRelativeFilePathList(Path directory1, Path directory2) {
+    static List<String> getUnionRelativeFilePathList(Path directory1, Path directory2) {
         List<String> list1 = getRelativeFilePathList(directory1);
         List<String> list2 = getRelativeFilePathList(directory2);
         Set<String> set = new HashSet<>();
@@ -62,11 +60,11 @@ public class DirectoryDiffUtils {
                 ));
         Map<String, Patch> filteredMap = map.entrySet().stream()
                 .filter(p -> !p.getValue().getDeltas().isEmpty())
-                .collect(Collectors.toMap(p -> p.getKey(), p -> p.getValue()));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new DirectoryPatch(filteredMap);
     }
 
-    public static Patch diffFiles(Path original, Path revised) throws IOException {
+    static Patch diffFiles(Path original, Path revised) throws IOException {
         File file1 = original.toFile();
         throwIsNotValidForDiff(file1);
 
@@ -138,6 +136,6 @@ public class DirectoryDiffUtils {
                 throw new RuntimeException("Cannot read file: " + file.getName(), ex);
             }
         }
-        throw new RuntimeException("File " + file.getName() + "is a directory");
+        throw new RuntimeException("File " + file.getName() + "is a sourceCodeProvider");
     }
 }

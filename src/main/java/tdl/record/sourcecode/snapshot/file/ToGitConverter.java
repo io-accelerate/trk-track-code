@@ -64,7 +64,7 @@ public class ToGitConverter {
             throw new IOException("Directory not found");
         }
         if (!dir.isDirectory()) {
-            throw new IOException("No directory found.");
+            throw new IOException("No sourceCodeProvider found.");
         }
     }
 }

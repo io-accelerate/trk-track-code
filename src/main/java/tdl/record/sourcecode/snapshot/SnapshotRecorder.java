@@ -5,28 +5,49 @@ import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+
+import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 
 public class SnapshotRecorder implements AutoCloseable {
 
-    public static int DEFAULT_SNAPSHOT_STEP = 5;
-
-    protected final Path directory;
-
-    private Path gitDirectory;
+    protected final SourceCodeProvider sourceCodeProvider;
 
     private Git git;
 
+    private Path directory;
+
+    private Path gitDirectory;
+
     private int counter = 0;
 
-    public SnapshotRecorder(Path directory) {
-        this.directory = directory;
+    private final int keySnapshotPacing;
+
+    public SnapshotRecorder(SourceCodeProvider sourceCodeProvider, int keySnapshotPacing) {
+        this.sourceCodeProvider = sourceCodeProvider;
+        this.keySnapshotPacing = keySnapshotPacing;
+        initTempDirectory();
         initGitDirectory();
+    }
+
+    private void initTempDirectory() {
+        try {
+            File sysTmpDir = FileUtils.getTempDirectory();
+            directory = Files.createTempDirectory(
+                    sysTmpDir.toPath(),
+                    getClass().getSimpleName()
+            );
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private void initGitDirectory() {
@@ -52,6 +73,8 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     public void syncToGitDirectory() throws IOException {
+        FileUtils.cleanDirectory(directory.toFile());
+        sourceCodeProvider.retrieveAndSaveTo(directory);
         copyToGitDirectory();
         removeDeletedFileInOriginal();
     }
@@ -111,19 +134,20 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     private boolean shouldTakeSnapshot() {
-        return counter % DEFAULT_SNAPSHOT_STEP == 0;
+        return counter % keySnapshotPacing == 0;
     }
 
-    public KeySnapshot takeKeySnapshot() throws IOException {
+    private KeySnapshot takeKeySnapshot() throws IOException {
         return KeySnapshot.takeSnapshotFromGit(git);
     }
 
-    public PatchSnapshot takePatchSnapshot() throws IOException {
+    private PatchSnapshot takePatchSnapshot() throws IOException {
         return PatchSnapshot.takeSnapshotFromGit(git);
     }
 
     @Override
     public void close() {
+        directory.toFile().deleteOnExit();
         git.close();
         gitDirectory.toFile().deleteOnExit();
     }

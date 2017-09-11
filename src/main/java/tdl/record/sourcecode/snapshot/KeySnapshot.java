@@ -36,16 +36,6 @@ public class KeySnapshot extends Snapshot {
         return snapshot;
     }
 
-    public void restoreSnapshot(Path destinationDirectory) throws IOException {
-        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(data))) {
-            ZipEntry entry;
-            while ((entry = zip.getNextEntry()) != null) {
-                File file = new File(destinationDirectory.toFile(), entry.getName());
-                FileUtils.copyToFile(zip, file);
-            }
-        }
-    }
-
     @Override
     public void restoreSnapshot(Git git) throws Exception {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
@@ -53,7 +43,7 @@ public class KeySnapshot extends Snapshot {
             unzip(inputStream, outputDir);
         }
     }
-    
+
     public static int ZIP_BUFFER_SIZE = 1024;
 
     public static void unzip(InputStream inputStream, File outputDir) {

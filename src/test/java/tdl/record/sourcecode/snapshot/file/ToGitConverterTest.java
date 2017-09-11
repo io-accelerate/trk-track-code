@@ -5,13 +5,14 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.apache.commons.codec.binary.Hex;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 
 public class ToGitConverterTest {
 
@@ -37,7 +38,8 @@ public class ToGitConverterTest {
     }
 
     private void createRandomSnapshot(Path snapshotFile, Path workDir) throws IOException, InterruptedException {
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, workDir, false)) {
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, sourceCodeProvider, 5, false)) {
             writer.takeSnapshot();
             Thread.sleep(1000);
 

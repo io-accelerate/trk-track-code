@@ -18,6 +18,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.test.FileTestHelper;
 
 public class SnapshotRecorderTest {
@@ -30,33 +31,33 @@ public class SnapshotRecorderTest {
         Path directory = Paths.get("./src/test/resources/diff/test1/dir1/");
         Path tmpDir = folder.getRoot().toPath();
         FileUtils.copyDirectory(directory.toFile(), tmpDir.toFile());
-        SnapshotRecorder recorder = new SnapshotRecorder(tmpDir);
+        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
 
         Snapshot snapshot1 = recorder.takeSnapshot();
         assertTrue(snapshot1 instanceof KeySnapshot);
         printSnapshot(snapshot1);
 
-        appendString(tmpDir, "file1.txt", "\ndata1");
+        FileTestHelper.appendStringToFile(tmpDir, "file1.txt", "\ndata1");
         Snapshot snapshot2 = recorder.takeSnapshot();
         assertTrue(snapshot2 instanceof PatchSnapshot);
         printSnapshot(snapshot2);
 
-        appendString(tmpDir, "file2.txt", "\nLOREM");
+        FileTestHelper.appendStringToFile(tmpDir, "file2.txt", "\nLOREM");
         Snapshot snapshot3 = recorder.takeSnapshot();
         assertTrue(snapshot3 instanceof PatchSnapshot);
         printSnapshot(snapshot3);
 
-        appendString(tmpDir, "subdir1/file1.txt", "\nIPSUM");
+        FileTestHelper.appendStringToFile(tmpDir, "subdir1/file1.txt", "\nIPSUM");
         Snapshot snapshot4 = recorder.takeSnapshot();
         assertTrue(snapshot4 instanceof PatchSnapshot);
         printSnapshot(snapshot4);
 
-        appendString(tmpDir, "subdir1/file1.txt", "SIT");
+        FileTestHelper.appendStringToFile(tmpDir, "subdir1/file1.txt", "SIT");
         Snapshot snapshot5 = recorder.takeSnapshot();
         assertTrue(snapshot5 instanceof PatchSnapshot);
         printSnapshot(snapshot5);
 
-        appendString(tmpDir, "subdir1/file1.txt", "AMENT");
+        FileTestHelper.appendStringToFile(tmpDir, "subdir1/file1.txt", "AMENT");
         Snapshot snapshot6 = recorder.takeSnapshot();
         assertTrue(snapshot6 instanceof KeySnapshot);
         printSnapshot(snapshot6);
@@ -67,23 +68,24 @@ public class SnapshotRecorderTest {
         //do nothing
     }
 
-    private static void appendString(Path dir, String path, String data) throws IOException {
-        FileUtils.writeStringToFile(dir.resolve(path).toFile(), data, Charset.defaultCharset(), true);
+    private SnapshotRecorder createDefaultRecorder(Path tmpDir) {
+        return new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
     }
 
     @Test
     public void constructShouldCreateGitDirectory() {
         Path tmpDir = folder.getRoot().toPath();
-        SnapshotRecorder recorder = new SnapshotRecorder(tmpDir);
-        Path gitDir = recorder.getGitDirectory();
-        assertTrue(gitDir.toFile().exists());
-        assertTrue(gitDir.resolve(".git").toFile().exists());
+        try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
+            Path gitDir = recorder.getGitDirectory();
+            assertTrue(gitDir.toFile().exists());
+            assertTrue(gitDir.resolve(".git").toFile().exists());
+        }
     }
 
     @Test
     public void syncToGitDirectoryShouldCopyDirectory() throws IOException {
         Path tmpDir = folder.getRoot().toPath();
-        try (SnapshotRecorder recorder = new SnapshotRecorder(tmpDir)) {
+        try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
 
             assertFalse(gitDir.resolve("file1.txt").toFile().exists());
@@ -115,7 +117,7 @@ public class SnapshotRecorderTest {
     @Test
     public void syncToGitDirectoryShouldCopyDirectoryWithDotGitignore() throws IOException {
         Path tmpDir = folder.getRoot().toPath();
-        try (SnapshotRecorder recorder = new SnapshotRecorder(tmpDir)) {
+        try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
 
             assertFalse(gitDir.resolve(".gitignore").toFile().exists());
@@ -129,7 +131,7 @@ public class SnapshotRecorderTest {
     @Test
     public void syncToGitDirectoryShouldCopyDirectoryWithoutDotGitDirectory() throws IOException, GitAPIException {
         Path tmpDir = folder.getRoot().toPath();
-        try (SnapshotRecorder recorder = new SnapshotRecorder(tmpDir)) {
+        try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
 
             assertFalse(tmpDir.resolve(".git").toFile().exists());
@@ -146,7 +148,7 @@ public class SnapshotRecorderTest {
     @Test
     public void commitAllChanges() throws Exception {
         Path tmpDir = folder.getRoot().toPath();
-        try (SnapshotRecorder recorder = new SnapshotRecorder(tmpDir)) {
+        try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Git git = recorder.getGit();
 
             assertEquals(1, getCommitCount(git));
@@ -156,7 +158,7 @@ public class SnapshotRecorderTest {
             recorder.syncToGitDirectory();
             recorder.commitAllChanges();
             assertEquals(2, getCommitCount(git));
-            
+
             recorder.commitAllChanges();
             assertEquals(3, getCommitCount(git));
         }
