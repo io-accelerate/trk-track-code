@@ -6,14 +6,21 @@ import java.util.concurrent.TimeUnit;
 
 public class FakeTimeSource implements TimeSource {
     private long currentTimeNano;
+    private long incrementNanos;
 
     public FakeTimeSource() {
-        currentTimeNano = 0;
+        this(1);
     }
+
+    public FakeTimeSource(long incrementNanos) {
+        currentTimeNano = 0;
+        this.incrementNanos = incrementNanos;
+    }
+
 
     @Override
     public long currentTimeNano() {
-        currentTimeNano++;
+        currentTimeNano += incrementNanos;
         return currentTimeNano;
     }
 

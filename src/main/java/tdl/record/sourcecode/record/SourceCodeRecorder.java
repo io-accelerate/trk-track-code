@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import tdl.record.sourcecode.App;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileWriter;
-import tdl.record.sourcecode.time.SystemTimeSource;
+import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 import tdl.record.sourcecode.time.TimeSource;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ public class SourceCodeRecorder {
         public Builder(SourceCodeProvider sourceCodeProvider, Path outputRecordingFilePath) {
             bSourceCodeProvider = sourceCodeProvider;
             bOutputRecordingFilePath = outputRecordingFilePath;
-            bTimeSource = new SystemTimeSource();
+            bTimeSource = new SystemMonotonicTimeSource();
             bSnapshotIntervalMillis = TimeUnit.MINUTES.toMillis(5);
             bKeySnapshotSpacing = 5;
         }
@@ -92,7 +92,9 @@ public class SourceCodeRecorder {
         try {
             Files.write(lockFilePath, new byte[0], CREATE);
             //TODO Initialise inside constructor once SnapshotsFileWriter::new is free from exceptions
-            writer = new SnapshotsFileWriter(outputRecordingFilePath, sourceCodeProvider, keySnapshotSpacing, true);
+            writer = new SnapshotsFileWriter(
+                    outputRecordingFilePath, sourceCodeProvider,
+                    timeSource, keySnapshotSpacing, true);
         } catch (IOException e) {
             throw new SourceCodeRecorderException("Failed to open destination", e);
         }

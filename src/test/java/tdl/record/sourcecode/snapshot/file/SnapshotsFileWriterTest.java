@@ -8,7 +8,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
+import tdl.record.sourcecode.time.TimeSource;
 
 public class SnapshotsFileWriterTest {
 
@@ -26,7 +28,8 @@ public class SnapshotsFileWriterTest {
         FileUtils.copyDirectory(dirPath.toFile(), sourceDir.toFile());
 
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(sourceDir);
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, 5, false)) {
+        TimeSource timeSource = new FakeTimeSource();
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, timeSource, 5, false)) {
             writer.takeSnapshot();
 
             appendString(sourceDir, "file1.txt", "\nLOREM");

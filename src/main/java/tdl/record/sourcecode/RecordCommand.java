@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 import lombok.extern.slf4j.Slf4j;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileWriter;
-import tdl.record.sourcecode.time.SystemTimeSource;
+import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 import tdl.record.sourcecode.time.TimeSource;
 
 @Parameters
@@ -41,7 +41,8 @@ class RecordCommand {
 
     void run() throws IOException, InterruptedException {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(dirPath));
-        writer = new SnapshotsFileWriter(Paths.get(outputPath), sourceCodeProvider, 5, append);
+        TimeSource timeSource = new SystemMonotonicTimeSource();
+        writer = new SnapshotsFileWriter(Paths.get(outputPath), sourceCodeProvider, timeSource, 5, append);
         if (isOneTime) {
             runOneTime();
         } else {
@@ -55,7 +56,7 @@ class RecordCommand {
 
     private void runContinuous() throws InterruptedException {
         registerSigtermHandler();
-        TimeSource timeSource = new SystemTimeSource();
+        TimeSource timeSource = new SystemMonotonicTimeSource();
         Integer timeBetweenFramesMillis = delay;
 
         //noinspection InfiniteLoopStatement

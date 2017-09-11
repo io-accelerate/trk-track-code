@@ -1,8 +1,9 @@
 package acceptance;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.junit.Assert;
+import org.hamcrest.Description;
+import org.hamcrest.Matcher;
+import org.hamcrest.TypeSafeMatcher;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -13,9 +14,9 @@ import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
+import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
+import tdl.record.sourcecode.snapshot.helpers.DirectoryPatch;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,68 +27,54 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
+import static tdl.record.sourcecode.snapshot.file.SnapshotFileSegment.TYPE_KEY;
 
 public class CanRecordSourceCodeAccTest {
 
     @Rule
-    public TemporaryFolder sourceCodeFolder = new TemporaryFolder();
-
-    @Rule
-    public TemporaryFolder outputFolder = new TemporaryFolder();
+    public TemporaryFolder testFolder = new TemporaryFolder();
 
     @Test
     public void should_be_able_to_record_history_at_a_given_rate() throws Exception {
-        Path outputFilePath = outputFolder.newFile("output.srcs").toPath();
+        Path outputFilePath = testFolder.newFile("output.srcs").toPath();
 
-        // TODO Add more events including subfolder
-        List<SourceCodeProvider> events = Arrays.asList(
+        List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
                 dst -> writeTextFile(dst, "test1.txt", "TEST1"),
                 dst -> writeTextFile(dst, "test1.txt", "TEST1TEST2"),
                 dst -> writeTextFile(dst, "test2.txt", "TEST1TEST2"),
+                dst -> {
+                    writeTextFile(dst, "test2.txt", "TEST1TEST2");
+                    writeTextFile(dst, "subdir/test3.txt", "TEST3");
+                },
                 dst ->  { /* Empty folder */ });
 
         // TODO Change the KeySnapshotSpacing to be greater than 1
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder
-                .Builder(new MultiStepSourceCodeProvider(events), outputFilePath)
+                .Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
                 .withKeySnapshotSpacing(1)
                 .build();
-        sourceCodeRecorder.start(Duration.of(events.size(), ChronoUnit.SECONDS));
+        sourceCodeRecorder.start(Duration.of(sourceCodeHistory.size(), ChronoUnit.SECONDS));
         sourceCodeRecorder.close();
 
-        // Verify snapshot content
-        // TODO Assert on the timestamps and on the type of SNAPSHOT ( KEY / PATCH )
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             List<SnapshotFileSegment> snapshots = reader.getSnapshots();
-            Assert.assertEquals(4, snapshots.size());
-
-            String content1 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(0).data);
-            Assert.assertEquals("TEST1", content1);
-
-            String content2 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(1).data);
-            Assert.assertEquals("TEST1TEST2", content2);
-
-            String content3 = getFileContentFromZipByteArray("/test1.txt", snapshots.get(2).data);
-            Assert.assertNull(content3);
-
-            String content4 = getFileContentFromZipByteArray("/test2.txt", snapshots.get(2).data);
-            Assert.assertEquals("TEST1TEST2", content4);
-
-            String content5 = getFileContentFromZipByteArray("/test2.txt", snapshots.get(3).data);
-            Assert.assertNull(content5);
+            assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY), snapshots);
+            assertContentMatches(sourceCodeHistory, snapshots);
+            assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
         }
     }
 
     @Test
     public void should_minimize_the_size_of_the_stream() throws Exception {
-        Path onlyKeySnapshotsPath = outputFolder.newFile("only_key_snapshots.bin").toPath();
-        Path patchesAndKeySnapshotsPath = outputFolder.newFile("patches_and_snapshots.bin").toPath();
+        Path onlyKeySnapshotsPath = testFolder.newFile("only_key_snapshots.bin").toPath();
+        Path patchesAndKeySnapshotsPath = testFolder.newFile("patches_and_snapshots.bin").toPath();
 
         Path staticFolder = Paths.get("./src/test/resources/large_folder");
         int numberOfSnapshots = 10;
@@ -110,17 +97,62 @@ public class CanRecordSourceCodeAccTest {
         FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
     }
 
+    private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<SnapshotFileSegment> actualSnapshots) {
+        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.type)
+                .collect(Collectors.toList());
+        assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
+    }
 
-    private String getFileContentFromZipByteArray(String path, byte[] bytes) throws IOException {
-        ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(bytes));
-        ZipEntry entry;
-        while ((entry = zip.getNextEntry()) != null) {
-            if (entry.getName().equals(path)) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                IOUtils.copy(zip, out);
-                return out.toString();
-            }
+    private void assertContentMatches(List<SourceCodeProvider> sourceCodeHistory, List<SnapshotFileSegment> snapshots) {
+        assertThat(snapshots.size(), equalTo(sourceCodeHistory.size()));
+        for (int i = 0; i < snapshots.size(); i++) {
+            //noinspection ConstantConditions
+            assertThat("Data of snapshot "+i,
+                    snapshots.get(i), hasSameData(sourceCodeHistory.get(i)));
         }
-        return null;
+    }
+
+    private Matcher<SnapshotFileSegment> hasSameData(SourceCodeProvider sourceCodeProvider) {
+        return new TypeSafeMatcher<SnapshotFileSegment>() {
+
+            private Path actual;
+            private Path expected;
+
+            @Override
+            protected boolean matchesSafely(SnapshotFileSegment snapshotSegment) {
+                try {
+                    expected = testFolder.newFolder().toPath();
+                    actual = testFolder.newFolder().toPath();
+
+                    sourceCodeProvider.retrieveAndSaveTo(expected);
+                    snapshotSegment.getSnapshot().restoreSnapshot(actual);
+                    DirectoryPatch patch = DirectoryDiffUtils.diffDirectories(expected, actual);
+
+                    return patch.getPatches().isEmpty();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("Matches the contents of the corresponding event");
+            }
+
+            @Override
+            protected void describeMismatchSafely(SnapshotFileSegment snapshotSegment, Description mismatchDescription) {
+                mismatchDescription.appendText("there differences detected:\n");
+                mismatchDescription.appendText("expected: ").appendText(expected.toString()).appendText("\n");
+                mismatchDescription.appendText("actual:   ").appendText(actual.toString());
+            }
+        };
+    }
+
+    private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<SnapshotFileSegment> snapshots) {
+        for (int i = 0; i < snapshots.size(); i++) {
+            assertThat("Timestamp of snapshot "+i,
+                    (double)snapshots.get(i).timestamp, closeTo(unit.toSeconds(time*i), 0.01));
+        }
     }
 }

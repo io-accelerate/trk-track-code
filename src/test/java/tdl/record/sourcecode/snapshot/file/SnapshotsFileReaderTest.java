@@ -1,18 +1,22 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import org.apache.commons.io.FileUtils;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
+import tdl.record.sourcecode.time.TimeSource;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.*;
 
 public class SnapshotsFileReaderTest {
 
@@ -29,7 +33,9 @@ public class SnapshotsFileReaderTest {
         outputFilePath = sourceFolder.newFile("output.bin").toPath();
         Path destinationFolderPath = destinationFolder.getRoot().toPath();
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(destinationFolderPath);
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(outputFilePath, sourceCodeProvider, 5, true)) {
+        TimeSource timeSource = new FakeTimeSource(TimeUnit.SECONDS.toNanos(1));
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(
+                outputFilePath, sourceCodeProvider, timeSource, 5, true)) {
 
             File newFile1 = destinationFolder.newFile("test1.txt");
             FileUtils.writeStringToFile(newFile1, "TEST1", StandardCharsets.US_ASCII);
@@ -52,24 +58,16 @@ public class SnapshotsFileReaderTest {
     public void next() throws IOException {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
-            SnapshotFileSegment snapshot1 = reader.next();
-            assertTrue(getTimestamp() - snapshot1.timestamp < 60);
+            assertThat(reader.next().timestamp, equalTo(1L));
 
             assertTrue(reader.hasNext());
-            SnapshotFileSegment snapshot2 = reader.next();
-            assertTrue(getTimestamp() - snapshot2.timestamp < 60);
+            assertThat(reader.next().timestamp, equalTo(2L));
 
             assertTrue(reader.hasNext());
-            SnapshotFileSegment snapshot3 = reader.next();
-            assertTrue(getTimestamp() - snapshot3.timestamp < 60);
+            assertThat(reader.next().timestamp, equalTo(3L));
 
             assertFalse(reader.hasNext());
         }
-    }
-
-    private int getTimestamp() {
-        Long unixTimestamp = System.currentTimeMillis() / 1000L;
-        return unixTimestamp.intValue();
     }
 
     @Test
@@ -77,15 +75,13 @@ public class SnapshotsFileReaderTest {
 
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             assertTrue(reader.hasNext());
-            SnapshotFileSegment snapshot1 = reader.next();
-            assertTrue(getTimestamp() - snapshot1.timestamp < 60);
+            assertThat(reader.next().timestamp, equalTo(1L));
 
             assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-            SnapshotFileSegment snapshot3 = reader.next();
-            assertTrue(getTimestamp() - snapshot3.timestamp < 60);
+            assertThat(reader.next().timestamp, equalTo(3L));
 
             assertFalse(reader.hasNext());
         }

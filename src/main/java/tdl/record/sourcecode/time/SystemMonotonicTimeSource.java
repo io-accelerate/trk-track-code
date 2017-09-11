@@ -5,13 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-public class SystemTimeSource implements TimeSource {
+public class SystemMonotonicTimeSource implements TimeSource {
+    private final long referenceTime;
+
+    public SystemMonotonicTimeSource() {
+        referenceTime = System.nanoTime();
+    }
 
     @Override
     public long currentTimeNano() {
-        return System.nanoTime();
+        return System.nanoTime() - referenceTime;
     }
-
 
     @Override
     public void wakeUpAt(long timestamp, TimeUnit timeUnit) throws InterruptedException {
