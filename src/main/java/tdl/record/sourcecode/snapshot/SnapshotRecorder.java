@@ -11,19 +11,20 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
+import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 
 public class SnapshotRecorder implements AutoCloseable {
 
     protected final SourceCodeProvider sourceCodeProvider;
 
     private Git git;
-
-    private Path directory;
 
     private Path gitDirectory;
 
@@ -34,20 +35,7 @@ public class SnapshotRecorder implements AutoCloseable {
     public SnapshotRecorder(SourceCodeProvider sourceCodeProvider, int keySnapshotPacing) {
         this.sourceCodeProvider = sourceCodeProvider;
         this.keySnapshotPacing = keySnapshotPacing;
-        initTempDirectory();
         initGitDirectory();
-    }
-
-    private void initTempDirectory() {
-        try {
-            File sysTmpDir = FileUtils.getTempDirectory();
-            directory = Files.createTempDirectory(
-                    sysTmpDir.toPath(),
-                    getClass().getSimpleName()
-            );
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     private void initGitDirectory() {
@@ -73,34 +61,15 @@ public class SnapshotRecorder implements AutoCloseable {
     }
 
     public void syncToGitDirectory() throws IOException {
-        FileUtils.cleanDirectory(directory.toFile());
-        sourceCodeProvider.retrieveAndSaveTo(directory);
-        copyToGitDirectory();
-        removeDeletedFileInOriginal();
+        cleanGitDirectory();
+        sourceCodeProvider.retrieveAndSaveTo(gitDirectory);
     }
 
-    private void copyToGitDirectory() throws IOException {
-        FileFilter filter = (file) -> {
-            Path relative = directory.relativize(file.toPath());
-            return !((file.isDirectory() && relative.equals(".git"))
-                    || relative.startsWith(".git/"));
-        };
-        FileUtils.copyDirectory(directory.toFile(), gitDirectory.toFile(), filter);
-    }
-
-    private void removeDeletedFileInOriginal() {
-        List<String> files = DirectoryDiffUtils.getRelativeFilePathList(gitDirectory);
-        files.stream().forEach((path) -> {
-            if (path.startsWith(".git")) {
-                return;
-            }
-            File file = gitDirectory.resolve(path).toFile();
-            boolean isExists = file.exists()
-                    && !directory.resolve(path).toFile().exists();
-            if (isExists) {
-                file.delete();
-            }
-        });
+    private void cleanGitDirectory() {
+        IOFileFilter filter = new ExcludeGitDirectoryFileFilter(gitDirectory);
+        FileUtils.listFiles(gitDirectory.toFile(), filter, TrueFileFilter.INSTANCE)
+                .stream()
+                .forEach(File::delete);
     }
 
     public void commitAllChanges() {
@@ -147,7 +116,6 @@ public class SnapshotRecorder implements AutoCloseable {
 
     @Override
     public void close() {
-        directory.toFile().deleteOnExit();
         git.close();
         gitDirectory.toFile().deleteOnExit();
     }
