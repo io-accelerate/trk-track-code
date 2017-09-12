@@ -33,21 +33,22 @@ public class KeySnapshotTest {
 
         FileTestHelper.appendStringToFile(directory1.toPath(), "file1.txt", "Test\n");
         FileTestHelper.appendStringToFile(directory1.toPath(), "file2.txt", "Test\n");
-        FileTestHelper.appendStringToFile(directory1.toPath(), "file3.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory1.toPath(), "subdir1/file3.txt", "Test\n");
+        
         FileTestHelper.appendStringToFile(directory2.toPath(), "file1.txt", "Test\n");
         FileTestHelper.appendStringToFile(directory2.toPath(), "file2.txt", "Test\n");
-        FileTestHelper.appendStringToFile(directory2.toPath(), "file3.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory2.toPath(), "subdir1/file3.txt", "Test\n");
 
         GitTestHelper.addAndCommit(git1);
         GitTestHelper.addAndCommit(git2);
 
         FileTestHelper.appendStringToFile(directory1.toPath(), "file1.txt", "Test\n");
         FileTestHelper.appendStringToFile(directory1.toPath(), "file2.txt", "Test\n");
-        FileTestHelper.appendStringToFile(directory1.toPath(), "file3.txt", "Test\n");
+        FileTestHelper.appendStringToFile(directory1.toPath(), "subdir1/file3.txt", "Test\n");
 
         GitTestHelper.addAndCommit(git1);
 
-        PatchSnapshot snapshot = PatchSnapshot.takeSnapshotFromGit(git1);
+        KeySnapshot snapshot = KeySnapshot.takeSnapshotFromGit(git1);
         snapshot.restoreSnapshot(git2);
 
         assertTrue(FileTestHelper.isDirectoryEqualsWithoutGit(directory1.toPath(), directory2.toPath()));

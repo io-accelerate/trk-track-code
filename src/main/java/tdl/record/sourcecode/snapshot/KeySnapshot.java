@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
@@ -39,7 +40,7 @@ public class KeySnapshot extends Snapshot {
     @Override
     public void restoreSnapshot(Git git) throws Exception {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
-            File outputDir = git.getRepository().getDirectory();
+            File outputDir = git.getRepository().getWorkTree();
             unzip(inputStream, outputDir);
         }
     }
@@ -47,19 +48,33 @@ public class KeySnapshot extends Snapshot {
     public static int ZIP_BUFFER_SIZE = 1024;
 
     public static void unzip(InputStream inputStream, File outputDir) {
+        Path outputPath = outputDir.toPath();
         try (ZipInputStream zis = new ZipInputStream(inputStream);) {
-            ZipEntry ze = zis.getNextEntry();
-            while (ze != null) {
-                String fileName = ze.getName();
-                File newFile = outputDir.toPath().resolve(fileName).toFile();
-                FileUtils.forceMkdirParent(newFile);
-                try (FileOutputStream output = new FileOutputStream(newFile)) {
-                    IOUtils.copy(inputStream, output, ZIP_BUFFER_SIZE);
-                }
-                ze = zis.getNextEntry();
+            ZipEntry entry;
+
+            while ((entry = zis.getNextEntry()) != null) {
+                extractEntry(zis, entry, outputPath);
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private static void extractEntry(ZipInputStream zis, ZipEntry entry, Path outputPath) throws IOException {
+        Path newFilePath = outputPath.resolve(entry.getName());
+        if (entry.isDirectory()) {
+            Files.createDirectories(newFilePath);
+            return;
+        }
+        if (!Files.exists(newFilePath.getParent())) {
+            Files.createDirectories(newFilePath.getParent());
+        }
+        try (OutputStream bos = Files.newOutputStream(newFilePath)) {
+            byte[] buffer = new byte[1024];
+            int location;
+            while ((location = zis.read(buffer)) != -1) {
+                bos.write(buffer, 0, location);
+            }
         }
     }
 }
