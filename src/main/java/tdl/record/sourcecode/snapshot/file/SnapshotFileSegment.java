@@ -3,6 +3,7 @@ package tdl.record.sourcecode.snapshot.file;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;

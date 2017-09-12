@@ -1,18 +1,21 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import support.time.FakeTimeSource;
+import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
+import tdl.record.sourcecode.time.TimeSource;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import static org.junit.Assert.assertTrue;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 
 public class ToGitConverterTest {
 
@@ -39,7 +42,8 @@ public class ToGitConverterTest {
 
     private void createRandomSnapshot(Path snapshotFile, Path workDir) throws IOException, InterruptedException {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, sourceCodeProvider, 5, false)) {
+        TimeSource timeSource = new FakeTimeSource();
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, sourceCodeProvider, timeSource, 5, false)) {
             writer.takeSnapshot();
             Thread.sleep(1000);
 
