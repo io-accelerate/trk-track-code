@@ -1,7 +1,6 @@
 package tdl.record.sourcecode.snapshot;
 
-import java.io.IOException;
-import java.nio.file.Path;
+import org.eclipse.jgit.api.Git;
 
 abstract public class Snapshot {
 
@@ -11,5 +10,5 @@ abstract public class Snapshot {
         return data;
     }
 
-    abstract public void restoreSnapshot(Path destinationDirectory) throws IOException;
+    abstract public void restoreSnapshot(Git git) throws Exception;
 }

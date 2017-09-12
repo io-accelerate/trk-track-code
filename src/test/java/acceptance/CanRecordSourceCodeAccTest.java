@@ -26,8 +26,10 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.eclipse.jgit.api.Git;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
@@ -51,11 +53,11 @@ public class CanRecordSourceCodeAccTest {
                     writeTextFile(dst, "test2.txt", "TEST1TEST2");
                     writeTextFile(dst, "subdir/test3.txt", "TEST3");
                 },
-                dst ->  { /* Empty folder */ });
+                dst -> {
+                    /* Empty folder */ });
 
         // TODO Change the KeySnapshotSpacing to be greater than 1
-        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder
-                .Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
+        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
                 .withKeySnapshotSpacing(1)
@@ -84,14 +86,13 @@ public class CanRecordSourceCodeAccTest {
                 numberOfSnapshots, 5);
 
         long onlyKeySizeKB = onlyKeySnapshotsPath.toFile().length() / 1000;
-        System.out.println("onlyKeySnapshots = " + onlyKeySizeKB+ " KB");
+        System.out.println("onlyKeySnapshots = " + onlyKeySizeKB + " KB");
         long patchesAndKeysSizeKB = patchesAndKeySnapshotsPath.toFile().length() / 1000;
         System.out.println("patchesAndKeySnapshots = " + patchesAndKeysSizeKB + " KB");
         assertThat("Size reduction", (int) (onlyKeySizeKB / patchesAndKeysSizeKB), equalTo(4));
     }
 
     //~~~~~ Helpers
-
     private void writeTextFile(Path destinationFolder, String childFile, String content) throws IOException {
         File newFile1 = destinationFolder.resolve(childFile).toFile();
         FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
@@ -107,7 +108,7 @@ public class CanRecordSourceCodeAccTest {
         assertThat(snapshots.size(), equalTo(sourceCodeHistory.size()));
         for (int i = 0; i < snapshots.size(); i++) {
             //noinspection ConstantConditions
-            assertThat("Data of snapshot "+i,
+            assertThat("Data of snapshot " + i,
                     snapshots.get(i), hasSameData(sourceCodeHistory.get(i)));
         }
     }
@@ -123,13 +124,17 @@ public class CanRecordSourceCodeAccTest {
                 try {
                     expected = testFolder.newFolder().toPath();
                     actual = testFolder.newFolder().toPath();
+                    Git git = Git.init().setDirectory(actual.toFile()).call();
 
                     sourceCodeProvider.retrieveAndSaveTo(expected);
-                    snapshotSegment.getSnapshot().restoreSnapshot(actual);
+                    snapshotSegment.getSnapshot().restoreSnapshot(git);
                     DirectoryPatch patch = DirectoryDiffUtils.diffDirectories(expected, actual);
-
-                    return patch.getPatches().isEmpty();
-                } catch (IOException e) {
+                    Map filtered = patch.getPatches().entrySet()
+                            .stream()
+                            .filter(map -> !map.getKey().startsWith(".git"))
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    return filtered.isEmpty();
+                } catch (Exception e) {
                     e.printStackTrace();
                     return false;
                 }
@@ -151,8 +156,8 @@ public class CanRecordSourceCodeAccTest {
 
     private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<SnapshotFileSegment> snapshots) {
         for (int i = 0; i < snapshots.size(); i++) {
-            assertThat("Timestamp of snapshot "+i,
-                    (double)snapshots.get(i).timestamp, closeTo(unit.toSeconds(time*i), 0.01));
+            assertThat("Timestamp of snapshot " + i,
+                    (double) snapshots.get(i).timestamp, closeTo(unit.toSeconds(time * i), 0.01));
         }
     }
 }

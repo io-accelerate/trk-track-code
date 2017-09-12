@@ -39,7 +39,7 @@ public class ToGitConverter {
     private void writeDirFromSnapshot(SnapshotFileSegment segment) throws IOException {
         //TODO: Check if not corrupt.
         Snapshot snapshot = segment.getSnapshot();
-        snapshot.restoreSnapshot(outputDir);
+        //snapshot.restoreSnapshot(outputDir);
     }
 
     private void commitDirectory(SnapshotFileSegment segment) throws GitAPIException {

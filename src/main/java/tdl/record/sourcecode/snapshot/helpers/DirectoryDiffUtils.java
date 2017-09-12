@@ -20,7 +20,7 @@ import org.apache.commons.io.filefilter.TrueFileFilter;
 
 public class DirectoryDiffUtils {
 
-    static List<String> getRelativeFilePathList(Path directory) {
+    public static List<String> getRelativeFilePathList(Path directory) {
         File dir = directory.toFile();
         if (!dir.isDirectory()) {
             throw new RuntimeException("Path " + dir.getName() + " is not sourceCodeProvider");
