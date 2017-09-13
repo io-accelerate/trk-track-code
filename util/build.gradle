@@ -1,0 +1,46 @@
+//~~~~ Settings for Gradle
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+    }
+
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+dependencies {
+    compile project(':dev-sourcecode-record-core')
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+group 'ro.ghionoiu'
+
+//noinspection GroovyUnusedAssignment
+targetCompatibility = JavaVersion.VERSION_1_8
+//noinspection GroovyUnusedAssignment
+sourceCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    jcenter()
+}
+
+// ~~~~~ Packaging
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
+mainClassName = "tdl.record.util.App"
+jar {
+    manifest {
+        attributes "Main-Class": "$mainClassName"
+    }
+}
