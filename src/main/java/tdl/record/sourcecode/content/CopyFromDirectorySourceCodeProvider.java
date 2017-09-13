@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.Status;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.NoWorkTreeException;
+import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.DepthWalk.RevWalk;
@@ -62,22 +66,48 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
         );
     }
 
-    private void walkGitAndCopyFiles(Path destinationFolder) throws IOException {
+    private void walkGitAndCopyFiles(Path destPath) throws IOException {
+        copyTree(git, destPath);
+        copyUntracked(git, destPath);
+    }
+
+    private static void copyTree(Git git, Path destPath) throws IOException {
         Repository repo = git.getRepository();
 
         TreeWalk treeWalk = createTreeWalkForCopying(repo);
-        File sourceFolder = repo.getWorkTree();
+        Path srcPath = repo.getWorkTree().toPath();
 
         while (treeWalk.next()) {
             String path = treeWalk.getPathString();
-            Path destFile = destinationFolder.resolve(path);
-            Path srcFile = sourceFolder.toPath().resolve(path);
-            FileUtils.copyFile(srcFile.toFile(), destFile.toFile());
+            copyFile(srcPath, destPath, path);
         }
     }
 
-    private TreeWalk createTreeWalkForCopying(Repository repo) throws IOException {
-        ObjectId lastCommitId = repo.resolve("master");
+    private static void copyUntracked(Git git, Path destPath) {
+        Path srcPath = git.getRepository().getWorkTree().toPath();
+        try {
+            Status status;
+            status = git.status().call();
+            status.getUntracked().stream().forEach((path) -> {
+                try {
+                    copyFile(srcPath, destPath, path);
+                } catch (IOException ex) {
+                    //Do nothing
+                }
+            });
+        } catch (GitAPIException | NoWorkTreeException ex) {
+            //Do nothing.
+        }
+    }
+
+    private static void copyFile(Path srcPath, Path destPath, String path) throws IOException {
+        Path destFile = destPath.resolve(path);
+        Path srcFile = srcPath.resolve(path);
+        FileUtils.copyFile(srcFile.toFile(), destFile.toFile());
+    }
+
+    private static TreeWalk createTreeWalkForCopying(Repository repo) throws IOException {
+        ObjectId lastCommitId = repo.resolve(Constants.HEAD);
         RevWalk revWalk = new RevWalk(repo, 1);
         RevCommit commit = revWalk.parseCommit(lastCommitId);
         RevTree tree = commit.getTree();

@@ -32,6 +32,8 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
         git.add().addFilepattern(".").call();
         git.commit().setMessage("commit1").call();
+        
+        FileTestHelper.appendStringToFile(originalPath, "subdir1/untracked.txt", "TEST");
 
         CopyFromDirectorySourceCodeProvider provider = new CopyFromDirectorySourceCodeProvider(originalPath);
         assertTrue(provider.isGit());
@@ -40,6 +42,7 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
         assertTrue(exists(actual, "file1.txt"));
         assertTrue(exists(actual, "subdir1/file1.txt"));
+        assertTrue(exists(actual, "subdir1/untracked.txt"));
         assertTrue(exists(actual, ".gitignore"));
         assertFalse(exists(actual, "file1.bak"));
         assertFalse(exists(actual, ".git"));
