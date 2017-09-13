@@ -5,6 +5,8 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
@@ -26,27 +28,27 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
 
     private final IOFileFilter filter;
 
-    private Git git;
+    private CopyFromGitSourceCodeProvider gitSourceCodeProvider;
 
     public CopyFromDirectorySourceCodeProvider(Path sourceFolderPath) {
         this.sourceFolderPath = sourceFolderPath;
         filter = new ExcludeGitDirectoryFileFilter(sourceFolderPath);
-        initGitIfAvailable();
+        try {
+            initGitIfAvailable();
+        } catch (IOException ex) {
+            //Do nothing.
+        }
     }
 
-    private void initGitIfAvailable() {
+    private void initGitIfAvailable() throws IOException {
         if (!GitHelper.isGitDirectory(sourceFolderPath)) {
             return;
         }
-        try {
-            git = Git.open(sourceFolderPath.toFile());
-        } catch (IOException ex) {
-            git = null;
-        }
+        gitSourceCodeProvider = new CopyFromGitSourceCodeProvider(sourceFolderPath);
     }
 
     public boolean isGit() {
-        return git != null;
+        return gitSourceCodeProvider != null;
     }
 
     @Override
@@ -54,7 +56,7 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
         if (!isGit()) {
             copyDirectory(destinationFolder);
         } else {
-            walkGitAndCopyFiles(destinationFolder);
+            gitSourceCodeProvider.retrieveAndSaveTo(destinationFolder);
         }
     }
 
@@ -64,57 +66,5 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
                 destinationFolder.toFile(),
                 filter
         );
-    }
-
-    private void walkGitAndCopyFiles(Path destPath) throws IOException {
-        copyTree(git, destPath);
-        copyUntracked(git, destPath);
-    }
-
-    private static void copyTree(Git git, Path destPath) throws IOException {
-        Repository repo = git.getRepository();
-
-        TreeWalk treeWalk = createTreeWalkForCopying(repo);
-        Path srcPath = repo.getWorkTree().toPath();
-
-        while (treeWalk.next()) {
-            String path = treeWalk.getPathString();
-            copyFile(srcPath, destPath, path);
-        }
-    }
-
-    private static void copyUntracked(Git git, Path destPath) {
-        Path srcPath = git.getRepository().getWorkTree().toPath();
-        try {
-            Status status;
-            status = git.status().call();
-            status.getUntracked().stream().forEach((path) -> {
-                try {
-                    copyFile(srcPath, destPath, path);
-                } catch (IOException ex) {
-                    //Do nothing
-                }
-            });
-        } catch (GitAPIException | NoWorkTreeException ex) {
-            //Do nothing.
-        }
-    }
-
-    private static void copyFile(Path srcPath, Path destPath, String path) throws IOException {
-        Path destFile = destPath.resolve(path);
-        Path srcFile = srcPath.resolve(path);
-        FileUtils.copyFile(srcFile.toFile(), destFile.toFile());
-    }
-
-    private static TreeWalk createTreeWalkForCopying(Repository repo) throws IOException {
-        ObjectId lastCommitId = repo.resolve(Constants.HEAD);
-        RevWalk revWalk = new RevWalk(repo, 1);
-        RevCommit commit = revWalk.parseCommit(lastCommitId);
-        RevTree tree = commit.getTree();
-
-        TreeWalk treeWalk = new TreeWalk(repo);
-        treeWalk.addTree(tree);
-        treeWalk.setRecursive(true);
-        return treeWalk;
     }
 }
