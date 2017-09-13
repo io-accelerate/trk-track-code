@@ -55,6 +55,14 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         Iterator.super.forEachRemaining(action); //To change body of generated methods, choose Tools | Templates.
     }
 
+    public Date getStartTimestamp() throws IOException {
+        reset();
+        SnapshotFileSegment firstSegment = next();
+        Date firstTimestamp = firstSegment.getTimestampAsDate();
+        reset();
+        return firstTimestamp;
+    }
+
     public void reset() throws IOException {
         inputStream.getChannel().position(0);
     }
