@@ -5,11 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import org.apache.commons.io.IOUtils;
+import tdl.record.sourcecode.snapshot.KeySnapshot;
 
 public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoCloseable {
 
@@ -68,9 +70,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     }
 
     public void skip() throws IOException {
-        byte[] header = readHeader();
-        SnapshotFileSegment snapshot = SnapshotFileSegment.createFromHeaderBytes(header);
-        inputStream.skip(snapshot.size);
+        skipAndReturnHeader();
     }
 
     public byte[] readHeader() throws IOException {
@@ -83,19 +83,107 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return data;
     }
 
-    public List<Date> getDates() {
+    /**
+     * @param index Inclusive.
+     * @return
+     * @throws java.lang.Exception
+     */
+    public List<SnapshotFileSegment> getReplayableSnapshotSegmentsUntil(int index) throws Exception {
+        SnapshotFileSegment snapshot = getSnapshotsAt(index);
+        if (snapshot.getSnapshot() instanceof KeySnapshot) {
+            return Arrays.asList(new SnapshotFileSegment[]{snapshot});
+        }
+        int first = getFirstKeySnapshotBefore(index);
+        return getSnapshotSegmentsByRange(first, index + 1);
+    }
+
+    /**
+     * @param start inclusive.
+     * @param end exclusive.
+     * @return
+     * @throws java.io.IOException
+     */
+    public List<SnapshotFileSegment> getSnapshotSegmentsByRange(int start, int end) throws IOException {
+        List<SnapshotFileSegment> list = new ArrayList<>();
+        reset();
+        int index = 0;
+        while (index < end) {
+            SnapshotFileSegment snapshot = skipAndReturnHeader();
+            if (index >= start && index < end) {
+                list.add(snapshot);
+            }
+            index++;
+        }
+        reset();
+        return list;
+    }
+
+    public int getFirstKeySnapshotBefore(int index) throws IOException {
+        int keyIndex = 0;
+        int start = 0;
+        reset();
+        while (start < index) {
+            SnapshotFileSegment snapshot = skipAndReturnHeader();
+            if (snapshot.getSnapshot() instanceof KeySnapshot) {
+                keyIndex = start;
+            }
+            start++;
+        }
+        reset();
+        return keyIndex;
+    }
+
+    private SnapshotFileSegment skipAndReturnHeader() throws IOException {
+        byte[] header = readHeader();
+        SnapshotFileSegment snapshot = SnapshotFileSegment.createFromHeaderBytes(header);
+
+        inputStream.skip(snapshot.size);
+        return snapshot;
+    }
+
+    public List<Date> getDates() throws IOException {
         //TODO: need to do manual skip
         List<Date> list = new ArrayList<>();
+        reset();
         this.forEachRemaining((SnapshotFileSegment snapshot) -> {
             list.add(new Date(snapshot.timestamp * 1000L));
         });
         return list;
     }
 
-    public List<SnapshotFileSegment> getSnapshots() {
+    public SnapshotFileSegment getSnapshotsAt(int index) throws IOException {
+        int start = 0;
+        reset();
+        while (start < index) {
+            skip();
+            start++;
+        }
+        SnapshotFileSegment snapshot = next();
+        reset();
+        return snapshot;
+    }
+
+    public List<SnapshotFileSegment> getSnapshots() throws IOException {
         List<SnapshotFileSegment> list = new ArrayList<>();
-        this.forEachRemaining(list::add);
+        reset();
+        forEachRemaining(list::add);
         return list;
+    }
+
+    public int getIndexBeforeTime(Date date) throws IOException {
+        int index = 0;
+        reset();
+        do {
+            SnapshotFileSegment segment = skipAndReturnHeader();
+            Date timestamp = segment.getTimestampAsDate();
+            if (timestamp.after(date) || timestamp.equals(date)) {
+                index--;
+                break;
+            }
+            index++;
+        } while (hasNext());
+        reset();
+        return index;
     }
 
     @Override
