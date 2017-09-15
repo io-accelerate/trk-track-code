@@ -30,6 +30,7 @@ public class SnapshotFileSegment {
 
     /**
      * Timestamp in second.
+     * First segment starts from 0.
      */
     public long timestamp;
 
@@ -37,6 +38,11 @@ public class SnapshotFileSegment {
      * The data size in bytes.
      */
     public long size;
+    
+    /**
+     * The address in the file.
+     */
+    public long address = -1;
 
     public byte[] checksum;
 

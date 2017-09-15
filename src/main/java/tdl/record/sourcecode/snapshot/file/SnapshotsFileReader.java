@@ -4,12 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 
@@ -17,17 +20,17 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     private final File file;
 
-    private final FileInputStream inputStream;
+    private final RandomAccessFile randomAccessFile;
 
     public SnapshotsFileReader(File file) throws FileNotFoundException, IOException {
         this.file = file;
-        this.inputStream = new FileInputStream(file);
+        this.randomAccessFile = new RandomAccessFile(file, "r");
     }
 
     @Override
     public boolean hasNext() {
         try {
-            return inputStream.available() > 0;
+            return randomAccessFile.getFilePointer() < randomAccessFile.length() - 1;
         } catch (IOException ex) {
             return false;
         }
@@ -36,15 +39,23 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     @Override
     public SnapshotFileSegment next() {
         try {
-            byte[] header = readHeader();
-            SnapshotFileSegment snapshot = SnapshotFileSegment.createFromHeaderBytes(header);
-            byte[] data = readData((int) snapshot.size);
-            snapshot.data = data;
+            SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
+            
+            byte[] data = readData((int) segment.size);
+            segment.data = data;
 
-            return snapshot;
+            return segment;
         } catch (IOException ex) {
             return null;
         }
+    }
+    
+    private SnapshotFileSegment readHeaderAndCreateFileSegment() throws IOException {
+        long address = randomAccessFile.getFilePointer();
+        byte[] header = readHeader();
+        SnapshotFileSegment segment = SnapshotFileSegment.createFromHeaderBytes(header);
+        segment.address = address;
+        return segment;
     }
 
     @Override
@@ -66,7 +77,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     }
 
     public void reset() throws IOException {
-        inputStream.getChannel().position(0);
+        randomAccessFile.getChannel().position(0);
     }
 
     public void skip() throws IOException {
@@ -79,7 +90,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     public byte[] readData(int size) throws IOException {
         byte[] data = new byte[size];
-        inputStream.read(data);
+        randomAccessFile.read(data);
         return data;
     }
 
@@ -134,11 +145,9 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     }
 
     private SnapshotFileSegment skipAndReturnHeader() throws IOException {
-        byte[] header = readHeader();
-        SnapshotFileSegment snapshot = SnapshotFileSegment.createFromHeaderBytes(header);
-
-        inputStream.skip(snapshot.size);
-        return snapshot;
+        SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
+        randomAccessFile.skipBytes((int) segment.size);
+        return segment;
     }
 
     public List<Date> getDates() throws IOException {
@@ -188,7 +197,11 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(inputStream);
+        try {
+            randomAccessFile.close();
+        } catch (IOException ex) {
+            //
+        }
     }
 
     public File getFile() {

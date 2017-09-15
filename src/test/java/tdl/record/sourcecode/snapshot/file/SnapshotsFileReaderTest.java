@@ -63,6 +63,7 @@ public class SnapshotsFileReaderTest {
                 .build();
         sourceCodeRecorder.start(Duration.of(sourceCodeHistory.size(), ChronoUnit.SECONDS));
         sourceCodeRecorder.close();
+        //FileUtils.copyFile(outputFilePath.toFile(), new File("/tmp/samplesnapshot2.srcs"));
     }
 
     @Test
