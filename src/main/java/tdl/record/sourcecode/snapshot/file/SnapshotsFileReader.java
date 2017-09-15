@@ -40,7 +40,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     public SnapshotFileSegment next() {
         try {
             SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
-            
+
             byte[] data = readData((int) segment.size);
             segment.data = data;
 
@@ -49,7 +49,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
             return null;
         }
     }
-    
+
     private SnapshotFileSegment readHeaderAndCreateFileSegment() throws IOException {
         long address = randomAccessFile.getFilePointer();
         byte[] header = readHeader();
@@ -100,7 +100,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
      * @throws java.lang.Exception
      */
     public List<SnapshotFileSegment> getReplayableSnapshotSegmentsUntil(int index) throws Exception {
-        SnapshotFileSegment snapshot = getSnapshotsAt(index);
+        SnapshotFileSegment snapshot = getSnapshotAt(index);
         if (snapshot.getSnapshot() instanceof KeySnapshot) {
             return Arrays.asList(new SnapshotFileSegment[]{snapshot});
         }
@@ -119,9 +119,11 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         reset();
         int index = 0;
         while (index < end) {
-            SnapshotFileSegment snapshot = skipAndReturnHeader();
             if (index >= start && index < end) {
+                SnapshotFileSegment snapshot = next();
                 list.add(snapshot);
+            } else {
+                skip();
             }
             index++;
         }
@@ -160,7 +162,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return list;
     }
 
-    public SnapshotFileSegment getSnapshotsAt(int index) throws IOException {
+    public SnapshotFileSegment getSnapshotAt(int index) throws IOException {
         int start = 0;
         reset();
         while (start < index) {
@@ -179,13 +181,12 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return list;
     }
 
-    public int getIndexBeforeTime(Date date) throws IOException {
+    public int getIndexBeforeTimestamp(long timestamp) throws IOException {
         int index = 0;
         reset();
         do {
             SnapshotFileSegment segment = skipAndReturnHeader();
-            Date timestamp = segment.getTimestampAsDate();
-            if (timestamp.after(date) || timestamp.equals(date)) {
+            if (segment.timestamp >= timestamp) {
                 index--;
                 break;
             }

@@ -120,6 +120,23 @@ public class SnapshotsFileReaderTest {
             assertEquals(snapshot1, snapshot2);
         }
     }
+    
+    @Test
+    public void getSnapshotAt() throws SourceCodeRecorderException, IOException, Exception {
+        try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
+            int[][] inputAndExpected = new int[][]{
+                {0, 139},
+                {1, 136},
+                {2, 182}
+            };
+            for (int[] inputs : inputAndExpected) {
+                int input = inputs[0];
+                int expected = inputs[1];
+                int actual = (int) reader.getSnapshotAt(input).size;
+                assertEquals(expected, actual);
+            }
+        }
+    }
 
     @Test
     public void getFirstKeySnapshotBefore() throws SourceCodeRecorderException, IOException, Exception {
@@ -155,6 +172,8 @@ public class SnapshotsFileReaderTest {
                 int count = inputs[2];
                 List<SnapshotFileSegment> segments = reader.getSnapshotSegmentsByRange(start, end);
                 assertEquals(count, segments.size());
+                boolean hasData = segments.stream().allMatch(segment -> segment.data.length > 0);
+                assertTrue(hasData);
             }
         }
     }
@@ -175,6 +194,8 @@ public class SnapshotsFileReaderTest {
                 int count = inputs[1];
                 List<SnapshotFileSegment> segments = reader.getReplayableSnapshotSegmentsUntil(end);
                 assertEquals(count, segments.size());
+                boolean hasData = segments.stream().allMatch(segment -> segment.data.length > 0);
+                assertTrue(hasData);
             }
         }
     }
@@ -191,7 +212,7 @@ public class SnapshotsFileReaderTest {
             for (int[] inputs : inputAndExpected) {
                 int timestamp = inputs[0];
                 int expected = inputs[1];
-                int actual = reader.getIndexBeforeTime(new Date((long) timestamp * 1000L));
+                int actual = reader.getIndexBeforeTimestamp(timestamp);
                 assertEquals(expected, actual);
             }
         }

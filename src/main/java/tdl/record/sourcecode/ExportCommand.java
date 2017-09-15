@@ -5,7 +5,10 @@ import com.beust.jcommander.Parameters;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Date;
+import java.util.List;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
 
@@ -15,39 +18,45 @@ public class ExportCommand extends Command {
     @Parameter(names = {"-i", "--input"}, required = true, description = "The SRCS input file.")
     private String inputFilePath;
 
-    @Parameter(names = {"-t", "--time"}, required = true, description = "The time. Available format: <m>m for minute, <s>s for seconds, or <m>m<s>s for both, e.g. 1m20s")
-    private String time;
+    @Parameter(names = {"-o", "--output"}, required = true, description = "The directory. This will be cleaned.")
+    private String outputDirPath;
+
+    @Parameter(names = {"-t", "--time"}, required = true, description = "The time in seconds.")
+    private long time;
 
     @Override
     public void run() {
         File file = Paths.get(inputFilePath).toFile();
+
         try (SnapshotsFileReader reader = new SnapshotsFileReader(file)) {
-            Date expected = expectedDateTime(reader.getStartTimestamp());
-            while (reader.hasNext()) {
-                SnapshotFileSegment segment = reader.next();
-                Date current = segment.getTimestampAsDate();
-                if (current.before(expected)) {
-                    continue;
+            Git git = initGit();
+            int index = reader.getIndexBeforeTimestamp(time);
+            List<SnapshotFileSegment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
+            segments.forEach(segment -> {
+                try {
+                    segment.getSnapshot().restoreSnapshot(git);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
                 }
-                System.out.println(expected);
-                exportSnapshot(segment);
-                break;
-            }
-        } catch (IOException ex) {
+            });
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private Date expectedDateTime(Date startTime) {
-        int seconds = parseTimeToSeconds();
-        return null;
-    }
-
-    private int parseTimeToSeconds() {
-        return 1;
-    }
-
-    private void exportSnapshot(SnapshotFileSegment segment) {
-
+    private Git initGit() {
+        try {
+            File outputDir = Paths.get(outputDirPath).toFile();
+            if (outputDir.isFile()) {
+                throw new RuntimeException("Output is not a directory");
+            } else if (!outputDir.exists()) {
+                FileUtils.forceMkdir(outputDir);
+            }
+            FileUtils.cleanDirectory(outputDir);
+            Git git = Git.init().setDirectory(outputDir).call();
+            return git;
+        } catch (IOException | RuntimeException | GitAPIException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }
