@@ -71,7 +71,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
     public Date getStartTimestamp() throws IOException {
         reset();
         SnapshotFileSegment firstSegment = next();
-        Date firstTimestamp = firstSegment.getTimestampAsDate();
+        Date firstTimestamp = firstSegment.getAbsoluteTimestampAsDate();
         reset();
         return firstTimestamp;
     }
@@ -152,16 +152,6 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return segment;
     }
 
-    public List<Date> getDates() throws IOException {
-        //TODO: need to do manual skip
-        List<Date> list = new ArrayList<>();
-        reset();
-        this.forEachRemaining((SnapshotFileSegment snapshot) -> {
-            list.add(new Date(snapshot.timestamp * 1000L));
-        });
-        return list;
-    }
-
     public SnapshotFileSegment getSnapshotAt(int index) throws IOException {
         int start = 0;
         reset();
@@ -186,7 +176,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         reset();
         do {
             SnapshotFileSegment segment = skipAndReturnHeader();
-            if (segment.timestamp > timestamp) {
+            if (segment.relativeTimestamp > timestamp) {
                 index--;
                 break;
             }

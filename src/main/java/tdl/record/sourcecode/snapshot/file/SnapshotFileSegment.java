@@ -15,9 +15,14 @@ import tdl.record.sourcecode.snapshot.Snapshot;
 public class SnapshotFileSegment {
 
     /**
-     * 6 magic bytes 8 timestamp 8 size 20 checksum
+     * Header size.
+     * - 6 bytes magic bytes.
+     * - 8 bytes relative timestamp.
+     * - 8 bytes absolute timestamp.
+     * - 8 size.
+     * - 20 checksum.
      */
-    public static final int HEADER_SIZE = 42;
+    public static final int HEADER_SIZE = 50;
 
     public static final int TYPE_KEY = 0;
     public static final int TYPE_PATCH = 1;
@@ -29,10 +34,15 @@ public class SnapshotFileSegment {
     public int type;
 
     /**
-     * Timestamp in second.
+     * Relative timestamp to the whole recording session, in seconds.
      * First segment starts from 0.
      */
-    public long timestamp;
+    public long relativeTimestamp;
+    
+    /**
+     * Timestamp of recording in seconds since epoch.
+     */
+    public long absoluteTimestamp;
 
     /**
      * The data size in bytes.
@@ -76,7 +86,8 @@ public class SnapshotFileSegment {
     public byte[] getHeaderAsBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream(HEADER_SIZE)) {
             byteArray.write(getMagicBytesByType(type));
-            byteArray.write(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(relativeTimestamp, 8));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(absoluteTimestamp, 8));
             byteArray.write(ByteHelper.littleEndianLongToByteArray(size, 8));
             byteArray.write(checksum);
             return byteArray.toByteArray();
@@ -118,9 +129,10 @@ public class SnapshotFileSegment {
     public static SnapshotFileSegment createFromHeaderBytes(byte[] bytes) {
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
         snapshot.type = getTypeByteBytes(Arrays.copyOfRange(bytes, 0, MAGIC_BYTES_KEY.length));
-        snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
-        snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 14, 22));
-        snapshot.checksum = Arrays.copyOfRange(bytes, 22, 42);
+        snapshot.relativeTimestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
+        snapshot.absoluteTimestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 14, 22));
+        snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 22, 30));
+        snapshot.checksum = Arrays.copyOfRange(bytes, 30, 50);
         return snapshot;
     }
 
@@ -134,8 +146,8 @@ public class SnapshotFileSegment {
         throw new RuntimeException("Cannot recognize type");
     }
 
-    public Date getTimestampAsDate() {
-        return new Date(timestamp * 1000L);
+    public Date getAbsoluteTimestampAsDate() {
+        return new Date(absoluteTimestamp * 1000L);
     }
 
     @Override
@@ -146,7 +158,7 @@ public class SnapshotFileSegment {
         SnapshotFileSegment snapshot = (SnapshotFileSegment) obj;
 
         return type == snapshot.type
-                && timestamp == snapshot.timestamp
+                && relativeTimestamp == snapshot.relativeTimestamp
                 && Arrays.equals(checksum, snapshot.checksum)
                 && Arrays.equals(data, snapshot.data);
     }

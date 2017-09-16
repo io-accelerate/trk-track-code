@@ -42,13 +42,12 @@ public class ListCommand extends Command {
                 + "\tChecksum  {5}\n";
         String checksum = Hex.encodeHexString(segment.checksum);
         long size = segment.size + SnapshotFileSegment.HEADER_SIZE;
-        String message = MessageFormat.format(
-                template,
+        String message = MessageFormat.format(template,
                 //
                 index,
                 segment.address,
                 type,
-                segment.timestamp,
+                segment.relativeTimestamp,
                 size,
                 checksum
         );
