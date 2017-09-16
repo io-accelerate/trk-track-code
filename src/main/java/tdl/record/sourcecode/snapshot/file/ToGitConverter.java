@@ -43,7 +43,7 @@ public class ToGitConverter {
     }
 
     private void commitDirectory(SnapshotFileSegment segment) throws GitAPIException {
-        Date timestamp = segment.getTimestampAsDate();
+        Date timestamp = segment.getAbsoluteTimestampAsDate();
         PersonIdent origIdent = new PersonIdent(git.getRepository());
         PersonIdent ident = new PersonIdent(origIdent, timestamp);
         String message = timestamp.toString();

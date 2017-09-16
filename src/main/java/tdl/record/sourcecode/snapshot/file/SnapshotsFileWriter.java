@@ -31,7 +31,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
     private final SnapshotRecorder recorder;
 
     public SnapshotsFileWriter(Path outputPath, SourceCodeProvider sourceCodeProvider,
-                               TimeSource timeSource, int keySnapshotPacing, boolean append) throws IOException {
+            TimeSource timeSource, int keySnapshotPacing, boolean append) throws IOException {
         this.outputFile = outputPath.toFile();
         this.sourceCodeProvider = sourceCodeProvider;
         this.timeSource = timeSource;
@@ -46,11 +46,17 @@ public final class SnapshotsFileWriter implements AutoCloseable {
             SnapshotFileSegment segment = new SnapshotFileSegment();
             segment.type = (snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_PATCH;
             segment.relativeTimestamp = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
+            segment.absoluteTimestamp = getTimestamp();
             segment.setData(snapshot.getData());
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+
+    public int getTimestamp() {
+        Long unixTimestamp = System.currentTimeMillis() / 1000L;
+        return unixTimestamp.intValue();
     }
 
     @Override
