@@ -1,24 +1,28 @@
 package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
-import java.io.IOException;
+import com.beust.jcommander.Parameters;
 import java.nio.file.Paths;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
-import org.eclipse.jgit.api.errors.GitAPIException;
 
-class ConvertToGitCommand {
+@Parameters(commandDescription = "Convert a SRCS file to git repository.")
+class ConvertToGitCommand extends Command {
 
-    @Parameter(names = "--in", description = "The SRCS input file")
+    @Parameter(names = {"-i", "--input"}, required = true, description = "The SRCS input file")
     private String inputFilePath;
 
-    @Parameter(names = "--out", description = "The destination sourceCodeProvider. Warning! It will be cleared if exists.")
+    @Parameter(names = {"-o", "--output"}, required = true, description = "The destination sourceCodeProvider. Warning! It will be cleared if exists.")
     private String outputDirectoryPath;
 
-    void run() throws IOException, GitAPIException {
-        ToGitConverter converter = new ToGitConverter(
-                Paths.get(inputFilePath),
-                Paths.get(outputDirectoryPath)
-        );
-        converter.convert();
+    public void run() {
+        try {
+            ToGitConverter converter = new ToGitConverter(
+                    Paths.get(inputFilePath),
+                    Paths.get(outputDirectoryPath)
+            );
+            converter.convert();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

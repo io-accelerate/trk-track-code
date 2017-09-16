@@ -1,44 +1,31 @@
 package tdl.record.sourcecode;
 
 import com.beust.jcommander.JCommander;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import tdl.record.sourcecode.record.SourceCodeRecorderException;
+import java.util.Map;
 
 public class App {
 
-    public static void main(final String[] argv) throws IOException, InterruptedException, SourceCodeRecorderException {
-        RecordCommand record = new RecordCommand();
-        ConvertToGitCommand open = new ConvertToGitCommand();
+    public static void main(final String[] argv) {
+        Map<String, Command> commandMap = Command.getCommandMap();
+
         App app = new App();
-        JCommander jc = JCommander.newBuilder()
-                .addObject(app)
-                .addCommand("record", record)
-                .addCommand("convert-to-git", open)
-                .build();
+
+        JCommander.Builder builder = JCommander.newBuilder()
+                .addObject(app);
+        commandMap.entrySet().forEach(entry
+                -> builder.addCommand(entry.getKey(), entry.getValue()));
+        JCommander jc = builder.build();
+
         jc.parse(argv);
-        String command = jc.getParsedCommand();
-        if(command == null) {
+        String parsedCommand = jc.getParsedCommand();
+
+        Command command = commandMap.getOrDefault(parsedCommand, null);
+        if (command == null) {
             jc.usage();
             return;
         }
+        command.run();
 
-        switch (command) {
-            case "record":
-                record.run();
-                return;
-            case "convert-to-git":
-                try {
-                    open.run();
-                } catch (GitAPIException ex) {
-                    Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                return;
-            default:
-                jc.usage();
-        }
     }
 
 }

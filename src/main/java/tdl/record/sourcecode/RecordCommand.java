@@ -15,14 +15,14 @@ import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 
-@Parameters
+@Parameters(commandDescription = "Start a recording session")
 @Slf4j
-class RecordCommand {
+class RecordCommand extends Command {
 
     @Parameter(names = {"-s", "--source"}, description = "The target sourceCodeProvider that you want to record")
     private String sourceCodePath;
 
-    @Parameter(names = {"-o","--output"}, description = "The destination file")
+    @Parameter(names = {"-o", "--output"}, description = "The destination file")
     private String outputPath;
 
     @Parameter(names = {"-d", "--duration"}, description = "Duration of the recording in seconds")
@@ -31,25 +31,26 @@ class RecordCommand {
     @Parameter(names = {"-y", "--delay"}, description = "The delay between two consecutive snapshots")
     private Integer delay = 5; //in seconds
 
-    @Parameter(names = {"-ks","--key-spacing"}, description = "The spacing between two key snapshots")
+    @Parameter(names = {"-ks", "--key-spacing"}, description = "The spacing between two key snapshots")
     private Integer keySnapshotSpacing = 1; // All snaps are key snapshots
-
 
     private SourceCodeRecorder sourceCodeRecorder;
 
+    public void run() {
+        try {
+            CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath));
+            Path outputRecordingFilePath = Paths.get(outputPath);
+            sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputRecordingFilePath)
+                    .withTimeSource(new SystemMonotonicTimeSource())
+                    .withSnapshotEvery(delay, TimeUnit.SECONDS)
+                    .withKeySnapshotSpacing(keySnapshotSpacing)
+                    .build();
 
-    void run() throws IOException, InterruptedException, SourceCodeRecorderException {
-        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath));
-        Path outputRecordingFilePath = Paths.get(outputPath);
-        sourceCodeRecorder = new SourceCodeRecorder
-                .Builder(sourceCodeProvider, outputRecordingFilePath)
-                .withTimeSource(new SystemMonotonicTimeSource())
-                .withSnapshotEvery(delay, TimeUnit.SECONDS)
-                .withKeySnapshotSpacing(keySnapshotSpacing)
-                .build();
-
-        registerSigtermHandler();
-        sourceCodeRecorder.start(Duration.of(duration, ChronoUnit.SECONDS));
+            registerSigtermHandler();
+            sourceCodeRecorder.start(Duration.of(duration, ChronoUnit.SECONDS));
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private void registerSigtermHandler() {
