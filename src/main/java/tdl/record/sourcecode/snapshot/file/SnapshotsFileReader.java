@@ -181,12 +181,12 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return list;
     }
 
-    public int getIndexBeforeTimestamp(long timestamp) throws IOException {
+    public int getIndexBeforeOrEqualsTimestamp(long timestamp) throws IOException {
         int index = 0;
         reset();
         do {
             SnapshotFileSegment segment = skipAndReturnHeader();
-            if (segment.timestamp >= timestamp) {
+            if (segment.timestamp > timestamp) {
                 index--;
                 break;
             }

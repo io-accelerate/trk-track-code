@@ -39,7 +39,7 @@ public class ExportCommand extends Command {
 
         try (SnapshotsFileReader reader = new SnapshotsFileReader(file)) {
             Git git = initGit();
-            int index = reader.getIndexBeforeTimestamp(time);
+            int index = reader.getIndexBeforeOrEqualsTimestamp(time);
             List<SnapshotFileSegment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
             segments.forEach(segment -> {
                 try {

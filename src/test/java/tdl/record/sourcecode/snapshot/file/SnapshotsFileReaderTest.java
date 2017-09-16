@@ -177,7 +177,7 @@ public class SnapshotsFileReaderTest {
             for (int[] inputs : inputAndExpected) {
                 int timestamp = inputs[0];
                 int expected = inputs[1];
-                int actual = reader.getIndexBeforeTimestamp(timestamp);
+                int actual = reader.getIndexBeforeOrEqualsTimestamp(timestamp);
                 assertEquals(expected, actual);
             }
         }
