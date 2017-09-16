@@ -166,13 +166,13 @@ public class SnapshotsFileReaderTest {
     }
 
     @Test
-    public void getIndexBeforeTime() throws SourceCodeRecorderException, IOException, Exception {
+    public void getIndexBeforeOrEqualsTimestamp() throws SourceCodeRecorderException, IOException, Exception {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
-                {0, -1},
-                {1, 0},
-                {2, 1},
-                {3, 2}
+                {0, 0},
+                {1, 1},
+                {2, 2},
+                {3, 3}
             };
             for (int[] inputs : inputAndExpected) {
                 int timestamp = inputs[0];
