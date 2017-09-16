@@ -16,13 +16,13 @@ import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
 public class ExportCommand extends Command {
 
     @Parameter(names = {"-i", "--input"}, required = true, description = "The SRCS input file.")
-    private String inputFilePath;
+    public String inputFilePath;
 
     @Parameter(names = {"-o", "--output"}, required = true, description = "The directory. This will be cleaned.")
-    private String outputDirPath;
+    public String outputDirPath;
 
     @Parameter(names = {"-t", "--time"}, required = true, description = "The time in seconds.")
-    private long time;
+    public long time;
 
     @Override
     public void run() {
