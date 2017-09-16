@@ -157,7 +157,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         List<Date> list = new ArrayList<>();
         reset();
         this.forEachRemaining((SnapshotFileSegment snapshot) -> {
-            list.add(new Date(snapshot.timestamp * 1000L));
+            list.add(new Date(snapshot.relativeTimestamp * 1000L));
         });
         return list;
     }
@@ -186,7 +186,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         reset();
         do {
             SnapshotFileSegment segment = skipAndReturnHeader();
-            if (segment.timestamp > timestamp) {
+            if (segment.relativeTimestamp > timestamp) {
                 index--;
                 break;
             }

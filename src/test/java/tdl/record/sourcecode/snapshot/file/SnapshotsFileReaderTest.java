@@ -35,13 +35,13 @@ public class SnapshotsFileReaderTest {
     public void next() throws IOException {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(0L));
+            assertThat(reader.next().relativeTimestamp, equalTo(0L));
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(1L));
+            assertThat(reader.next().relativeTimestamp, equalTo(1L));
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(2L));
+            assertThat(reader.next().relativeTimestamp, equalTo(2L));
 
             assertTrue(reader.hasNext());
         }
@@ -52,13 +52,13 @@ public class SnapshotsFileReaderTest {
 
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(0L));
+            assertThat(reader.next().relativeTimestamp, equalTo(0L));
 
             assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(2L));
+            assertThat(reader.next().relativeTimestamp, equalTo(2L));
 
             assertTrue(reader.hasNext());
         }

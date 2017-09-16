@@ -30,7 +30,7 @@ public class SnapshotFileSegmentTest {
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
         snapshot.type = SnapshotFileSegment.TYPE_KEY;
         snapshot.setData(stringBytes);
-        snapshot.timestamp = new Date().getTime();
+        snapshot.relativeTimestamp = new Date().getTime();
 
         byte[] bytes = snapshot.asBytes();
         assertEquals(SnapshotFileSegment.HEADER_SIZE + stringBytes.length, bytes.length);
@@ -44,7 +44,7 @@ public class SnapshotFileSegmentTest {
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
         snapshot.type = SnapshotFileSegment.TYPE_KEY;
         snapshot.setData(stringBytes);
-        snapshot.timestamp = new Date().getTime();
+        snapshot.relativeTimestamp = new Date().getTime();
 
         byte[] header = snapshot.getHeaderAsBytes();
         assertEquals(SnapshotFileSegment.HEADER_SIZE, header.length);
@@ -53,7 +53,7 @@ public class SnapshotFileSegmentTest {
         assertEquals(snapshot2.type, snapshot.type);
         Assert.assertArrayEquals(snapshot2.checksum, snapshot.checksum);
         assertEquals(snapshot2.size, snapshot.size);
-        assertEquals(snapshot2.timestamp, snapshot.timestamp);
+        assertEquals(snapshot2.relativeTimestamp, snapshot.relativeTimestamp);
     }
 
     @Test

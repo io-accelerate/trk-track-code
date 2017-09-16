@@ -29,10 +29,10 @@ public class SnapshotFileSegment {
     public int type;
 
     /**
-     * Timestamp in second.
+     * Relative timestamp to the whole recording session, in seconds.
      * First segment starts from 0.
      */
-    public long timestamp;
+    public long relativeTimestamp;
 
     /**
      * The data size in bytes.
@@ -76,7 +76,7 @@ public class SnapshotFileSegment {
     public byte[] getHeaderAsBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream(HEADER_SIZE)) {
             byteArray.write(getMagicBytesByType(type));
-            byteArray.write(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(relativeTimestamp, 8));
             byteArray.write(ByteHelper.littleEndianLongToByteArray(size, 8));
             byteArray.write(checksum);
             return byteArray.toByteArray();
@@ -118,7 +118,7 @@ public class SnapshotFileSegment {
     public static SnapshotFileSegment createFromHeaderBytes(byte[] bytes) {
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
         snapshot.type = getTypeByteBytes(Arrays.copyOfRange(bytes, 0, MAGIC_BYTES_KEY.length));
-        snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
+        snapshot.relativeTimestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
         snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 14, 22));
         snapshot.checksum = Arrays.copyOfRange(bytes, 22, 42);
         return snapshot;
@@ -135,7 +135,7 @@ public class SnapshotFileSegment {
     }
 
     public Date getTimestampAsDate() {
-        return new Date(timestamp * 1000L);
+        return new Date(relativeTimestamp * 1000L);
     }
 
     @Override
@@ -146,7 +146,7 @@ public class SnapshotFileSegment {
         SnapshotFileSegment snapshot = (SnapshotFileSegment) obj;
 
         return type == snapshot.type
-                && timestamp == snapshot.timestamp
+                && relativeTimestamp == snapshot.relativeTimestamp
                 && Arrays.equals(checksum, snapshot.checksum)
                 && Arrays.equals(data, snapshot.data);
     }
