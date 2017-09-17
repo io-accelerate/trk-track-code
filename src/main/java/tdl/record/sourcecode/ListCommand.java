@@ -32,27 +32,14 @@ public class ListCommand extends Command {
         }
     }
 
-    private void printSnapshot(SnapshotFileSegment segment, int index) {
+    private static void printSnapshot(SnapshotFileSegment segment, int index) {
         String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
-        String template = "Snapshot #{0,number}: \n"
-                + "\tOffset    {1,number}\n"
-                + "\tType      {2}\n"
-                + "\tTime      {3,number}s\n"
-                + "\tSize      {4,number}b\n"
-                + "\tChecksum  {5}\n";
-        String checksum = Hex.encodeHexString(segment.checksum);
         long size = segment.size + SnapshotFileSegment.HEADER_SIZE;
-        String message = MessageFormat.format(
-                template,
-                //
-                index,
-                segment.address,
-                type,
-                segment.timestamp,
-                size,
-                checksum
-        );
-        System.out.println(message);
+        String checksum = Hex.encodeHexString(segment.checksum);
+
+        String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %5d | checksum %40s",
+                index, segment.timestamp, type, segment.address, size, checksum);
+        System.out.println(infoLine);
 
     }
 }

@@ -6,7 +6,7 @@
 ## Compiling
 
 ```
-./gradlew build shadowJar
+./gradlew build shadowJar -i
 ```
 
 ## Running
