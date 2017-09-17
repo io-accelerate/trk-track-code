@@ -4,11 +4,11 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
-        mavenCentral()
         jcenter()
     }
     dependencies {
         classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.4'
+        classpath 'ch.netzwerg:gradle-release-plugin:1.2.4'
     }
 
 }
@@ -74,7 +74,6 @@ jacocoTestReport {
 
 //~~~~~ Release management
 
-
 /**
  * Prerequisites
  *    - Create package in Bintray
@@ -108,9 +107,9 @@ task sourceJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allSource
 }
-task javadocJar(type: Jar, dependsOn: Javadoc) {
+task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
-    from Javadoc.destinationDir
+    from javadoc.destinationDir
 }
 
 // Add the sourceJars to non-extractor modules
