@@ -24,7 +24,7 @@ public class ToGitConverter {
         throwExceptionIfOutputDirInvalid();
     }
 
-    public void convert() throws IOException, GitAPIException {
+    public void convert() throws Exception {
         FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
         SnapshotsFileReader reader = new SnapshotsFileReader(inputFile.toFile());
@@ -36,10 +36,10 @@ public class ToGitConverter {
         }
     }
 
-    private void writeDirFromSnapshot(SnapshotFileSegment segment) throws IOException {
+    private void writeDirFromSnapshot(SnapshotFileSegment segment) throws Exception {
         //TODO: Check if not corrupt.
         Snapshot snapshot = segment.getSnapshot();
-        //snapshot.restoreSnapshot(outputDir);
+        snapshot.restoreSnapshot(git);
     }
 
     private void commitDirectory(SnapshotFileSegment segment) throws GitAPIException {

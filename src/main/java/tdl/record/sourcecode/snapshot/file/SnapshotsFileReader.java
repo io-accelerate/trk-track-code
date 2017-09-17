@@ -11,7 +11,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
-import org.apache.commons.codec.binary.Hex;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 
 public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoCloseable {
@@ -42,11 +44,11 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         try {
             SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
 
-            byte[] data = readData((int) segment.size);
-            segment.data = data;
+            segment.data = readData((int) segment.size);
 
             return segment;
         } catch (IOException ex) {
+            //TODO raise as a proper exception
             return null;
         }
     }
@@ -58,7 +60,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     private SnapshotFileSegment readHeaderAndCreateFileSegment() throws IOException {
         long address = randomAccessFile.getFilePointer();
-        byte[] header = readData(SnapshotFileSegment.HEADER_SIZE);
+        byte[] header = readHeader();
         SnapshotFileSegment segment = SnapshotFileSegment.createFromHeaderBytes(header);
         segment.address = address;
         return segment;
@@ -82,17 +84,23 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return firstTimestamp;
     }
 
-    public final void reset() throws IOException {
+    public void reset() throws IOException {
         randomAccessFile.getChannel().position(0);
         fileHeader = readFileHeader();
     }
+
 
     public SnapshotFileHeader getFileHeader() {
         return fileHeader;
     }
 
+
     public void skip() throws IOException {
         skipAndReturnHeader();
+    }
+
+    public byte[] readHeader() throws IOException {
+        return readData(SnapshotFileSegment.HEADER_SIZE);
     }
 
     public byte[] readData(int size) throws IOException {

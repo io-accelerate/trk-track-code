@@ -10,7 +10,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
-import tdl.record.sourcecode.test.TemporarySourceCodeRecorder;
+import support.TemporarySourceCodeRecorder;
 
 public class SnapshotsFileReaderTest {
 
@@ -87,7 +87,7 @@ public class SnapshotsFileReaderTest {
     }
 
     @Test
-    public void getSnapshotAt() throws SourceCodeRecorderException, IOException, Exception {
+    public void getSnapshotAt() throws Exception {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 139},
@@ -104,7 +104,7 @@ public class SnapshotsFileReaderTest {
     }
 
     @Test
-    public void getFirstKeySnapshotBefore() throws SourceCodeRecorderException, IOException, Exception {
+    public void getFirstKeySnapshotBefore() throws Exception {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 0},
@@ -166,7 +166,7 @@ public class SnapshotsFileReaderTest {
     }
 
     @Test
-    public void getIndexBeforeOrEqualsTimestamp() throws SourceCodeRecorderException, IOException, Exception {
+    public void getIndexBeforeOrEqualsTimestamp() throws Exception {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 0},
