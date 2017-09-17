@@ -29,7 +29,7 @@ public class SnapshotsFileWriterTest {
 
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(sourceDir);
         TimeSource timeSource = new FakeTimeSource();
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, timeSource, 5, false)) {
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, timeSource, 5)) {
             writer.takeSnapshot();
 
             appendString(sourceDir, "file1.txt", "\nLOREM");

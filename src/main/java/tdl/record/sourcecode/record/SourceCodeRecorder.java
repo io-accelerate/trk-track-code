@@ -1,7 +1,6 @@
 package tdl.record.sourcecode.record;
 
 import lombok.extern.slf4j.Slf4j;
-import tdl.record.sourcecode.App;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileWriter;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
@@ -12,11 +11,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.Queue;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 
@@ -27,7 +26,8 @@ public class SourceCodeRecorder {
     private final TimeSource timeSource;
     private final long snapshotIntervalMillis;
     private final int keySnapshotSpacing;
-    private final AtomicBoolean shouldStopJob = new AtomicBoolean(false);
+    private final AtomicBoolean shouldStopJob;
+    private Queue<String> tagQueue;
 
 
     SourceCodeRecorder(SourceCodeProvider sourceCodeProvider,
@@ -40,6 +40,8 @@ public class SourceCodeRecorder {
         this.timeSource = timeSource;
         this.snapshotIntervalMillis = snapshotIntervalMillis;
         this.keySnapshotSpacing = keySnapshotSpacing;
+        shouldStopJob = new AtomicBoolean(false);
+        tagQueue = new ConcurrentLinkedQueue<>();
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -85,7 +87,6 @@ public class SourceCodeRecorder {
         }
     }
 
-
     public void start(Duration recordingDuration) throws SourceCodeRecorderException {
         SnapshotsFileWriter writer;
         Path lockFilePath = Paths.get(outputRecordingFilePath + ".lock");
@@ -94,7 +95,7 @@ public class SourceCodeRecorder {
             //TODO Initialise inside constructor once SnapshotsFileWriter::new is free from exceptions
             writer = new SnapshotsFileWriter(
                     outputRecordingFilePath, sourceCodeProvider,
-                    timeSource, keySnapshotSpacing, true);
+                    timeSource, keySnapshotSpacing);
         } catch (IOException e) {
             throw new SourceCodeRecorderException("Failed to open destination", e);
         }
@@ -102,12 +103,19 @@ public class SourceCodeRecorder {
         doRecord(writer, recordingDuration);
     }
 
-    private void doRecord(SnapshotsFileWriter writer, Duration recordingDuration) {
-        double totalNumberOfFrames = recordingDuration.toMillis() / snapshotIntervalMillis;
-        for (long frameIndex = 0; frameIndex < totalNumberOfFrames; frameIndex++) {
-            long timestampBeforeProcessing = timeSource.currentTimeNano();
+    public void tagCurrentState(String tag) throws SourceCodeRecorderException {
+        log.info("Tag state with: "+tag);
+        tagQueue.offer(tag);
+        timeSource.wakeUpNow();
+    }
 
-            Logger.getLogger(App.class.getName()).log(Level.INFO, "Snapshot");
+    private void doRecord(SnapshotsFileWriter writer, Duration recordingDuration) {
+        while (timeSource.currentTimeNano() < recordingDuration.toNanos()) {
+            long timestampBeforeProcessing = timeSource.currentTimeNano();
+            log.info("Snap!");
+
+            //TODO pass this tag to the writer and save to snapshot
+            String tag = tagQueue.poll();
             writer.takeSnapshot();
 
             long nextTimestamp = timestampBeforeProcessing + TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
@@ -124,9 +132,11 @@ public class SourceCodeRecorder {
         }
     }
 
+
     public void stop() {
         log.info("Stopping recording");
         shouldStopJob.set(true);
+        timeSource.wakeUpNow();
     }
 
     public void close() {

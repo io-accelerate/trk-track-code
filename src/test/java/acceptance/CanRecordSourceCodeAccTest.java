@@ -1,6 +1,7 @@
 package acceptance;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -12,10 +13,12 @@ import support.content.MultiStepSourceCodeProvider;
 import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryPatch;
+import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,15 +32,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.eclipse.jgit.api.Git;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.*;
 import static tdl.record.sourcecode.snapshot.file.SnapshotFileSegment.TYPE_KEY;
 
 public class CanRecordSourceCodeAccTest {
 
+    public static final int TIME_TO_TAKE_A_SNAPSHOT = 1000;
+    public static final Duration INDEFINITE = Duration.of(999, ChronoUnit.HOURS);
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
 
@@ -71,6 +74,48 @@ public class CanRecordSourceCodeAccTest {
             assertContentMatches(sourceCodeHistory, snapshots);
             assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
         }
+    }
+
+    @Test
+    public void should_be_able_to_tag_a_particular_moment() throws Exception {
+        Path outputFilePath = testFolder.newFile("tagged_snapshots.srcs").toPath();
+
+        List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
+                dst -> writeTextFile(dst, "test1.txt", "TEST1"),
+                dst -> writeTextFile(dst, "test1.txt", "TEST2")
+        );
+
+        // Run a recording on a separate thread
+        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
+                .withTimeSource(new SystemMonotonicTimeSource())
+                .withSnapshotEvery(999, TimeUnit.HOURS)
+                .withKeySnapshotSpacing(1)
+                .build();
+        Thread recordingThread = new Thread(() -> {
+            try {
+                sourceCodeRecorder.start(INDEFINITE);
+            } catch (SourceCodeRecorderException e) {
+                e.printStackTrace();
+            }
+            sourceCodeRecorder.close();
+        });
+        recordingThread.start();
+
+        // Trigger the tagged snapshot
+        Thread.sleep(TIME_TO_TAKE_A_SNAPSHOT);
+        sourceCodeRecorder.tagCurrentState("testTag");
+        Thread.sleep(TIME_TO_TAKE_A_SNAPSHOT);
+        sourceCodeRecorder.stop();
+
+        // Wait for recording to finish
+        recordingThread.join();
+
+        try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
+            List<SnapshotFileSegment> snapshots = reader.getSnapshots();
+            assertThat(snapshots.size(), is(2));
+            //TODO check for the tag
+        }
+
     }
 
     @Test

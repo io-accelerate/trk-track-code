@@ -31,11 +31,11 @@ public final class SnapshotsFileWriter implements AutoCloseable {
     private final SnapshotRecorder recorder;
 
     public SnapshotsFileWriter(Path outputPath, SourceCodeProvider sourceCodeProvider,
-                               TimeSource timeSource, int keySnapshotPacing, boolean append) throws IOException {
+                               TimeSource timeSource, int keySnapshotPacing) throws IOException {
         this.outputFile = outputPath.toFile();
         this.sourceCodeProvider = sourceCodeProvider;
         this.timeSource = timeSource;
-        outputStream = new FileOutputStream(outputFile, append);
+        outputStream = new FileOutputStream(outputFile);
         recorder = new SnapshotRecorder(sourceCodeProvider, keySnapshotPacing);
     }
 
