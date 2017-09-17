@@ -45,13 +45,13 @@ public class WriterTest {
 
             appendString(sourceDir, "file1.txt", "\nSIT");
             writer.takeSnapshot();
-
+            
             appendString(sourceDir, "file2.txt", "\nLOREM");
             writer.takeSnapshot();
-
+            
             appendString(sourceDir, "file4.txt", "\nIPSUM");
             writer.takeSnapshot();
-
+            
             appendString(sourceDir, "file5.txt", "\nDOLOR");
             writer.takeSnapshot();
         }

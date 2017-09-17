@@ -9,7 +9,6 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.codec.binary.Hex;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.KeySnapshot;

@@ -35,6 +35,7 @@ public class SnapshotRecorder implements AutoCloseable {
     public SnapshotRecorder(SourceCodeProvider sourceCodeProvider, int keySnapshotPacing) {
         this.sourceCodeProvider = sourceCodeProvider;
         this.keySnapshotPacing = keySnapshotPacing;
+        //TODO move outside of constructor
         initGitDirectory();
     }
 
@@ -48,6 +49,7 @@ public class SnapshotRecorder implements AutoCloseable {
             git = Git.init().setDirectory(gitDirectory.toFile()).call();
             commitAllChanges();
         } catch (IOException | GitAPIException ex) {
+            //TODO replace with checked exception
             throw new RuntimeException(ex);
         }
     }
