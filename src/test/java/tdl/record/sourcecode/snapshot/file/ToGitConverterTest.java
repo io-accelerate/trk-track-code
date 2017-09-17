@@ -23,7 +23,7 @@ public class ToGitConverterTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void run() throws IOException, GitAPIException, InterruptedException {
+    public void run() throws Exception {
         Path original = Paths.get("src/test/resources/directory_snapshot/dir1");
         File snapshotFile = folder.newFile();
         Path workDir = folder.newFolder().toPath();

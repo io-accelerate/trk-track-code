@@ -22,7 +22,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     private final RandomAccessFile randomAccessFile;
 
-    public SnapshotsFileReader(File file) throws FileNotFoundException, IOException {
+    public SnapshotsFileReader(File file) throws IOException {
         this.file = file;
         this.randomAccessFile = new RandomAccessFile(file, "r");
     }
@@ -41,11 +41,11 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         try {
             SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
 
-            byte[] data = readData((int) segment.size);
-            segment.data = data;
+            segment.data = readData((int) segment.size);
 
             return segment;
         } catch (IOException ex) {
+            //TODO raise as a proper exception
             return null;
         }
     }

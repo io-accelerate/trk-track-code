@@ -32,7 +32,7 @@ class RecordCommand extends Command {
     private Integer delay = 5; //in seconds
 
     @Parameter(names = {"-ks", "--key-spacing"}, description = "The spacing between two key snapshots")
-    private Integer keySnapshotSpacing = 1; // All snaps are key snapshots
+    private Integer keySnapshotSpacing = 5;
 
     private SourceCodeRecorder sourceCodeRecorder;
 

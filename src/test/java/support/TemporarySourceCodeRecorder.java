@@ -1,4 +1,4 @@
-package tdl.record.sourcecode.test;
+package support;
 
 import java.io.File;
 import java.io.IOException;
