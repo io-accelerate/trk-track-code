@@ -22,32 +22,37 @@ import static java.nio.file.StandardOpenOption.CREATE;
 
 @Slf4j
 public class SourceCodeRecorder {
+
     private final SourceCodeProvider sourceCodeProvider;
     private final Path outputRecordingFilePath;
     private final TimeSource timeSource;
     private final long snapshotIntervalMillis;
+    private final long recordedTimestamp;
     private final int keySnapshotSpacing;
     private final AtomicBoolean shouldStopJob = new AtomicBoolean(false);
 
-
     SourceCodeRecorder(SourceCodeProvider sourceCodeProvider,
-                       Path outputRecordingFilePath,
-                       TimeSource timeSource,
-                       long snapshotIntervalMillis,
-                       int keySnapshotSpacing) {
+            Path outputRecordingFilePath,
+            TimeSource timeSource,
+            long recordedTimestamp,
+            long snapshotIntervalMillis,
+            int keySnapshotSpacing) {
         this.sourceCodeProvider = sourceCodeProvider;
         this.outputRecordingFilePath = outputRecordingFilePath;
         this.timeSource = timeSource;
+        this.recordedTimestamp = recordedTimestamp;
         this.snapshotIntervalMillis = snapshotIntervalMillis;
         this.keySnapshotSpacing = keySnapshotSpacing;
     }
 
     @SuppressWarnings("SameParameterValue")
     public static class Builder {
+
         private SourceCodeProvider bSourceCodeProvider;
         private Path bOutputRecordingFilePath;
         private TimeSource bTimeSource;
         private long bSnapshotIntervalMillis;
+        private long bRecordedTimestamp;
         private int bKeySnapshotSpacing;
 
         public Builder(SourceCodeProvider sourceCodeProvider, Path outputRecordingFilePath) {
@@ -56,6 +61,11 @@ public class SourceCodeRecorder {
             bTimeSource = new SystemMonotonicTimeSource();
             bSnapshotIntervalMillis = TimeUnit.MINUTES.toMillis(5);
             bKeySnapshotSpacing = 5;
+        }
+
+        public Builder withRecordedTime(long recordedTimestamp) {
+            this.bRecordedTimestamp = recordedTimestamp;
+            return this;
         }
 
         public Builder withTimeSource(TimeSource timeSource) {
@@ -73,18 +83,17 @@ public class SourceCodeRecorder {
             return this;
         }
 
-
         public SourceCodeRecorder build() {
             return new SourceCodeRecorder(
                     bSourceCodeProvider,
                     bOutputRecordingFilePath,
                     bTimeSource,
+                    bRecordedTimestamp,
                     bSnapshotIntervalMillis,
                     bKeySnapshotSpacing
             );
         }
     }
-
 
     public void start(Duration recordingDuration) throws SourceCodeRecorderException {
         SnapshotsFileWriter writer;
@@ -93,8 +102,13 @@ public class SourceCodeRecorder {
             Files.write(lockFilePath, new byte[0], CREATE);
             //TODO Initialise inside constructor once SnapshotsFileWriter::new is free from exceptions
             writer = new SnapshotsFileWriter(
-                    outputRecordingFilePath, sourceCodeProvider,
-                    timeSource, keySnapshotSpacing, true);
+                    outputRecordingFilePath,
+                    sourceCodeProvider,
+                    timeSource,
+                    recordedTimestamp,
+                    keySnapshotSpacing,
+                    true
+            );
         } catch (IOException e) {
             throw new SourceCodeRecorderException("Failed to open destination", e);
         }

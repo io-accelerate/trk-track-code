@@ -29,7 +29,8 @@ public class SnapshotsFileWriterTest {
 
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(sourceDir);
         TimeSource timeSource = new FakeTimeSource();
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, timeSource, 5, false)) {
+        long timestamp = System.currentTimeMillis() / 1000L;
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, timeSource, timestamp, 5, false)) {
             writer.takeSnapshot();
 
             appendString(sourceDir, "file1.txt", "\nLOREM");
@@ -43,13 +44,13 @@ public class SnapshotsFileWriterTest {
 
             appendString(sourceDir, "file1.txt", "\nSIT");
             writer.takeSnapshot();
-            
+
             appendString(sourceDir, "file2.txt", "\nLOREM");
             writer.takeSnapshot();
-            
+
             appendString(sourceDir, "file4.txt", "\nIPSUM");
             writer.takeSnapshot();
-            
+
             appendString(sourceDir, "file5.txt", "\nDOLOR");
             writer.takeSnapshot();
         }
