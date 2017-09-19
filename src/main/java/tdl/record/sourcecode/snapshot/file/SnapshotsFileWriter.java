@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.codec.binary.Hex;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
@@ -26,17 +27,41 @@ public final class SnapshotsFileWriter implements AutoCloseable {
     private final SourceCodeProvider sourceCodeProvider;
 
     private TimeSource timeSource;
+
+    private final long recordedTimestamp;
+
     private final FileOutputStream outputStream;
 
     private final SnapshotRecorder recorder;
 
-    public SnapshotsFileWriter(Path outputPath, SourceCodeProvider sourceCodeProvider,
-                               TimeSource timeSource, int keySnapshotPacing, boolean append) throws IOException {
+    public SnapshotsFileWriter(
+            Path outputPath,
+            SourceCodeProvider sourceCodeProvider,
+            TimeSource timeSource,
+            long recordedTimestamp,
+            int keySnapshotPacing,
+            boolean append
+    ) throws IOException {
         this.outputFile = outputPath.toFile();
         this.sourceCodeProvider = sourceCodeProvider;
         this.timeSource = timeSource;
+        this.recordedTimestamp = recordedTimestamp;
         outputStream = new FileOutputStream(outputFile, append);
         recorder = new SnapshotRecorder(sourceCodeProvider, keySnapshotPacing);
+
+        if (outputFile.length() == 0) { //new file
+            writeHeader();
+        }
+    }
+
+    private void writeHeader() {
+        try {
+            SnapshotFileHeader header = new SnapshotFileHeader(recordedTimestamp);
+            byte[] data = header.asBytes();
+            IOUtils.write(data, outputStream);
+        } catch (IOException ex) {
+            Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     public void takeSnapshot() {

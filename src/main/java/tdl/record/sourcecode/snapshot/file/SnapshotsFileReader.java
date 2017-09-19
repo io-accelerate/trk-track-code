@@ -11,9 +11,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.codec.binary.Hex;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 
 public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoCloseable {
@@ -22,9 +20,12 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     private final RandomAccessFile randomAccessFile;
 
+    private SnapshotFileHeader fileHeader;
+
     public SnapshotsFileReader(File file) throws FileNotFoundException, IOException {
         this.file = file;
         this.randomAccessFile = new RandomAccessFile(file, "r");
+        reset();
     }
 
     @Override
@@ -50,9 +51,14 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         }
     }
 
+    private SnapshotFileHeader readFileHeader() throws IOException {
+        byte[] header = readData(SnapshotFileHeader.SIZE);
+        return SnapshotFileHeader.fromBytes(header);
+    }
+
     private SnapshotFileSegment readHeaderAndCreateFileSegment() throws IOException {
         long address = randomAccessFile.getFilePointer();
-        byte[] header = readHeader();
+        byte[] header = readData(SnapshotFileSegment.HEADER_SIZE);
         SnapshotFileSegment segment = SnapshotFileSegment.createFromHeaderBytes(header);
         segment.address = address;
         return segment;
@@ -76,16 +82,17 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         return firstTimestamp;
     }
 
-    public void reset() throws IOException {
+    public final void reset() throws IOException {
         randomAccessFile.getChannel().position(0);
+        fileHeader = readFileHeader();
+    }
+
+    public SnapshotFileHeader getFileHeader() {
+        return fileHeader;
     }
 
     public void skip() throws IOException {
         skipAndReturnHeader();
-    }
-
-    public byte[] readHeader() throws IOException {
-        return readData(SnapshotFileSegment.HEADER_SIZE);
     }
 
     public byte[] readData(int size) throws IOException {

@@ -43,7 +43,8 @@ public class ToGitConverterTest {
     private void createRandomSnapshot(Path snapshotFile, Path workDir) throws IOException, InterruptedException {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
         TimeSource timeSource = new FakeTimeSource();
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, sourceCodeProvider, timeSource, 5, false)) {
+        long timestamp = System.currentTimeMillis() / 1000L;
+        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, sourceCodeProvider, timeSource, timestamp, 5, false)) {
             writer.takeSnapshot();
             Thread.sleep(1000);
 
