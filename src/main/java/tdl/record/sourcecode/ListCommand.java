@@ -23,10 +23,11 @@ public class ListCommand extends Command {
         File file = Paths.get(inputFilePath).toFile();
         try (SnapshotsFileReader reader = new SnapshotsFileReader(file)) {
             Date start = new Date(reader.getFileHeader().getTimestamp());
+            System.out.println("Recording Start Time: " + start.toString());
             int index = 0;
             while (reader.hasNext()) {
                 SnapshotFileSegment segment = reader.next();
-                printSnapshot(segment, index, start);
+                printSnapshot(segment, index);
                 index++;
             }
         } catch (IOException ex) {
@@ -34,13 +35,12 @@ public class ListCommand extends Command {
         }
     }
 
-    private void printSnapshot(SnapshotFileSegment segment, int index, Date start) {
+    private void printSnapshot(SnapshotFileSegment segment, int index) {
         String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
         long size = segment.size + SnapshotFileSegment.HEADER_SIZE;
         String checksum = Hex.encodeHexString(segment.checksum);
-        String recorded = (new Date(start.getTime() + segment.timestamp)).toString();
-        String infoLine = String.format("#%4d | recorded %40s | time %4s | type %-5s | offset %5d | size %5d | checksum %40s",
-                index, recorded, segment.timestamp, type, segment.address, size, checksum);
+        String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %5d | checksum %40s",
+                index, segment.timestamp, type, segment.address, size, checksum);
         System.out.println(infoLine);
     }
 }

@@ -27,7 +27,7 @@ public class SourceCodeRecorder {
     private final Path outputRecordingFilePath;
     private final TimeSource timeSource;
     private final long snapshotIntervalMillis;
-    private final long recordedTimestamp;
+    private final long recordingStartTimestamp;
     private final int keySnapshotSpacing;
     private final AtomicBoolean shouldStopJob = new AtomicBoolean(false);
 
@@ -40,7 +40,7 @@ public class SourceCodeRecorder {
         this.sourceCodeProvider = sourceCodeProvider;
         this.outputRecordingFilePath = outputRecordingFilePath;
         this.timeSource = timeSource;
-        this.recordedTimestamp = recordedTimestamp;
+        this.recordingStartTimestamp = recordedTimestamp;
         this.snapshotIntervalMillis = snapshotIntervalMillis;
         this.keySnapshotSpacing = keySnapshotSpacing;
     }
@@ -52,7 +52,7 @@ public class SourceCodeRecorder {
         private Path bOutputRecordingFilePath;
         private TimeSource bTimeSource;
         private long bSnapshotIntervalMillis;
-        private long bRecordedTimestamp;
+        private long bRecordingStartTimestamp;
         private int bKeySnapshotSpacing;
 
         public Builder(SourceCodeProvider sourceCodeProvider, Path outputRecordingFilePath) {
@@ -63,8 +63,8 @@ public class SourceCodeRecorder {
             bKeySnapshotSpacing = 5;
         }
 
-        public Builder withRecordedTime(long recordedTimestamp) {
-            this.bRecordedTimestamp = recordedTimestamp;
+        public Builder withRecordingStartTime(long recordedTimestamp) {
+            this.bRecordingStartTimestamp = recordedTimestamp;
             return this;
         }
 
@@ -88,7 +88,7 @@ public class SourceCodeRecorder {
                     bSourceCodeProvider,
                     bOutputRecordingFilePath,
                     bTimeSource,
-                    bRecordedTimestamp,
+                    bRecordingStartTimestamp,
                     bSnapshotIntervalMillis,
                     bKeySnapshotSpacing
             );
@@ -105,7 +105,7 @@ public class SourceCodeRecorder {
                     outputRecordingFilePath,
                     sourceCodeProvider,
                     timeSource,
-                    recordedTimestamp,
+                    recordingStartTimestamp,
                     keySnapshotSpacing,
                     true
             );
