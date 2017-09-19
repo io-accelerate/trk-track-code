@@ -16,7 +16,7 @@ import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
 public class ListCommand extends Command {
 
     @Parameter(names = {"-i", "--input"}, description = "The SRCS input file.", required = true)
-    private String inputFilePath;
+    public String inputFilePath;
 
     @Override
     public void run() {
