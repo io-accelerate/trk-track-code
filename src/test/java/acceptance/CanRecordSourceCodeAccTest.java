@@ -119,7 +119,7 @@ public class CanRecordSourceCodeAccTest {
 
         assertThat("Number of captured snapshots", commitIdsInChronologicalOrder.size(), equalTo(sourceCodeHistory.size()));
         Path expected;
-        for (int i = 0; i < commitIdsInChronologicalOrder.size(); i++) {
+        for (int i = 0; i < commitIdsInChronologicalOrder.size(); i++) {            
             expected = testFolder.newFolder().toPath();
             sourceCodeHistory.get(i).retrieveAndSaveTo(expected);
             git.checkout().setName(commitIdsInChronologicalOrder.get(i)).call();
@@ -128,7 +128,6 @@ public class CanRecordSourceCodeAccTest {
             assertThat("Data of snapshot " + i, gitExportFolder.toPath(), hasSameData(expected));
         }
     }
-
 
     private Matcher<Path> hasSameData(Path expected) {
         return new TypeSafeMatcher<Path>() {
