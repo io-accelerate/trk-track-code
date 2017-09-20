@@ -1,6 +1,8 @@
 package acceptance;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
@@ -14,6 +16,7 @@ import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
 import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
+import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryPatch;
 
@@ -24,12 +27,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.eclipse.jgit.api.Git;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
@@ -56,7 +56,6 @@ public class CanRecordSourceCodeAccTest {
                 dst -> {
                     /* Empty folder */ });
 
-        // TODO Change the KeySnapshotSpacing to be greater than 1
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
@@ -65,12 +64,18 @@ public class CanRecordSourceCodeAccTest {
         sourceCodeRecorder.start(Duration.of(sourceCodeHistory.size(), ChronoUnit.SECONDS));
         sourceCodeRecorder.close();
 
+        // Test the structure of the file
         try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
             List<SnapshotFileSegment> snapshots = reader.getSnapshots();
             assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY), snapshots);
-            assertContentMatches(sourceCodeHistory, snapshots);
             assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
         }
+
+        // Test the contents of the file
+        File gitExportFolder = testFolder.newFolder();
+        ToGitConverter converter = new ToGitConverter(outputFilePath, gitExportFolder.toPath());
+        converter.convert();
+        assertContentMatches(sourceCodeHistory, gitExportFolder);
     }
 
     @Test
@@ -104,30 +109,32 @@ public class CanRecordSourceCodeAccTest {
         assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
     }
 
-    private void assertContentMatches(List<SourceCodeProvider> sourceCodeHistory, List<SnapshotFileSegment> snapshots) {
-        assertThat(snapshots.size(), equalTo(sourceCodeHistory.size()));
-        for (int i = 0; i < snapshots.size(); i++) {
+    private void assertContentMatches(List<SourceCodeProvider> sourceCodeHistory, File gitExportFolder) throws Exception {
+        Git git = Git.open(gitExportFolder);
+        Iterator<RevCommit> commitsIterator = git.log().call().iterator();
+        List<String> commitIdsInChronologicalOrder = new ArrayList<>();
+        while (commitsIterator.hasNext()) {
+            commitIdsInChronologicalOrder.add(0, commitsIterator.next().getName());
+        }
+
+        assertThat("Number of captured snapshots", commitIdsInChronologicalOrder.size(), equalTo(sourceCodeHistory.size()));
+        Path expected;
+        for (int i = 0; i < commitIdsInChronologicalOrder.size(); i++) {            
+            expected = testFolder.newFolder().toPath();
+            sourceCodeHistory.get(i).retrieveAndSaveTo(expected);
+            git.checkout().setName(commitIdsInChronologicalOrder.get(i)).call();
+
             //noinspection ConstantConditions
-            assertThat("Data of snapshot " + i,
-                    snapshots.get(i), hasSameData(sourceCodeHistory.get(i)));
+            assertThat("Data of snapshot " + i, gitExportFolder.toPath(), hasSameData(expected));
         }
     }
 
-    private Matcher<SnapshotFileSegment> hasSameData(SourceCodeProvider sourceCodeProvider) {
-        return new TypeSafeMatcher<SnapshotFileSegment>() {
-
-            private Path actual;
-            private Path expected;
+    private Matcher<Path> hasSameData(Path expected) {
+        return new TypeSafeMatcher<Path>() {
 
             @Override
-            protected boolean matchesSafely(SnapshotFileSegment snapshotSegment) {
+            protected boolean matchesSafely(Path actual) {
                 try {
-                    expected = testFolder.newFolder().toPath();
-                    actual = testFolder.newFolder().toPath();
-                    Git git = Git.init().setDirectory(actual.toFile()).call();
-
-                    sourceCodeProvider.retrieveAndSaveTo(expected);
-                    snapshotSegment.getSnapshot().restoreSnapshot(git);
                     DirectoryPatch patch = DirectoryDiffUtils.diffDirectories(expected, actual);
                     Map filtered = patch.getPatches().entrySet()
                             .stream()
@@ -142,12 +149,12 @@ public class CanRecordSourceCodeAccTest {
 
             @Override
             public void describeTo(Description description) {
-                description.appendText("Matches the contents of the corresponding event");
+                description.appendText("Matches the contents of folder");
             }
 
             @Override
-            protected void describeMismatchSafely(SnapshotFileSegment snapshotSegment, Description mismatchDescription) {
-                mismatchDescription.appendText("there differences detected:\n");
+            protected void describeMismatchSafely(Path actual, Description mismatchDescription) {
+                mismatchDescription.appendText("differences detected:\n");
                 mismatchDescription.appendText("expected: ").appendText(expected.toString()).appendText("\n");
                 mismatchDescription.appendText("actual:   ").appendText(actual.toString());
             }

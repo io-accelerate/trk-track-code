@@ -14,8 +14,11 @@ import java.util.zip.ZipInputStream;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryZip;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
+import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class KeySnapshot extends Snapshot {
@@ -41,8 +44,14 @@ public class KeySnapshot extends Snapshot {
     public void restoreSnapshot(Git git) throws Exception {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(data)) {
             File outputDir = git.getRepository().getWorkTree();
+            cleanDirectory(outputDir);
             unzip(inputStream, outputDir);
         }
+    }
+
+    private void cleanDirectory(File directory) {
+        IOFileFilter filter = new ExcludeGitDirectoryFileFilter(directory.toPath());
+        FileUtils.listFiles(directory, filter, filter).forEach(File::delete);
     }
 
     public static int ZIP_BUFFER_SIZE = 1024;

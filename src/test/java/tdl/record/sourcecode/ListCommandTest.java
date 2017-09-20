@@ -3,7 +3,7 @@ package tdl.record.sourcecode;
 import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
-import tdl.record.sourcecode.test.TemporarySourceCodeRecorder;
+import support.TemporarySourceCodeRecorder;
 
 public class ListCommandTest {
 

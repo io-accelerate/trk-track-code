@@ -4,11 +4,17 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Stream;
 import tdl.record.sourcecode.snapshot.Snapshot;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.RmCommand;
+import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
+import tdl.record.sourcecode.snapshot.KeySnapshot;
 
 public class ToGitConverter {
 
@@ -24,7 +30,7 @@ public class ToGitConverter {
         throwExceptionIfOutputDirInvalid();
     }
 
-    public void convert() throws IOException, GitAPIException {
+    public void convert() throws Exception {
         FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
         SnapshotsFileReader reader = new SnapshotsFileReader(inputFile.toFile());
@@ -36,10 +42,10 @@ public class ToGitConverter {
         }
     }
 
-    private void writeDirFromSnapshot(SnapshotFileSegment segment) throws IOException {
+    private void writeDirFromSnapshot(SnapshotFileSegment segment) throws Exception {
         //TODO: Check if not corrupt.
         Snapshot snapshot = segment.getSnapshot();
-        //snapshot.restoreSnapshot(outputDir);
+        snapshot.restoreSnapshot(git);
     }
 
     private void commitDirectory(SnapshotFileSegment segment) throws GitAPIException {
@@ -48,10 +54,23 @@ public class ToGitConverter {
         PersonIdent ident = new PersonIdent(origIdent, timestamp);
         String message = timestamp.toString();
         git.add().addFilepattern(".").call();
+        deleteMissing(git);
         git.commit()
                 .setAuthor(ident)
                 .setMessage(message)
                 .call();
+    }
+
+    private static void deleteMissing(Git git) throws GitAPIException {
+        Status status = git.status().call();
+        Set<String> deletedFiles = new HashSet<>();
+        deletedFiles.addAll(status.getMissing());
+        deletedFiles.addAll(status.getRemoved());
+        if (!deletedFiles.isEmpty()) {
+            RmCommand rm = git.rm();
+            deletedFiles.stream().forEach(rm::addFilepattern);
+            rm.call();
+        }
     }
 
     private void initGit() throws GitAPIException {
