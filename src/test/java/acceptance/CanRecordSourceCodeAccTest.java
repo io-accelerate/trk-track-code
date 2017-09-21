@@ -104,7 +104,7 @@ public class CanRecordSourceCodeAccTest {
     }
 
     private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<SnapshotFileSegment> actualSnapshots) {
-        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.type)
+        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.getType())
                 .collect(Collectors.toList());
         assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
     }
@@ -164,7 +164,7 @@ public class CanRecordSourceCodeAccTest {
     private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<SnapshotFileSegment> snapshots) {
         for (int i = 0; i < snapshots.size(); i++) {
             assertThat("Timestamp of snapshot " + i,
-                    (double) snapshots.get(i).timestamp, closeTo(unit.toSeconds(time * i), 0.01));
+                    (double) snapshots.get(i).getTimestamp(), closeTo(unit.toSeconds(time * i), 0.01));
         }
     }
 }

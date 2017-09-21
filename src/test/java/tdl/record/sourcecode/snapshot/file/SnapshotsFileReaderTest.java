@@ -35,13 +35,13 @@ public class SnapshotsFileReaderTest {
     public void next() throws IOException {
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(0L));
+            assertThat(reader.next().getTimestamp(), equalTo(0L));
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(1L));
+            assertThat(reader.next().getTimestamp(), equalTo(1L));
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(2L));
+            assertThat(reader.next().getTimestamp(), equalTo(2L));
 
             assertTrue(reader.hasNext());
         }
@@ -52,13 +52,13 @@ public class SnapshotsFileReaderTest {
 
         try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(0L));
+            assertThat(reader.next().getTimestamp(), equalTo(0L));
 
             assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().timestamp, equalTo(2L));
+            assertThat(reader.next().getTimestamp(), equalTo(2L));
 
             assertTrue(reader.hasNext());
         }
@@ -97,7 +97,7 @@ public class SnapshotsFileReaderTest {
             for (int[] inputs : inputAndExpected) {
                 int input = inputs[0];
                 int expected = inputs[1];
-                int actual = (int) reader.getSnapshotAt(input).size;
+                int actual = (int) reader.getSnapshotAt(input).getSize();
                 assertEquals(expected, actual);
             }
         }
@@ -137,7 +137,7 @@ public class SnapshotsFileReaderTest {
                 int count = inputs[2];
                 List<SnapshotFileSegment> segments = reader.getSnapshotSegmentsByRange(start, end);
                 assertEquals(count, segments.size());
-                boolean hasData = segments.stream().allMatch(segment -> segment.data.length > 0);
+                boolean hasData = segments.stream().allMatch(segment -> segment.getData().length > 0);
                 assertTrue(hasData);
             }
         }
@@ -159,7 +159,7 @@ public class SnapshotsFileReaderTest {
                 int count = inputs[1];
                 List<SnapshotFileSegment> segments = reader.getReplayableSnapshotSegmentsUntil(end);
                 assertEquals(count, segments.size());
-                boolean hasData = segments.stream().allMatch(segment -> segment.data.length > 0);
+                boolean hasData = segments.stream().allMatch(segment -> segment.getData().length > 0);
                 assertTrue(hasData);
             }
         }

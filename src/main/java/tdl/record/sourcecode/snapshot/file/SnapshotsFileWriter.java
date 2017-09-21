@@ -56,7 +56,8 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private void writeHeader() {
         try {
-            SnapshotFileHeader header = new SnapshotFileHeader(recordedTimestamp);
+            SnapshotFileHeader header = new SnapshotFileHeader();
+            header.setTimestamp(recordedTimestamp);
             byte[] data = header.asBytes();
             IOUtils.write(data, outputStream);
         } catch (IOException ex) {
@@ -69,8 +70,8 @@ public final class SnapshotsFileWriter implements AutoCloseable {
             Snapshot snapshot = recorder.takeSnapshot();
             //try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
             SnapshotFileSegment segment = new SnapshotFileSegment();
-            segment.type = (snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_PATCH;
-            segment.timestamp = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
+            segment.setType((snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_PATCH);
+            segment.setTimestamp(TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano()));
             segment.setData(snapshot.getData());
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {

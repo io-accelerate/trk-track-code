@@ -15,11 +15,7 @@ public class SnapshotFileHeader {
 
     public static final byte[] MAGIC_BYTES = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x53 /*S*/, 0x54 /*T*/, 0x4d /*M*/};
 
-    private final long timestamp;
-
-    public SnapshotFileHeader(long timestamp) {
-        this.timestamp = timestamp;
-    }
+    private long timestamp;
 
     public byte[] asBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream()) {
@@ -31,6 +27,10 @@ public class SnapshotFileHeader {
         }
     }
 
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
     public long getTimestamp() {
         return timestamp;
     }
@@ -40,8 +40,8 @@ public class SnapshotFileHeader {
         if (!Arrays.equals(magicBytes, MAGIC_BYTES)) {
             throw new RuntimeException("Unrecognized format");
         }
-        long timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
-        SnapshotFileHeader header = new SnapshotFileHeader(timestamp);
+        SnapshotFileHeader header = new SnapshotFileHeader();
+        header.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
         return header;
     }
 }

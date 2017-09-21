@@ -17,9 +17,9 @@ public class SnapshotFileSegmentTest {
         String string = "Lorem Ipsum Dolor Sit Amet";
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.type = SnapshotFileSegment.TYPE_KEY;
+        snapshot.setType(SnapshotFileSegment.TYPE_KEY);
         snapshot.setData(stringBytes);
-        assertEquals(snapshot.size, stringBytes.length);
+        assertEquals(snapshot.getSize(), stringBytes.length);
     }
 
     @Test
@@ -28,9 +28,9 @@ public class SnapshotFileSegmentTest {
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
 
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.type = SnapshotFileSegment.TYPE_KEY;
+        snapshot.setType(SnapshotFileSegment.TYPE_KEY);
         snapshot.setData(stringBytes);
-        snapshot.timestamp = new Date().getTime();
+        snapshot.setTimestamp(new Date().getTime());
 
         byte[] bytes = snapshot.asBytes();
         assertEquals(SnapshotFileSegment.HEADER_SIZE + stringBytes.length, bytes.length);
@@ -42,18 +42,18 @@ public class SnapshotFileSegmentTest {
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
 
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.type = SnapshotFileSegment.TYPE_KEY;
+        snapshot.setType(SnapshotFileSegment.TYPE_KEY);
         snapshot.setData(stringBytes);
-        snapshot.timestamp = new Date().getTime();
+        snapshot.setTimestamp(new Date().getTime());
 
         byte[] header = snapshot.getHeaderAsBytes();
         assertEquals(SnapshotFileSegment.HEADER_SIZE, header.length);
 
         SnapshotFileSegment snapshot2 = SnapshotFileSegment.createFromHeaderBytes(header);
-        assertEquals(snapshot2.type, snapshot.type);
-        Assert.assertArrayEquals(snapshot2.checksum, snapshot.checksum);
-        assertEquals(snapshot2.size, snapshot.size);
-        assertEquals(snapshot2.timestamp, snapshot.timestamp);
+        assertEquals(snapshot2.getType(), snapshot.getType());
+        Assert.assertArrayEquals(snapshot2.getChecksum(), snapshot.getChecksum());
+        assertEquals(snapshot2.getSize(), snapshot.getSize());
+        assertEquals(snapshot2.getTimestamp(), snapshot.getTimestamp());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class SnapshotFileSegmentTest {
         String expected = "887a5b6d458b496633a01451ae7370025f4e7ceb";
         byte[] stringBytes = string.getBytes(StandardCharsets.US_ASCII);
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.data = stringBytes;
+        snapshot.setData(stringBytes);
         byte[] checksum = snapshot.generateChecksum();
         assertEquals(checksum.length, 20);
         String checksumString = new String(Hex.encodeHex(checksum));
@@ -77,8 +77,8 @@ public class SnapshotFileSegmentTest {
         byte[] stringBytes = dataString.getBytes(StandardCharsets.US_ASCII);
         byte[] checksumBytes = Hex.decodeHex(checksumString.toCharArray());
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.data = stringBytes;
-        snapshot.checksum = checksumBytes;
+        snapshot.setData(stringBytes);
+        snapshot.setChecksum(checksumBytes);
         assertTrue(snapshot.isDataValid());
     }
 
@@ -89,8 +89,8 @@ public class SnapshotFileSegmentTest {
         byte[] stringBytes = dataString.getBytes(StandardCharsets.US_ASCII);
         byte[] checksumBytes = Hex.decodeHex(checksumString.toCharArray());
         SnapshotFileSegment snapshot = new SnapshotFileSegment();
-        snapshot.data = stringBytes;
-        snapshot.checksum = checksumBytes;
+        snapshot.setData(stringBytes);
+        snapshot.setChecksum(checksumBytes);
         assertFalse(snapshot.isDataValid());
     }
 }

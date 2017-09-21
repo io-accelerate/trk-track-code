@@ -77,7 +77,7 @@ public class CanReadSourceStreamAccTest {
             return false;
         }
         int count = 0;
-        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(snapshot.data))) {
+        try (ZipInputStream zip = new ZipInputStream(new ByteArrayInputStream(snapshot.getData()))) {
             ZipEntry entry;
             while ((entry = zip.getNextEntry()) != null) {
                 if (entry.getName().isEmpty()) {
@@ -109,7 +109,7 @@ public class CanReadSourceStreamAccTest {
 
         int start = 4 //magit number
                 + SnapshotFileSegment.HEADER_SIZE
-                + (int) list1.get(0).size
+                + (int) list1.get(0).getSize()
                 + SnapshotFileSegment.HEADER_SIZE
                 + 10 //random
                 ;

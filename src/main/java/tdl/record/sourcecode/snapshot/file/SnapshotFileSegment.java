@@ -26,27 +26,26 @@ public class SnapshotFileSegment {
 
     public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53, 0x52, 0x43, 0x50, 0x54, 0x43};
 
-    public int type;
+    private int type;
 
     /**
-     * Timestamp in second.
-     * First segment starts from 0.
+     * Timestamp in second. First segment starts from 0.
      */
-    public long timestamp;
+    private long timestamp;
 
     /**
      * The data size in bytes.
      */
-    public long size;
-    
+    private long size;
+
     /**
      * The address in the file.
      */
-    public long address = -1;
+    private long address = -1;
 
-    public byte[] checksum;
+    private byte[] checksum;
 
-    public byte[] data;
+    private byte[] data;
 
     public byte[] generateChecksum() {
         try {
@@ -113,6 +112,50 @@ public class SnapshotFileSegment {
         this.data = data;
         this.size = data.length;
         this.checksum = generateChecksum();
+    }
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public byte[] getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(byte[] checksum) {
+        this.checksum = checksum;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public long getAddress() {
+        return address;
+    }
+
+    public void setAddress(long address) {
+        this.address = address;
     }
 
     public static SnapshotFileSegment createFromHeaderBytes(byte[] bytes) {

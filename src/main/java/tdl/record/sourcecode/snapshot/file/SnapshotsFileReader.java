@@ -44,7 +44,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         try {
             SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
 
-            segment.data = readData((int) segment.size);
+            segment.setData(readData((int) segment.getSize()));
 
             return segment;
         } catch (IOException ex) {
@@ -62,7 +62,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         long address = randomAccessFile.getFilePointer();
         byte[] header = readHeader();
         SnapshotFileSegment segment = SnapshotFileSegment.createFromHeaderBytes(header);
-        segment.address = address;
+        segment.setAddress(address);
         return segment;
     }
 
@@ -163,7 +163,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
 
     private SnapshotFileSegment skipAndReturnHeader() throws IOException {
         SnapshotFileSegment segment = readHeaderAndCreateFileSegment();
-        randomAccessFile.skipBytes((int) segment.size);
+        randomAccessFile.skipBytes((int) segment.getSize());
         return segment;
     }
 
@@ -172,7 +172,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         List<Date> list = new ArrayList<>();
         reset();
         this.forEachRemaining((SnapshotFileSegment snapshot) -> {
-            list.add(new Date(snapshot.timestamp * 1000L));
+            list.add(new Date(snapshot.getTimestamp() * 1000L));
         });
         return list;
     }
@@ -201,7 +201,7 @@ public class SnapshotsFileReader implements Iterator<SnapshotFileSegment>, AutoC
         reset();
         do {
             SnapshotFileSegment segment = skipAndReturnHeader();
-            if (segment.timestamp > timestamp) {
+            if (segment.getTimestamp() > timestamp) {
                 index--;
                 break;
             }
