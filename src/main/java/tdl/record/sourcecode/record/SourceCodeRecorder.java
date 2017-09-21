@@ -3,7 +3,7 @@ package tdl.record.sourcecode.record;
 import lombok.extern.slf4j.Slf4j;
 import tdl.record.sourcecode.App;
 import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.file.SnapshotsFileWriter;
+import tdl.record.sourcecode.snapshot.file.Writer;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 import tdl.record.sourcecode.time.TimeSource;
 
@@ -96,12 +96,12 @@ public class SourceCodeRecorder {
     }
 
     public void start(Duration recordingDuration) throws SourceCodeRecorderException {
-        SnapshotsFileWriter writer;
+        Writer writer;
         Path lockFilePath = Paths.get(outputRecordingFilePath + ".lock");
         try {
             Files.write(lockFilePath, new byte[0], CREATE);
             //TODO Initialise inside constructor once SnapshotsFileWriter::new is free from exceptions
-            writer = new SnapshotsFileWriter(
+            writer = new Writer(
                     outputRecordingFilePath,
                     sourceCodeProvider,
                     timeSource,
@@ -116,7 +116,7 @@ public class SourceCodeRecorder {
         doRecord(writer, recordingDuration);
     }
 
-    private void doRecord(SnapshotsFileWriter writer, Duration recordingDuration) {
+    private void doRecord(Writer writer, Duration recordingDuration) {
         double totalNumberOfFrames = recordingDuration.toMillis() / snapshotIntervalMillis;
         for (long frameIndex = 0; frameIndex < totalNumberOfFrames; frameIndex++) {
             long timestampBeforeProcessing = timeSource.currentTimeNano();

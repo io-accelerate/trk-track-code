@@ -12,7 +12,7 @@ import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.PatchSnapshot;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
-public class SnapshotFileSegment {
+public class Segment {
 
     /**
      * 6 magic bytes 8 timestamp 8 size 20 checksum
@@ -158,8 +158,8 @@ public class SnapshotFileSegment {
         this.address = address;
     }
 
-    public static SnapshotFileSegment createFromHeaderBytes(byte[] bytes) {
-        SnapshotFileSegment snapshot = new SnapshotFileSegment();
+    public static Segment createFromHeaderBytes(byte[] bytes) {
+        Segment snapshot = new Segment();
         snapshot.type = getTypeByteBytes(Arrays.copyOfRange(bytes, 0, MAGIC_BYTES_KEY.length));
         snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
         snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 14, 22));
@@ -183,10 +183,10 @@ public class SnapshotFileSegment {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof SnapshotFileSegment)) {
+        if (!(obj instanceof Segment)) {
             return false;
         }
-        SnapshotFileSegment snapshot = (SnapshotFileSegment) obj;
+        Segment snapshot = (Segment) obj;
 
         return type == snapshot.type
                 && timestamp == snapshot.timestamp

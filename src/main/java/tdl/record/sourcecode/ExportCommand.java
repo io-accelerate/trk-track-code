@@ -9,8 +9,8 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
-import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
+import tdl.record.sourcecode.snapshot.file.Segment;
+import tdl.record.sourcecode.snapshot.file.Reader;
 
 @Parameters(commandDescription = "Export a snapshot of a SCRS file.")
 public class ExportCommand extends Command {
@@ -37,10 +37,10 @@ public class ExportCommand extends Command {
     public void run() {
         File file = Paths.get(inputFilePath).toFile();
 
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(file)) {
+        try (Reader reader = new Reader(file)) {
             Git git = initGit();
             int index = reader.getIndexBeforeOrEqualsTimestamp(time);
-            List<SnapshotFileSegment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
+            List<Segment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
             segments.forEach(segment -> {
                 try {
                     segment.getSnapshot().restoreSnapshot(git);

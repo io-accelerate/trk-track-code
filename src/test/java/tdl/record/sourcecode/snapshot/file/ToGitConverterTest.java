@@ -1,5 +1,7 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.file.ToGitConverter;
+import tdl.record.sourcecode.snapshot.file.Writer;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Rule;
@@ -44,7 +46,7 @@ public class ToGitConverterTest {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
         TimeSource timeSource = new FakeTimeSource();
         long timestamp = System.currentTimeMillis() / 1000L;
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(snapshotFile, sourceCodeProvider, timeSource, timestamp, 5, false)) {
+        try (Writer writer = new Writer(snapshotFile, sourceCodeProvider, timeSource, timestamp, 5, false)) {
             writer.takeSnapshot();
             Thread.sleep(1000);
 

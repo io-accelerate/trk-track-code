@@ -1,5 +1,6 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.file.Header;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -10,7 +11,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
-public class SnapshotFileHeaderTest {
+public class HeaderTest {
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -21,11 +22,11 @@ public class SnapshotFileHeaderTest {
         byte[] timestampBytes = ByteHelper.littleEndianLongToByteArray(timestamp, 8);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(SnapshotFileHeader.MAGIC_BYTES);
+        outputStream.write(Header.MAGIC_BYTES);
         outputStream.write(timestampBytes);
         byte[] all = outputStream.toByteArray();
 
-        SnapshotFileHeader header = SnapshotFileHeader.fromBytes(all);
+        Header header = Header.fromBytes(all);
         assertEquals(header.getTimestamp(), timestamp);
 
         byte[] asBytes = header.asBytes();
@@ -43,6 +44,6 @@ public class SnapshotFileHeaderTest {
         outputStream.write(wrongHeader);
         outputStream.write(timestampBytes);
         byte[] all = outputStream.toByteArray();
-        SnapshotFileHeader.fromBytes(all);
+        Header.fromBytes(all);
     }
 }

@@ -3,10 +3,9 @@ package tdl.record.sourcecode.snapshot.file;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import org.apache.commons.codec.binary.Hex;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
-public class SnapshotFileHeader {
+public class Header {
 
     /**
      * The header size. 6 for magic bytes. 8 for timestamp.
@@ -35,12 +34,12 @@ public class SnapshotFileHeader {
         return timestamp;
     }
 
-    public static SnapshotFileHeader fromBytes(byte[] bytes) {
+    public static Header fromBytes(byte[] bytes) {
         byte[] magicBytes = Arrays.copyOfRange(bytes, 0, MAGIC_BYTES.length);
         if (!Arrays.equals(magicBytes, MAGIC_BYTES)) {
             throw new RuntimeException("Unrecognized format");
         }
-        SnapshotFileHeader header = new SnapshotFileHeader();
+        Header header = new Header();
         header.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
         return header;
     }

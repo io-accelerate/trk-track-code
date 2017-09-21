@@ -33,22 +33,22 @@ public class ToGitConverter {
     public void convert() throws Exception {
         FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
-        SnapshotsFileReader reader = new SnapshotsFileReader(inputFile.toFile());
+        Reader reader = new Reader(inputFile.toFile());
 
         while (reader.hasNext()) {
-            SnapshotFileSegment segment = reader.next();
+            Segment segment = reader.next();
             writeDirFromSnapshot(segment);
             commitDirectory(segment);
         }
     }
 
-    private void writeDirFromSnapshot(SnapshotFileSegment segment) throws Exception {
+    private void writeDirFromSnapshot(Segment segment) throws Exception {
         //TODO: Check if not corrupt.
         Snapshot snapshot = segment.getSnapshot();
         snapshot.restoreSnapshot(git);
     }
 
-    private void commitDirectory(SnapshotFileSegment segment) throws GitAPIException {
+    private void commitDirectory(Segment segment) throws GitAPIException {
         Date timestamp = segment.getTimestampAsDate();
         PersonIdent origIdent = new PersonIdent(git.getRepository());
         PersonIdent ident = new PersonIdent(origIdent, timestamp);

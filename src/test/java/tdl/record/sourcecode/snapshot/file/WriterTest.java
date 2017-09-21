@@ -1,5 +1,6 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.file.Writer;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -12,7 +13,7 @@ import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.time.TimeSource;
 
-public class SnapshotsFileWriterTest {
+public class WriterTest {
 
     @Rule
     public TemporaryFolder sourceFolder = new TemporaryFolder();
@@ -30,7 +31,7 @@ public class SnapshotsFileWriterTest {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(sourceDir);
         TimeSource timeSource = new FakeTimeSource();
         long timestamp = System.currentTimeMillis() / 1000L;
-        try (SnapshotsFileWriter writer = new SnapshotsFileWriter(output, sourceCodeProvider, timeSource, timestamp, 5, false)) {
+        try (Writer writer = new Writer(output, sourceCodeProvider, timeSource, timestamp, 5, false)) {
             writer.takeSnapshot();
 
             appendString(sourceDir, "file1.txt", "\nLOREM");

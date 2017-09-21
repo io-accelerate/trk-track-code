@@ -1,5 +1,7 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.file.Segment;
+import tdl.record.sourcecode.snapshot.file.Reader;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -12,7 +14,7 @@ import static org.junit.Assert.*;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import support.TemporarySourceCodeRecorder;
 
-public class SnapshotsFileReaderTest {
+public class ReaderTest {
 
     @Rule
     public TemporarySourceCodeRecorder recorder = new TemporarySourceCodeRecorder(Arrays.asList(
@@ -33,7 +35,7 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void next() throws IOException {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
             assertThat(reader.next().getTimestamp(), equalTo(0L));
 
@@ -50,7 +52,7 @@ public class SnapshotsFileReaderTest {
     @Test
     public void skip() throws IOException {
 
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
             assertThat(reader.next().getTimestamp(), equalTo(0L));
 
@@ -66,9 +68,9 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void reset() throws IOException {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            SnapshotFileSegment snapshot1 = reader.next();
+            Segment snapshot1 = reader.next();
 
             assertTrue(reader.hasNext());
             reader.skip();
@@ -80,7 +82,7 @@ public class SnapshotsFileReaderTest {
             reader.reset();
             assertTrue(reader.hasNext());
 
-            SnapshotFileSegment snapshot2 = reader.next();
+            Segment snapshot2 = reader.next();
 
             assertEquals(snapshot1, snapshot2);
         }
@@ -88,7 +90,7 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void getSnapshotAt() throws Exception {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 139},
                 {1, 136},
@@ -105,7 +107,7 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void getFirstKeySnapshotBefore() throws Exception {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 0},
                 {1, 0},
@@ -126,7 +128,7 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void getSnapshotSegmentsByRange() throws SourceCodeRecorderException, IOException, Exception {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 3, 3},
                 {1, 2, 1},
@@ -135,7 +137,7 @@ public class SnapshotsFileReaderTest {
                 int start = inputs[0];
                 int end = inputs[1];
                 int count = inputs[2];
-                List<SnapshotFileSegment> segments = reader.getSnapshotSegmentsByRange(start, end);
+                List<Segment> segments = reader.getSnapshotSegmentsByRange(start, end);
                 assertEquals(count, segments.size());
                 boolean hasData = segments.stream().allMatch(segment -> segment.getData().length > 0);
                 assertTrue(hasData);
@@ -145,7 +147,7 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void getReplayableSnapshotSegmentsUntil() throws SourceCodeRecorderException, IOException, Exception {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 1},
                 {1, 2},
@@ -157,7 +159,7 @@ public class SnapshotsFileReaderTest {
             for (int[] inputs : inputAndExpected) {
                 int end = inputs[0];
                 int count = inputs[1];
-                List<SnapshotFileSegment> segments = reader.getReplayableSnapshotSegmentsUntil(end);
+                List<Segment> segments = reader.getReplayableSnapshotSegmentsUntil(end);
                 assertEquals(count, segments.size());
                 boolean hasData = segments.stream().allMatch(segment -> segment.getData().length > 0);
                 assertTrue(hasData);
@@ -167,7 +169,7 @@ public class SnapshotsFileReaderTest {
 
     @Test
     public void getIndexBeforeOrEqualsTimestamp() throws Exception {
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 0},
                 {1, 1},

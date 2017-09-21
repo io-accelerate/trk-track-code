@@ -5,8 +5,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import support.TestSourceStreamRecorder;
-import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
-import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
+import tdl.record.sourcecode.snapshot.file.Segment;
+import tdl.record.sourcecode.snapshot.file.Reader;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -33,7 +33,7 @@ public class CanReadSourceStreamAccTest {
         File outputFile = outputFilePath.toFile();
         TestSourceStreamRecorder.recordRandom(outputFilePath, 3, 1);
 
-        SnapshotsFileReader reader = new SnapshotsFileReader(outputFile);
+        Reader reader = new Reader(outputFile);
 
         assertEquals(3, reader.getSnapshots().size());
         boolean isAllIntact = reader.getSnapshots().stream().allMatch(this::isSnapshotIntact);
@@ -57,8 +57,8 @@ public class CanReadSourceStreamAccTest {
         //is still considered valid.
         truncateFile(outputFile);
 
-        SnapshotsFileReader reader2 = new SnapshotsFileReader(outputFile);
-        List<SnapshotFileSegment> list2 = reader2.getSnapshots();
+        Reader reader2 = new Reader(outputFile);
+        List<Segment> list2 = reader2.getSnapshots();
         assertEquals(5, list2.size());
         boolean isAllButLastIntact = list2.subList(0, 4).stream().allMatch(this::isSnapshotIntact);
         assertTrue(isAllButLastIntact);
@@ -72,7 +72,7 @@ public class CanReadSourceStreamAccTest {
         }
     }
 
-    private boolean isSnapshotIntact(SnapshotFileSegment snapshot) {
+    private boolean isSnapshotIntact(Segment snapshot) {
         if (!snapshot.isDataValid()) {
             return false;
         }
@@ -104,13 +104,13 @@ public class CanReadSourceStreamAccTest {
         TestSourceStreamRecorder.recordRandom(outputFilePath, 5, 1);
 
         long size1 = outputFile.length();
-        SnapshotsFileReader reader1 = new SnapshotsFileReader(outputFile);
-        List<SnapshotFileSegment> list1 = reader1.getSnapshots();
+        Reader reader1 = new Reader(outputFile);
+        List<Segment> list1 = reader1.getSnapshots();
 
         int start = 4 //magit number
-                + SnapshotFileSegment.HEADER_SIZE
+                + Segment.HEADER_SIZE
                 + (int) list1.get(0).getSize()
-                + SnapshotFileSegment.HEADER_SIZE
+                + Segment.HEADER_SIZE
                 + 10 //random
                 ;
 
@@ -119,8 +119,8 @@ public class CanReadSourceStreamAccTest {
         long size2 = outputFile.length();
         assertEquals(size1, size2);
 
-        SnapshotsFileReader reader2 = new SnapshotsFileReader(outputFile);
-        List<SnapshotFileSegment> list2 = reader2.getSnapshots();
+        Reader reader2 = new Reader(outputFile);
+        List<Segment> list2 = reader2.getSnapshots();
         assertEquals(5, list2.size());
         assertTrue(isSnapshotIntact(list2.get(0)));
         boolean isSnapshot2Intact = isSnapshotIntact(list2.get(1));

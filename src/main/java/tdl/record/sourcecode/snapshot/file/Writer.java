@@ -18,7 +18,7 @@ import tdl.record.sourcecode.snapshot.SnapshotRecorder;
 import org.apache.commons.io.IOUtils;
 import tdl.record.sourcecode.time.TimeSource;
 
-public final class SnapshotsFileWriter implements AutoCloseable {
+public final class Writer implements AutoCloseable {
 
     private final Charset CHARSET = StandardCharsets.US_ASCII;
 
@@ -34,7 +34,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private final SnapshotRecorder recorder;
 
-    public SnapshotsFileWriter(
+    public Writer(
             Path outputPath,
             SourceCodeProvider sourceCodeProvider,
             TimeSource timeSource,
@@ -56,12 +56,12 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private void writeHeader() {
         try {
-            SnapshotFileHeader header = new SnapshotFileHeader();
+            Header header = new Header();
             header.setTimestamp(recordedTimestamp);
             byte[] data = header.asBytes();
             IOUtils.write(data, outputStream);
         } catch (IOException ex) {
-            Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -69,13 +69,13 @@ public final class SnapshotsFileWriter implements AutoCloseable {
         try {
             Snapshot snapshot = recorder.takeSnapshot();
             //try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            SnapshotFileSegment segment = new SnapshotFileSegment();
-            segment.setType((snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_PATCH);
+            Segment segment = new Segment();
+            segment.setType((snapshot instanceof KeySnapshot) ? Segment.TYPE_KEY : Segment.TYPE_PATCH);
             segment.setTimestamp(TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano()));
             segment.setData(snapshot.getData());
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
-            Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
