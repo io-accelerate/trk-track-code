@@ -12,7 +12,7 @@ import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.PatchSnapshot;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
-public class Segment {
+abstract public class Segment {
 
     /**
      * 6 magic bytes 8 timestamp 8 size 20 checksum
@@ -26,31 +26,22 @@ public class Segment {
 
     public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53, 0x52, 0x43, 0x50, 0x54, 0x43};
 
-    private int type;
+    abstract public byte[] getData();
 
-    /**
-     * Timestamp in second. First segment starts from 0.
-     */
-    private long timestamp;
+    abstract public byte[] getChecksum();
 
-    /**
-     * The data size in bytes.
-     */
-    private long size;
+    abstract public long getSize();
 
-    /**
-     * The address in the file.
-     */
-    private long address = -1;
+    abstract public int getType();
 
-    private byte[] checksum;
+    abstract public long getTimestamp();
 
-    private byte[] data;
+    abstract public long getAddress();
 
-    public byte[] generateChecksum() {
+    public final byte[] generateChecksum() {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
-            return md.digest(data);
+            return md.digest(getData());
         } catch (NoSuchAlgorithmException ex) {
             throw new RuntimeException(ex);
         }
@@ -58,14 +49,13 @@ public class Segment {
 
     public boolean isDataValid() {
         byte[] checksumChallenge = generateChecksum();
-        return Arrays.equals(checksumChallenge, checksum);
+        return Arrays.equals(checksumChallenge, getChecksum());
     }
 
     public byte[] asBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream()) {
-            byte[] header = getHeaderAsBytes();
-            byteArray.write(header);
-            byteArray.write(data);
+            byteArray.write(getHeaderAsBytes());
+            byteArray.write(getData());
             return byteArray.toByteArray();
         } catch (IOException ex) {
             return new byte[0];
@@ -74,10 +64,10 @@ public class Segment {
 
     public byte[] getHeaderAsBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream(HEADER_SIZE)) {
-            byteArray.write(getMagicBytesByType(type));
-            byteArray.write(ByteHelper.littleEndianLongToByteArray(timestamp, 8));
-            byteArray.write(ByteHelper.littleEndianLongToByteArray(size, 8));
-            byteArray.write(checksum);
+            byteArray.write(getMagicBytesByType(getType()));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(getTimestamp(), 8));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(getSize(), 8));
+            byteArray.write(getChecksum());
             return byteArray.toByteArray();
         } catch (IOException ex) {
             return new byte[0];
@@ -102,83 +92,14 @@ public class Segment {
         throw new RuntimeException("Unknown bytes: " + new String(bytes));
     }
 
-    /**
-     * This should only be called when checksum and size is not set. I.e. on
-     * writing data instead of reading.
-     *
-     * @param data
-     */
-    public void setData(byte[] data) {
-        this.data = data;
-        this.size = data.length;
-        this.checksum = generateChecksum();
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public byte[] getChecksum() {
-        return checksum;
-    }
-
-    public void setChecksum(byte[] checksum) {
-        this.checksum = checksum;
-    }
-
-    public long getSize() {
-        return size;
-    }
-
-    public void setSize(long size) {
-        this.size = size;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    public long getAddress() {
-        return address;
-    }
-
-    public void setAddress(long address) {
-        this.address = address;
-    }
-
-    public static Segment createFromHeaderBytes(byte[] bytes) {
-        Segment snapshot = new Segment();
-        snapshot.type = getTypeByteBytes(Arrays.copyOfRange(bytes, 0, MAGIC_BYTES_KEY.length));
-        snapshot.timestamp = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 6, 14));
-        snapshot.size = ByteHelper.byteArrayToLittleEndianLong(Arrays.copyOfRange(bytes, 14, 22));
-        snapshot.checksum = Arrays.copyOfRange(bytes, 22, 42);
-        return snapshot;
-    }
-
     public Snapshot getSnapshot() {
-        switch (type) {
+        switch (getType()) {
             case TYPE_KEY:
-                return KeySnapshot.createSnapshotFromBytes(data);
+                return KeySnapshot.createSnapshotFromBytes(getData());
             case TYPE_PATCH:
-                return PatchSnapshot.createSnapshotFromBytes(data);
+                return PatchSnapshot.createSnapshotFromBytes(getData());
         }
         throw new RuntimeException("Cannot recognize type");
-    }
-
-    public Date getTimestampAsDate() {
-        return new Date(timestamp * 1000L);
     }
 
     @Override
@@ -188,9 +109,9 @@ public class Segment {
         }
         Segment snapshot = (Segment) obj;
 
-        return type == snapshot.type
-                && timestamp == snapshot.timestamp
-                && Arrays.equals(checksum, snapshot.checksum)
-                && Arrays.equals(data, snapshot.data);
+        return getType() == snapshot.getType()
+                && getTimestamp() == snapshot.getTimestamp()
+                && Arrays.equals(getChecksum(), snapshot.getChecksum())
+                && Arrays.equals(getData(), snapshot.getData());
     }
 }

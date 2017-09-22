@@ -36,16 +36,33 @@ public class ReaderTest {
     @Test
     public void next() throws IOException {
         try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+            assertEquals(Header.SIZE, reader.getFilePointer());
             assertTrue(reader.hasNext());
-            assertThat(reader.next().getTimestamp(), equalTo(0L));
+            Segment segment1 = reader.next();
+            assertNotNull(segment1);
+            assertEquals(Segment.TYPE_KEY, segment1.getType());
+            assertEquals(139, segment1.getSize());
+            assertEquals(195, reader.getFilePointer());
 
-            assertTrue(reader.hasNext());
-            assertThat(reader.next().getTimestamp(), equalTo(1L));
+            Segment segment2 = reader.next();
+            assertNotNull(segment2);
+            assertEquals(Segment.TYPE_PATCH, segment2.getType());
 
-            assertTrue(reader.hasNext());
-            assertThat(reader.next().getTimestamp(), equalTo(2L));
+            Segment segment3 = reader.next();
+            assertNotNull(segment3);
+            assertEquals(Segment.TYPE_PATCH, segment3.getType());
 
-            assertTrue(reader.hasNext());
+            Segment segment4 = reader.next();
+            assertNotNull(segment4);
+            assertEquals(Segment.TYPE_KEY, segment4.getType());
+
+            Segment segment5 = reader.next();
+            assertNotNull(segment5);
+            assertEquals(Segment.TYPE_PATCH, segment5.getType());
+            
+            Segment segment6 = reader.next();
+            assertNotNull(segment6);
+            assertEquals(Segment.TYPE_PATCH, segment6.getType());
         }
     }
 

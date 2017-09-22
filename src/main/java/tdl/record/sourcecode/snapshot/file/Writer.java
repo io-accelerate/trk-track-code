@@ -20,13 +20,79 @@ import tdl.record.sourcecode.time.TimeSource;
 
 public final class Writer implements AutoCloseable {
 
-    private final Charset CHARSET = StandardCharsets.US_ASCII;
+    private static class WriteHeader extends Header {
+
+        private final long timestamp;
+
+        public WriteHeader(long timestamp) {
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+    }
+
+    private static class WriteSegment extends Segment {
+
+        private final int type;
+
+        private final long size;
+
+        private final byte[] data;
+
+        private final byte[] checksum;
+
+        private final long timestamp;
+
+        public WriteSegment(int type, long timestamp, byte[] data) {
+            this.type = type;
+            this.data = data;
+            this.timestamp = timestamp;
+            this.size = data.length;
+            this.checksum = generateChecksum();
+        }
+
+        @Override
+        public byte[] getData() {
+            return data;
+        }
+
+        @Override
+        public byte[] getChecksum() {
+            return checksum;
+        }
+
+        @Override
+        public long getSize() {
+            return size;
+        }
+
+        @Override
+        public int getType() {
+            return type;
+        }
+
+        @Override
+        public long getTimestamp() {
+            return timestamp;
+        }
+
+        @Override
+        public long getAddress() {
+            return -1;
+        }
+
+    }
+
 
     private final File outputFile;
 
     private final SourceCodeProvider sourceCodeProvider;
 
-    private TimeSource timeSource;
+    private final TimeSource timeSource;
 
     private final long recordedTimestamp;
 
@@ -56,8 +122,7 @@ public final class Writer implements AutoCloseable {
 
     private void writeHeader() {
         try {
-            Header header = new Header();
-            header.setTimestamp(recordedTimestamp);
+            Header header = new WriteHeader(recordedTimestamp);
             byte[] data = header.asBytes();
             IOUtils.write(data, outputStream);
         } catch (IOException ex) {
@@ -68,11 +133,10 @@ public final class Writer implements AutoCloseable {
     public void takeSnapshot() {
         try {
             Snapshot snapshot = recorder.takeSnapshot();
-            //try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            Segment segment = new Segment();
-            segment.setType((snapshot instanceof KeySnapshot) ? Segment.TYPE_KEY : Segment.TYPE_PATCH);
-            segment.setTimestamp(TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano()));
-            segment.setData(snapshot.getData());
+            int type = (snapshot instanceof KeySnapshot) ? Segment.TYPE_KEY : Segment.TYPE_PATCH;
+            long timestamp = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
+            byte[] data = snapshot.getData();
+            Segment segment = new WriteSegment(type, timestamp, data);
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);

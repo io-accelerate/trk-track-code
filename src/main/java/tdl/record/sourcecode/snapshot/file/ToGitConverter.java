@@ -49,7 +49,7 @@ public class ToGitConverter {
     }
 
     private void commitDirectory(Segment segment) throws GitAPIException {
-        Date timestamp = segment.getTimestampAsDate();
+        Date timestamp = new Date(segment.getTimestamp() * 1000L);
         PersonIdent origIdent = new PersonIdent(git.getRepository());
         PersonIdent ident = new PersonIdent(origIdent, timestamp);
         String message = timestamp.toString();
