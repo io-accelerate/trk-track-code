@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
-abstract public class Header {
+public class Header {
 
     /**
      * The header size. 6 for magic bytes. 8 for timestamp.
@@ -12,6 +12,16 @@ abstract public class Header {
     public static int SIZE = 14;
 
     public static final byte[] MAGIC_BYTES = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x53 /*S*/, 0x54 /*T*/, 0x4d /*M*/};
+
+    private long timestamp;
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
 
     public byte[] asBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream()) {
@@ -23,5 +33,4 @@ abstract public class Header {
         }
     }
 
-    abstract public long getTimestamp();
 }

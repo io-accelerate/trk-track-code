@@ -12,7 +12,7 @@ import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.PatchSnapshot;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
-abstract public class Segment {
+public class Segment {
 
     /**
      * 6 magic bytes 8 timestamp 8 size 20 checksum
@@ -26,17 +26,67 @@ abstract public class Segment {
 
     public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53, 0x52, 0x43, 0x50, 0x54, 0x43};
 
-    abstract public byte[] getData();
+    private byte[] data;
 
-    abstract public byte[] getChecksum();
+    private byte[] checksum;
 
-    abstract public long getSize();
+    private long size;
 
-    abstract public int getType();
+    private int type;
 
-    abstract public long getTimestamp();
+    private long timestamp;
 
-    abstract public long getAddress();
+    private long address;
+
+    public byte[] getData() {
+        return data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+        setSize(data.length);
+        setChecksum(generateChecksum());
+    }
+
+    public byte[] getChecksum() {
+        return checksum;
+    }
+
+    public void setChecksum(byte[] checksum) {
+        this.checksum = checksum;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public long getAddress() {
+        return address;
+    }
+
+    public void setAddress(long address) {
+        this.address = address;
+    }
 
     public final byte[] generateChecksum() {
         try {
