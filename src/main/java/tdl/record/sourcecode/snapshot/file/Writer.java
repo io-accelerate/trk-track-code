@@ -73,6 +73,7 @@ public final class Writer implements AutoCloseable {
             segment.setType(type);
             segment.setTimestamp(timestamp);
             segment.setData(data);
+            segment.generateFromData();
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);

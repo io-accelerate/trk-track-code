@@ -36,7 +36,7 @@ public class ToGitConverter {
         Reader reader = new Reader(inputFile.toFile());
 
         while (reader.hasNext()) {
-            Segment segment = reader.next();
+            Segment segment = reader.nextSegment();
             writeDirFromSnapshot(segment);
             commitDirectory(segment);
         }

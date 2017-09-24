@@ -34,33 +34,55 @@ public class ReaderTest {
     ));
 
     @Test
+    public void getSegmentAddresses() throws IOException {
+        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+            List<Integer> addresses = reader.getSegmentAddresses();
+            System.out.println(addresses);
+            Integer[] expected = new Integer[]{14, 195, 373, 597, 1020, 1245, 1429, 1613, 1675, 1737};
+            assertArrayEquals(addresses.toArray(), expected);
+        }
+    }
+
+    @Test
     public void next() throws IOException {
         try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertEquals(Header.SIZE, reader.getFilePointer());
             assertTrue(reader.hasNext());
-            Segment segment1 = reader.next();
+
+            int address1 = reader.next();
+            assertEquals(14, address1);
+            Segment segment1 = reader.readSegmentByAddress(address1);
             assertNotNull(segment1);
             assertEquals(Segment.TYPE_KEY, segment1.getType());
             assertEquals(139, segment1.getSize());
-            assertEquals(195, reader.getFilePointer());
 
-            Segment segment2 = reader.next();
+            int address2 = reader.next();
+            assertEquals(195, address2);
+            Segment segment2 = reader.readSegmentByAddress(address2);
             assertNotNull(segment2);
             assertEquals(Segment.TYPE_PATCH, segment2.getType());
 
-            Segment segment3 = reader.next();
+            int address3 = reader.next();
+            assertEquals(373, address3);
+            Segment segment3 = reader.readSegmentByAddress(address3);
             assertNotNull(segment3);
             assertEquals(Segment.TYPE_PATCH, segment3.getType());
 
-            Segment segment4 = reader.next();
+            int address4 = reader.next();
+            assertEquals(597, address4);
+            Segment segment4 = reader.readSegmentByAddress(address4);
             assertNotNull(segment4);
             assertEquals(Segment.TYPE_KEY, segment4.getType());
 
-            Segment segment5 = reader.next();
+            int address5 = reader.next();
+            assertEquals(1020, address5);
+            Segment segment5 = reader.readSegmentByAddress(address5);
             assertNotNull(segment5);
             assertEquals(Segment.TYPE_PATCH, segment5.getType());
-            
-            Segment segment6 = reader.next();
+
+            int address6 = reader.next();
+            assertEquals(1245, address6);
+            Segment segment6 = reader.readSegmentByAddress(address6);
             assertNotNull(segment6);
             assertEquals(Segment.TYPE_PATCH, segment6.getType());
         }
@@ -71,13 +93,13 @@ public class ReaderTest {
 
         try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            assertThat(reader.next().getTimestamp(), equalTo(0L));
+            assertThat(reader.nextSegment().getTimestamp(), equalTo(0L));
 
             assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-            assertThat(reader.next().getTimestamp(), equalTo(2L));
+            assertThat(reader.nextSegment().getTimestamp(), equalTo(2L));
 
             assertTrue(reader.hasNext());
         }
@@ -87,7 +109,7 @@ public class ReaderTest {
     public void reset() throws IOException {
         try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            Segment snapshot1 = reader.next();
+            Segment snapshot1 = reader.nextSegment();
 
             assertTrue(reader.hasNext());
             reader.skip();
@@ -99,7 +121,7 @@ public class ReaderTest {
             reader.reset();
             assertTrue(reader.hasNext());
 
-            Segment snapshot2 = reader.next();
+            Segment snapshot2 = reader.nextSegment();
 
             assertEquals(snapshot1, snapshot2);
         }

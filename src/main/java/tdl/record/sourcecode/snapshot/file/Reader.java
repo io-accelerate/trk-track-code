@@ -10,113 +10,12 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
-public class Reader implements Iterator<Segment>, AutoCloseable {
-
-    private static class ReadHeader extends Header {
-
-        private final RandomAccessFile file;
-
-        public ReadHeader(RandomAccessFile file) {
-            this.file = file;
-        }
-
-        public boolean isValid() {
-            try {
-                byte[] magicBytes = new byte[MAGIC_BYTES.length];
-                file.read(magicBytes, 0, MAGIC_BYTES.length);
-                return Arrays.equals(magicBytes, MAGIC_BYTES);
-            } catch (IOException ex) {
-                return false;
-            }
-        }
-
-        @Override
-        public long getTimestamp() {
-            try {
-                byte[] bytes = new byte[8];
-                long lastPosition = file.getFilePointer();
-                file.seek(6);
-                file.read(bytes, 0, 8);
-                file.seek(lastPosition);
-                return ByteHelper.byteArrayToLittleEndianLong(bytes);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        public void next() throws IOException {
-            file.seek(SIZE);
-        }
-    }
-
-    private static class ReadSegment extends Segment {
-
-        private final RandomAccessFile file;
-
-        private final long address;
-
-        public ReadSegment(RandomAccessFile file, long address) {
-            this.file = file;
-            this.address = address;
-        }
-
-        private byte[] readByte(int offset, int length) {
-            try {
-                byte[] bytes = new byte[length];
-                long lastPosition = file.getFilePointer();
-                file.seek(address + offset);
-                file.read(bytes, 0, length);
-                file.seek(lastPosition);
-                return bytes;
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        @Override
-        public int getType() {
-            return getTypeByteBytes(readByte(0, MAGIC_BYTES_KEY.length));
-        }
-
-        @Override
-        public long getTimestamp() {
-            return ByteHelper.byteArrayToLittleEndianLong(readByte(6, 8));
-        }
-
-        @Override
-        public long getSize() {
-            return ByteHelper.byteArrayToLittleEndianLong(readByte(14, 8));
-        }
-
-        @Override
-        public byte[] getChecksum() {
-            return readByte(22, 20);
-        }
-
-        @Override
-        public byte[] getData() {
-            long size = getSize();
-            return readByte(42, (int) size);
-        }
-
-        @Override
-        public long getAddress() {
-            return address;
-        }
-
-        public void next() {
-            try {
-                int size = (int) getSize();
-                file.seek(address + HEADER_SIZE);
-                file.skipBytes(size);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-    }
+public class Reader implements Iterator<Integer>, AutoCloseable {
 
     private final File file;
 
@@ -130,6 +29,25 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
         reset();
     }
 
+    private byte[] readBytesFromOffset(int offset, int length) throws IOException {
+        byte[] bytes = new byte[length];
+        long lastPosition = randomAccessFile.getFilePointer();
+        randomAccessFile.seek(offset);
+        randomAccessFile.read(bytes, 0, length);
+        randomAccessFile.seek(lastPosition);
+        return bytes;
+    }
+
+    private long readLong(int offset) throws IOException {
+        return ByteHelper.byteArrayToLittleEndianLong(readBytesFromOffset(offset, 8));
+    }
+
+    private byte[] readBytes(int length) throws IOException {
+        byte[] bytes = new byte[length];
+        randomAccessFile.read(bytes, 0, length);
+        return bytes;
+    }
+
     @Override
     public boolean hasNext() {
         try {
@@ -140,30 +58,37 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
     }
 
     @Override
-    public Segment next() {
+    public Integer next() {
         try {
-            Segment segment = readSegment();
-            return segment;
+            long address = randomAccessFile.getFilePointer();
+            long size = readSegmentSizeFromAddress((int) address);
+            int skip = Segment.HEADER_SIZE + (int) size;
+            randomAccessFile.skipBytes(skip);
+            return (int) address;
         } catch (IOException ex) {
             //TODO raise as a proper exception
             return null;
         }
     }
 
+    public Segment nextSegment() throws IOException {
+        int address = next();
+        return readSegmentByAddress(address);
+    }
+
     private Header readFileHeader() throws IOException {
-        ReadHeader header = new ReadHeader(randomAccessFile);
+        Header header = new Header();
+        header.setMagicBytes(readBytesFromOffset(0, Header.MAGIC_BYTES.length));
+        header.setTimestamp(readLong(6));
         if (!header.isValid()) {
             throw new IOException("Cannot parse header");
         }
-        header.next();
+        randomAccessFile.seek(Header.SIZE);
         return header;
     }
 
-    private Segment readSegment() throws IOException {
-        long address = randomAccessFile.getFilePointer();
-        ReadSegment segment = new ReadSegment(randomAccessFile, address);
-        segment.next();
-        return segment;
+    private long readSegmentSizeFromAddress(int address) throws IOException {
+        return readLong(address + Segment.SIZE_ADDRESS);
     }
 
     @Override
@@ -172,7 +97,7 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
     }
 
     @Override
-    public void forEachRemaining(Consumer<? super Segment> action) {
+    public void forEachRemaining(Consumer<? super Integer> action) {
         Iterator.super.forEachRemaining(action); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -194,7 +119,14 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
     }
 
     public void skip() throws IOException {
-        readSegment();
+        next();
+    }
+
+    public List<Integer> getSegmentAddresses() throws IOException {
+        reset();
+        List<Integer> list = new ArrayList<>();
+        forEachRemaining(list::add);
+        return list;
     }
 
     /**
@@ -223,7 +155,7 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
         int index = 0;
         while (index < end) {
             if (index >= start && index < end) {
-                Segment snapshot = next();
+                Segment snapshot = nextSegment();
                 list.add(snapshot);
             } else {
                 skip();
@@ -239,7 +171,7 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
         int start = 0;
         reset();
         while (start < index) {
-            Segment snapshot = readSegment();
+            Segment snapshot = nextSegment();
             if (snapshot.getSnapshot() instanceof KeySnapshot) {
                 keyIndex = start;
             }
@@ -249,14 +181,31 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
         return keyIndex;
     }
 
-    public List<Date> getDates() throws IOException {
-        //TODO: need to do manual skip
-        List<Date> list = new ArrayList<>();
-        reset();
-        this.forEachRemaining((Segment snapshot) -> {
-            list.add(new Date(snapshot.getTimestamp() * 1000L));
-        });
-        return list;
+    public Segment readSegmentByAddress(int address) throws IOException {
+        long lastPosition = randomAccessFile.getFilePointer();
+        randomAccessFile.seek(address);
+        Segment segment = new Segment();
+        segment.setAddress(address);
+        segment.setType(Segment.getTypeByteBytes(readBytes(6)));
+        segment.setTimestamp(ByteHelper.byteArrayToLittleEndianInt(readBytes(8)));
+        segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(8)));
+        segment.setChecksum(readBytes(20));
+        segment.setData(readBytes((int) segment.getSize()));
+        if (!segment.isDataValid()) {
+            throw new IOException("Checksum mismatch");
+        }
+        randomAccessFile.seek(lastPosition);
+        return segment;
+    }
+
+    private Segment generateEmptySegment() {
+        Segment segment = new Segment();
+        segment.setType(Segment.TYPE_KEY);
+        byte[] bytes = new byte[0];
+        segment.setData(bytes);
+        segment.setTimestamp(0);
+        segment.generateFromData();
+        return segment;
     }
 
     public Segment getSnapshotAt(int index) throws IOException {
@@ -266,7 +215,8 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
             skip();
             start++;
         }
-        Segment snapshot = next();
+        int address = next();
+        Segment snapshot = readSegmentByAddress(address);
         reset();
         return snapshot;
     }
@@ -274,7 +224,16 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
     public List<Segment> getSnapshots() throws IOException {
         List<Segment> list = new ArrayList<>();
         reset();
-        forEachRemaining(list::add);
+        forEachRemaining((address) -> {
+            Segment segment;
+            try {
+                segment = readSegmentByAddress(address);
+            } catch (IOException ex) {
+                //Do nothing
+                segment = generateEmptySegment();
+            }
+            list.add(segment);
+        });
         return list;
     }
 
@@ -282,7 +241,7 @@ public class Reader implements Iterator<Segment>, AutoCloseable {
         int index = 0;
         reset();
         do {
-            Segment segment = readSegment();
+            Segment segment = nextSegment();
             if (segment.getTimestamp() > timestamp) {
                 index--;
                 break;

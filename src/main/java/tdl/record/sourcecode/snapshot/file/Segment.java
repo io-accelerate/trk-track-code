@@ -19,12 +19,14 @@ public class Segment {
      */
     public static final int HEADER_SIZE = 42;
 
+    public static final int SIZE_ADDRESS = 14;
+
     public static final int TYPE_KEY = 0;
     public static final int TYPE_PATCH = 1;
 
-    public static final byte[] MAGIC_BYTES_KEY = new byte[]{0x53, 0x52, 0x43, 0x4b, 0x45, 0x59};
+    public static final byte[] MAGIC_BYTES_KEY = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x4b /*K*/, 0x45 /*E*/, 0x59 /*Y*/};
 
-    public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53, 0x52, 0x43, 0x50, 0x54, 0x43};
+    public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x50, 0x54, 0x43};
 
     private byte[] data;
 
@@ -44,6 +46,9 @@ public class Segment {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    public void generateFromData() {
         setSize(data.length);
         setChecksum(generateChecksum());
     }
@@ -139,7 +144,7 @@ public class Segment {
         } else if (Arrays.equals(bytes, MAGIC_BYTES_PATCH)) {
             return TYPE_PATCH;
         }
-        throw new RuntimeException("Unknown bytes: " + new String(bytes));
+        throw new RuntimeException("Unknown bytes: '" + new String(bytes) + "'");
     }
 
     public Snapshot getSnapshot() {

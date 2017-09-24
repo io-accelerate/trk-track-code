@@ -26,7 +26,7 @@ public class ListCommand extends Command {
             System.out.println("Recording Start Time: " + start.toString());
             int index = 0;
             while (reader.hasNext()) {
-                Segment segment = reader.next();
+                Segment segment = reader.nextSegment();
                 printSnapshot(segment, index);
                 index++;
             }
