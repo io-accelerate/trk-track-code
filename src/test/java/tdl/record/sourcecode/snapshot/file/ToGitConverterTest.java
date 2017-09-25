@@ -42,7 +42,7 @@ public class ToGitConverterTest {
         assertTrue(gitDir.resolve(".git").toFile().exists());
     }
 
-    private void createRandomSnapshot(Path snapshotFile, Path workDir) throws IOException, InterruptedException {
+    private void createRandomSnapshot(Path snapshotFile, Path workDir) throws Exception {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
         TimeSource timeSource = new FakeTimeSource();
         long timestamp = System.currentTimeMillis() / 1000L;

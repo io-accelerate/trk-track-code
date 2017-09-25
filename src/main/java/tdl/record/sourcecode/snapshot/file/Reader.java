@@ -6,12 +6,9 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
@@ -186,10 +183,11 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         randomAccessFile.seek(address);
         Segment segment = new Segment();
         segment.setAddress(address);
-        segment.setType(Segment.getTypeByteBytes(readBytes(6)));
-        segment.setTimestamp(ByteHelper.byteArrayToLittleEndianInt(readBytes(8)));
-        segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(8)));
-        segment.setChecksum(readBytes(20));
+        segment.setType(Segment.getTypeByteBytes(readBytes(Segment.MAGIC_BYTES_KEY.length)));
+        segment.setTimestamp(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
+        segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
+        segment.setTag(new String(readBytes(Segment.TAG_SIZE)));
+        segment.setChecksum(readBytes(Segment.CHECKSUM_SIZE));
         segment.setData(readBytes((int) segment.getSize()));
         if (!segment.isDataValid()) {
             throw new IOException("Checksum mismatch");

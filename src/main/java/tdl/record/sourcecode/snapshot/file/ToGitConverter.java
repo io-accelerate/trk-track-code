@@ -59,6 +59,13 @@ public class ToGitConverter {
                 .setAuthor(ident)
                 .setMessage(message)
                 .call();
+
+        if (segment.hasTag()) {
+            git.tag()
+                    .setTagger(ident)
+                    .setName(segment.getTag().trim())
+                    .call();
+        }
     }
 
     private static void deleteMissing(Git git) throws GitAPIException {

@@ -22,7 +22,7 @@ public class WriterTest {
     public TemporaryFolder destinationFolder = new TemporaryFolder();
 
     @Test
-    public void run() throws IOException {
+    public void run() throws Exception {
         Path output = destinationFolder.newFile("snapshot.bin").toPath();
         Path dirPath = Paths.get("src/test/resources/directory_snapshot/dir1");
         Path sourceDir = sourceFolder.getRoot().toPath();
@@ -45,13 +45,13 @@ public class WriterTest {
 
             appendString(sourceDir, "file1.txt", "\nSIT");
             writer.takeSnapshot();
-
+            
             appendString(sourceDir, "file2.txt", "\nLOREM");
             writer.takeSnapshot();
-
+            
             appendString(sourceDir, "file4.txt", "\nIPSUM");
             writer.takeSnapshot();
-
+            
             appendString(sourceDir, "file5.txt", "\nDOLOR");
             writer.takeSnapshot();
         }

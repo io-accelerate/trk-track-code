@@ -8,4 +8,6 @@ public interface TimeSource {
     long currentTimeNano();
 
     void wakeUpAt(long timestamp, TimeUnit timeUnit) throws InterruptedException, BrokenBarrierException;
+
+    void wakeUpNow();
 }

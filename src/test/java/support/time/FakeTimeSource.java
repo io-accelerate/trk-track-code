@@ -9,12 +9,8 @@ public class FakeTimeSource implements TimeSource {
     private long incrementNanos;
 
     public FakeTimeSource() {
-        this(1);
-    }
-
-    public FakeTimeSource(long incrementNanos) {
         currentTimeNano = 0;
-        this.incrementNanos = incrementNanos;
+        this.incrementNanos = 1L;
     }
 
 
@@ -27,5 +23,10 @@ public class FakeTimeSource implements TimeSource {
     @Override
     public void wakeUpAt(long timestamp, TimeUnit timeUnit) throws InterruptedException {
         currentTimeNano = timeUnit.toNanos(timestamp);
+    }
+
+    @Override
+    public void wakeUpNow() {
+        currentTimeNano += incrementNanos;
     }
 }
