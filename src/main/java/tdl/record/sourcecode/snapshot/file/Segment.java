@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import org.eclipse.jgit.lib.Repository;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.PatchSnapshot;
 import tdl.record.sourcecode.snapshot.Snapshot;
@@ -106,11 +107,21 @@ public class Segment {
     }
 
     public void setTag(String tag) {
+        if (tag != null) {
+            tag = tag.trim();
+            if (tag.length() > 0 && !isValidTagName(tag)) {
+                throw new RuntimeException("Invalid tag name");
+            }
+        }
         this.tag = tag;
     }
 
     public boolean hasTag() {
         return tag != null && tag.trim().length() > 0;
+    }
+
+    public static boolean isValidTagName(String tag) {
+        return Repository.isValidRefName("refs/tag/" + tag);
     }
 
     public final byte[] generateChecksum() {
