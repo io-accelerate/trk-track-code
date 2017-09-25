@@ -18,15 +18,13 @@ import tdl.record.sourcecode.snapshot.SnapshotRecorder;
 import org.apache.commons.io.IOUtils;
 import tdl.record.sourcecode.time.TimeSource;
 
-public final class SnapshotsFileWriter implements AutoCloseable {
-
-    private final Charset CHARSET = StandardCharsets.US_ASCII;
+public final class Writer implements AutoCloseable {
 
     private final File outputFile;
 
     private final SourceCodeProvider sourceCodeProvider;
 
-    private TimeSource timeSource;
+    private final TimeSource timeSource;
 
     private final long recordedTimestamp;
 
@@ -34,7 +32,7 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private final SnapshotRecorder recorder;
 
-    public SnapshotsFileWriter(
+    public Writer(
             Path outputPath,
             SourceCodeProvider sourceCodeProvider,
             TimeSource timeSource,
@@ -56,25 +54,29 @@ public final class SnapshotsFileWriter implements AutoCloseable {
 
     private void writeHeader() {
         try {
-            SnapshotFileHeader header = new SnapshotFileHeader(recordedTimestamp);
+            Header header = new Header();
+            header.setTimestamp(recordedTimestamp);
             byte[] data = header.asBytes();
             IOUtils.write(data, outputStream);
         } catch (IOException ex) {
-            Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     public void takeSnapshot() {
         try {
             Snapshot snapshot = recorder.takeSnapshot();
-            //try (ByteArrayOutputStream buff = createSnapshotAndStoreToByteArray()) {
-            SnapshotFileSegment segment = new SnapshotFileSegment();
-            segment.type = (snapshot instanceof KeySnapshot) ? SnapshotFileSegment.TYPE_KEY : SnapshotFileSegment.TYPE_PATCH;
-            segment.timestamp = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
-            segment.setData(snapshot.getData());
+            int type = (snapshot instanceof KeySnapshot) ? Segment.TYPE_KEY : Segment.TYPE_PATCH;
+            long timestamp = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
+            byte[] data = snapshot.getData();
+            Segment segment = new Segment();
+            segment.setType(type);
+            segment.setTimestamp(timestamp);
+            segment.setData(data);
+            segment.generateFromData();
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
-            Logger.getLogger(SnapshotsFileWriter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

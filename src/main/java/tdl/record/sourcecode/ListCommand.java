@@ -9,8 +9,8 @@ import java.text.MessageFormat;
 import java.util.Date;
 import org.apache.commons.codec.binary.Hex;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
-import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
+import tdl.record.sourcecode.snapshot.file.Segment;
+import tdl.record.sourcecode.snapshot.file.Reader;
 
 @Parameters(commandDescription = "List snapshots in the file.")
 public class ListCommand extends Command {
@@ -21,12 +21,12 @@ public class ListCommand extends Command {
     @Override
     public void run() {
         File file = Paths.get(inputFilePath).toFile();
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(file)) {
+        try (Reader reader = new Reader(file)) {
             Date start = new Date(reader.getFileHeader().getTimestamp());
             System.out.println("Recording Start Time: " + start.toString());
             int index = 0;
             while (reader.hasNext()) {
-                SnapshotFileSegment segment = reader.next();
+                Segment segment = reader.nextSegment();
                 printSnapshot(segment, index);
                 index++;
             }
@@ -35,12 +35,12 @@ public class ListCommand extends Command {
         }
     }
 
-    private void printSnapshot(SnapshotFileSegment segment, int index) {
+    private void printSnapshot(Segment segment, int index) {
         String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
-        long size = segment.size + SnapshotFileSegment.HEADER_SIZE;
-        String checksum = Hex.encodeHexString(segment.checksum);
+        long size = segment.getSize() + Segment.HEADER_SIZE;
+        String checksum = Hex.encodeHexString(segment.getChecksum());
         String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %5d | checksum %40s",
-                index, segment.timestamp, type, segment.address, size, checksum);
+                index, segment.getTimestamp(), type, segment.getAddress(), size, checksum);
         System.out.println(infoLine);
     }
 }

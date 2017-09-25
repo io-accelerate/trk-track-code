@@ -14,8 +14,8 @@ import support.content.MultiStepSourceCodeProvider;
 import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
-import tdl.record.sourcecode.snapshot.file.SnapshotFileSegment;
-import tdl.record.sourcecode.snapshot.file.SnapshotsFileReader;
+import tdl.record.sourcecode.snapshot.file.Segment;
+import tdl.record.sourcecode.snapshot.file.Reader;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryPatch;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
-import static tdl.record.sourcecode.snapshot.file.SnapshotFileSegment.TYPE_KEY;
+import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
 
 public class CanRecordSourceCodeAccTest {
 
@@ -65,8 +65,8 @@ public class CanRecordSourceCodeAccTest {
         sourceCodeRecorder.close();
 
         // Test the structure of the file
-        try (SnapshotsFileReader reader = new SnapshotsFileReader(outputFilePath.toFile())) {
-            List<SnapshotFileSegment> snapshots = reader.getSnapshots();
+        try (Reader reader = new Reader(outputFilePath.toFile())) {
+            List<Segment> snapshots = reader.getSnapshots();
             assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY), snapshots);
             assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
         }
@@ -103,8 +103,8 @@ public class CanRecordSourceCodeAccTest {
         FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
     }
 
-    private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<SnapshotFileSegment> actualSnapshots) {
-        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.type)
+    private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<Segment> actualSnapshots) {
+        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.getType())
                 .collect(Collectors.toList());
         assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
     }
@@ -161,10 +161,10 @@ public class CanRecordSourceCodeAccTest {
         };
     }
 
-    private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<SnapshotFileSegment> snapshots) {
+    private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<Segment> snapshots) {
         for (int i = 0; i < snapshots.size(); i++) {
             assertThat("Timestamp of snapshot " + i,
-                    (double) snapshots.get(i).timestamp, closeTo(unit.toSeconds(time * i), 0.01));
+                    (double) snapshots.get(i).getTimestamp(), closeTo(unit.toSeconds(time * i), 0.01));
         }
     }
 }
