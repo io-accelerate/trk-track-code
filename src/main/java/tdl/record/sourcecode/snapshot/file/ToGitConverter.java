@@ -14,7 +14,6 @@ import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
 
 public class ToGitConverter {
 
@@ -52,13 +51,21 @@ public class ToGitConverter {
         Date timestamp = new Date(segment.getTimestamp() * 1000L);
         PersonIdent origIdent = new PersonIdent(git.getRepository());
         PersonIdent ident = new PersonIdent(origIdent, timestamp);
-        String message = timestamp.toString();
+        String message = getGitMessageBySegment(segment);
         git.add().addFilepattern(".").call();
         deleteMissing(git);
         git.commit()
                 .setAuthor(ident)
                 .setMessage(message)
                 .call();
+    }
+
+    private String getGitMessageBySegment(Segment segment) {
+        String tag = segment.getTag();
+        if (tag != null && tag.length() > 0) {
+            return tag;
+        }
+        return new Date(segment.getTimestamp() * 1000L).toString();
     }
 
     private static void deleteMissing(Git git) throws GitAPIException {

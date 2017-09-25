@@ -30,6 +30,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +131,19 @@ public class CanRecordSourceCodeAccTest {
             assertThat(snapshots.size(), is(2));
             assertEquals(snapshots.get(1).getTag().trim(), "testTag");
         }
+        File gitDir = testFolder.newFolder();
+        ToGitConverter converter = new ToGitConverter(outputFilePath, gitDir.toPath());
+        converter.convert();
+
+        //See the git commit messages
+        Git git = Git.open(gitDir);
+        Iterable<RevCommit> commits = git.log().call();
+        List<String> commitMessages = new ArrayList<>();
+        commits.forEach(commit -> {
+            commitMessages.add(commit.getFullMessage());
+        });
+        Collections.reverse(commitMessages);
+        assertEquals(commitMessages.get(1).trim(), "testTag");
     }
 
     @Test
