@@ -109,6 +109,10 @@ public class Segment {
         this.tag = tag;
     }
 
+    public boolean hasTag() {
+        return tag != null && tag.trim().length() > 0;
+    }
+
     public final byte[] generateChecksum() {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");

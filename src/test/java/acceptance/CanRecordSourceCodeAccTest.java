@@ -37,12 +37,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.lib.Ref;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
@@ -135,15 +137,16 @@ public class CanRecordSourceCodeAccTest {
         ToGitConverter converter = new ToGitConverter(outputFilePath, gitDir.toPath());
         converter.convert();
 
-        //See the git commit messages
+        //See the git tags
         Git git = Git.open(gitDir);
-        Iterable<RevCommit> commits = git.log().call();
-        List<String> commitMessages = new ArrayList<>();
-        commits.forEach(commit -> {
-            commitMessages.add(commit.getFullMessage());
-        });
-        Collections.reverse(commitMessages);
-        assertEquals(commitMessages.get(1).trim(), "testTag");
+
+        List<String> tags = git
+                .tagList()
+                .call()
+                .stream()
+                .map(Ref::getName)
+                .collect(Collectors.toList());
+        assertTrue(tags.get(0).trim().endsWith("testTag"));
     }
 
     @Test
