@@ -22,7 +22,7 @@ public class WriterTest {
     public TemporaryFolder destinationFolder = new TemporaryFolder();
 
     @Test
-    public void run() throws IOException {
+    public void run() throws Exception {
         Path output = destinationFolder.newFile("snapshot.bin").toPath();
         Path dirPath = Paths.get("src/test/resources/directory_snapshot/dir1");
         Path sourceDir = sourceFolder.getRoot().toPath();

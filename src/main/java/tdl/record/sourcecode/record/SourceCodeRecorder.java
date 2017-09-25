@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static java.nio.file.StandardOpenOption.CREATE;
+import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
 
 @Slf4j
 public class SourceCodeRecorder {
@@ -53,8 +54,8 @@ public class SourceCodeRecorder {
     @SuppressWarnings("SameParameterValue")
     public static class Builder {
 
-        private SourceCodeProvider bSourceCodeProvider;
-        private Path bOutputRecordingFilePath;
+        private final SourceCodeProvider bSourceCodeProvider;
+        private final Path bOutputRecordingFilePath;
         private TimeSource bTimeSource;
         private long bSnapshotIntervalMillis;
         private long bRecordingStartTimestamp;
@@ -114,7 +115,7 @@ public class SourceCodeRecorder {
                     keySnapshotSpacing,
                     true
             );
-        } catch (IOException e) {
+        } catch (IOException | SnapshotRecorderException e) {
             throw new SourceCodeRecorderException("Failed to open destination", e);
         }
 
@@ -132,9 +133,8 @@ public class SourceCodeRecorder {
             long timestampBeforeProcessing = timeSource.currentTimeNano();
             log.info("Snap!");
 
-            //TODO pass this tag to the writer and save to snapshot
             String tag = tagQueue.poll();
-            writer.takeSnapshot();
+            writer.takeSnapshotWithTag(tag);
 
             long nextTimestamp = timestampBeforeProcessing + TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
             try {

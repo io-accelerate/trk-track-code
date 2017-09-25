@@ -41,8 +41,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
+import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 
 public class CanRecordSourceCodeAccTest {
@@ -67,11 +69,10 @@ public class CanRecordSourceCodeAccTest {
                 dst -> {
                     /* Empty folder */ });
 
-        // TODO Change the KeySnapshotSpacing to be greater than 1
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
-                .withKeySnapshotSpacing(1)
+                .withKeySnapshotSpacing(3)
                 .build();
         sourceCodeRecorder.start(Duration.of(sourceCodeHistory.size(), ChronoUnit.SECONDS));
         sourceCodeRecorder.close();
@@ -79,7 +80,7 @@ public class CanRecordSourceCodeAccTest {
         // Test the structure of the file
         try (Reader reader = new Reader(outputFilePath.toFile())) {
             List<Segment> snapshots = reader.getSnapshots();
-            assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY, TYPE_KEY), snapshots);
+            assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_PATCH, TYPE_PATCH, TYPE_KEY, TYPE_PATCH), snapshots);
             assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
         }
 
@@ -127,7 +128,7 @@ public class CanRecordSourceCodeAccTest {
         try (Reader reader = new Reader(outputFilePath.toFile())) {
             List<Segment> snapshots = reader.getSnapshots();
             assertThat(snapshots.size(), is(2));
-            //TODO check for the tag
+            assertEquals(snapshots.get(1).getTag().trim(), "testTag");
         }
     }
 

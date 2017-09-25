@@ -27,11 +27,12 @@ public class SnapshotRecorderTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void takeSnapshot() throws IOException {
+    public void takeSnapshot() throws Exception {
         Path directory = Paths.get("./src/test/resources/diff/test1/dir1/");
         Path tmpDir = folder.getRoot().toPath();
         FileUtils.copyDirectory(directory.toFile(), tmpDir.toFile());
         SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
+        recorder.init();
 
         Snapshot snapshot1 = recorder.takeSnapshot();
         assertTrue(snapshot1 instanceof KeySnapshot);
@@ -68,12 +69,14 @@ public class SnapshotRecorderTest {
         //do nothing
     }
 
-    private SnapshotRecorder createDefaultRecorder(Path tmpDir) {
-        return new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
+    private SnapshotRecorder createDefaultRecorder(Path tmpDir) throws Exception {
+        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
+        recorder.init();
+        return recorder;
     }
 
     @Test
-    public void constructShouldCreateGitDirectory() {
+    public void constructShouldCreateGitDirectory() throws Exception {
         Path tmpDir = folder.getRoot().toPath();
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
@@ -83,7 +86,7 @@ public class SnapshotRecorderTest {
     }
 
     @Test
-    public void syncToGitDirectoryShouldCopyDirectory() throws IOException {
+    public void syncToGitDirectoryShouldCopyDirectory() throws Exception {
         Path tmpDir = folder.getRoot().toPath();
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
@@ -115,7 +118,7 @@ public class SnapshotRecorderTest {
     }
 
     @Test
-    public void syncToGitDirectoryShouldCopyDirectoryWithDotGitignore() throws IOException {
+    public void syncToGitDirectoryShouldCopyDirectoryWithDotGitignore() throws Exception {
         Path tmpDir = folder.getRoot().toPath();
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
@@ -129,7 +132,7 @@ public class SnapshotRecorderTest {
     }
 
     @Test
-    public void syncToGitDirectoryShouldCopyDirectoryWithoutDotGitDirectory() throws IOException, GitAPIException {
+    public void syncToGitDirectoryShouldCopyDirectoryWithoutDotGitDirectory() throws Exception {
         Path tmpDir = folder.getRoot().toPath();
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
