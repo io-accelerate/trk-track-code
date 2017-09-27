@@ -30,13 +30,12 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.eclipse.jgit.api.Git;
+
 import org.eclipse.jgit.lib.Ref;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -48,7 +47,6 @@ import static org.junit.Assert.assertTrue;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
-import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 
 public class CanRecordSourceCodeAccTest {
 
@@ -276,7 +274,7 @@ public class CanRecordSourceCodeAccTest {
     private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<Segment> snapshots) {
         for (int i = 0; i < snapshots.size(); i++) {
             assertThat("Timestamp of snapshot " + i,
-                    (double) snapshots.get(i).getTimestamp(), closeTo(unit.toSeconds(time * i), 0.01));
+                    (double) snapshots.get(i).getTimestampSec(), closeTo(unit.toSeconds(time * i), 0.01));
         }
     }
 }

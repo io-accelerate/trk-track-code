@@ -5,7 +5,6 @@ import com.beust.jcommander.Parameters;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.text.MessageFormat;
 import java.util.Date;
 import org.apache.commons.codec.binary.Hex;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
@@ -40,7 +39,7 @@ public class ListCommand extends Command {
         long size = segment.getSize() + Segment.HEADER_SIZE;
         String checksum = Hex.encodeHexString(segment.getChecksum());
         String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %5d | checksum %40s",
-                index, segment.getTimestamp(), type, segment.getAddress(), size, checksum);
+                index, segment.getTimestampSec(), type, segment.getAddress(), size, checksum);
         System.out.println(infoLine);
     }
 }

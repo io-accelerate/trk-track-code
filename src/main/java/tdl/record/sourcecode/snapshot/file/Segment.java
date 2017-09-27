@@ -45,7 +45,7 @@ public class Segment {
 
     private int type;
 
-    private long timestamp;
+    private long timestampSec;
 
     private long address;
 
@@ -86,12 +86,12 @@ public class Segment {
         this.type = type;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public long getTimestampSec() {
+        return timestampSec;
     }
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public void setTimestampSec(long timestampSec) {
+        this.timestampSec = timestampSec;
     }
 
     public long getAddress() {
@@ -151,7 +151,7 @@ public class Segment {
     public byte[] getHeaderAsBytes() {
         try (ByteArrayOutputStream byteArray = new ByteArrayOutputStream(HEADER_SIZE)) {
             byteArray.write(getMagicBytesByType(getType()));
-            byteArray.write(ByteHelper.littleEndianLongToByteArray(getTimestamp(), 8));
+            byteArray.write(ByteHelper.littleEndianLongToByteArray(getTimestampSec(), 8));
             byteArray.write(ByteHelper.littleEndianLongToByteArray(getSize(), 8));
             byteArray.write(getTagAsByte());
             byteArray.write(getChecksum());
@@ -206,7 +206,7 @@ public class Segment {
         Segment snapshot = (Segment) obj;
 
         return getType() == snapshot.getType()
-                && getTimestamp() == snapshot.getTimestamp()
+                && getTimestampSec() == snapshot.getTimestampSec()
                 && Arrays.equals(getChecksum(), snapshot.getChecksum())
                 && Arrays.equals(getData(), snapshot.getData());
     }
@@ -217,7 +217,7 @@ public class Segment {
         hash = 67 * hash + Arrays.hashCode(this.data);
         hash = 67 * hash + Arrays.hashCode(this.checksum);
         hash = 67 * hash + this.type;
-        hash = 67 * hash + (int) (this.timestamp ^ (this.timestamp >>> 32));
+        hash = 67 * hash + (int) (this.timestampSec ^ (this.timestampSec >>> 32));
         return hash;
     }
 }

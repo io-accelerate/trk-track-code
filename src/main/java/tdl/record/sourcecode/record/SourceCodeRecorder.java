@@ -1,7 +1,6 @@
 package tdl.record.sourcecode.record;
 
 import lombok.extern.slf4j.Slf4j;
-import tdl.record.sourcecode.App;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.file.Writer;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
@@ -17,8 +16,6 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
@@ -58,19 +55,20 @@ public class SourceCodeRecorder {
         private final Path bOutputRecordingFilePath;
         private TimeSource bTimeSource;
         private long bSnapshotIntervalMillis;
-        private long bRecordingStartTimestamp;
+        private long bRecordingStartTimestampSec;
         private int bKeySnapshotSpacing;
 
         public Builder(SourceCodeProvider sourceCodeProvider, Path outputRecordingFilePath) {
             bSourceCodeProvider = sourceCodeProvider;
             bOutputRecordingFilePath = outputRecordingFilePath;
+            bRecordingStartTimestampSec = System.currentTimeMillis() / 1000;
             bTimeSource = new SystemMonotonicTimeSource();
             bSnapshotIntervalMillis = TimeUnit.MINUTES.toMillis(5);
             bKeySnapshotSpacing = 5;
         }
 
-        public Builder withRecordingStartTime(long recordedTimestamp) {
-            this.bRecordingStartTimestamp = recordedTimestamp;
+        public Builder withRecordingStartTimestampSec(long recordingStartTimestampSec) {
+            this.bRecordingStartTimestampSec = recordingStartTimestampSec;
             return this;
         }
 
@@ -94,7 +92,7 @@ public class SourceCodeRecorder {
                     bSourceCodeProvider,
                     bOutputRecordingFilePath,
                     bTimeSource,
-                    bRecordingStartTimestamp,
+                    bRecordingStartTimestampSec,
                     bSnapshotIntervalMillis,
                     bKeySnapshotSpacing
             );
@@ -113,7 +111,7 @@ public class SourceCodeRecorder {
                     timeSource,
                     recordingStartTimestamp,
                     keySnapshotSpacing,
-                    true
+                    false
             );
         } catch (IOException | SnapshotRecorderException e) {
             throw new SourceCodeRecorderException("Failed to open destination", e);
