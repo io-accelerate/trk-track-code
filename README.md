@@ -27,7 +27,7 @@ There will be one key snapshot (full dir copy) to 9 patch snapshots.
 ```java
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(
                 Paths.get("./sourceCodeDir"));
-        String destinationPath = "./sourcecode.srcs";
+        String destinationPath = Paths.get("./sourcecode.srcs");
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, destinationPath)
                 .withTimeSource(new SystemMonotonicTimeSource())
                 .withSnapshotEvery(1, TimeUnit.MINUTES)

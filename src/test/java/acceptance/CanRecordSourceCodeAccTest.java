@@ -50,8 +50,9 @@ import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
 
 public class CanRecordSourceCodeAccTest {
 
-    public static final int TIME_TO_TAKE_A_SNAPSHOT = 1000;
-    public static final Duration INDEFINITE = Duration.of(999, ChronoUnit.HOURS);
+    private static final int TIME_TO_TAKE_A_SNAPSHOT = 1000;
+    private static final Duration INDEFINITE = Duration.of(999, ChronoUnit.HOURS);
+
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
 
@@ -128,7 +129,7 @@ public class CanRecordSourceCodeAccTest {
 
         try (Reader reader = new Reader(outputFilePath.toFile())) {
             List<Segment> snapshots = reader.getSnapshots();
-            assertThat(snapshots.size(), is(2));
+            assertThat(snapshots.size(), is(3)); // 1 initial + 1 tag + 1 final
             assertEquals(snapshots.get(1).getTag().trim(), "testTag");
         }
         File gitDir = testFolder.newFolder();
@@ -173,7 +174,7 @@ public class CanRecordSourceCodeAccTest {
     }
 
     private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<Segment> actualSnapshots) {
-        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.getType())
+        List<Integer> snapshotTypes = actualSnapshots.stream().map(Segment::getType)
                 .collect(Collectors.toList());
         assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
     }
@@ -271,6 +272,7 @@ public class CanRecordSourceCodeAccTest {
         };
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<Segment> snapshots) {
         for (int i = 0; i < snapshots.size(); i++) {
             assertThat("Timestamp of snapshot " + i,

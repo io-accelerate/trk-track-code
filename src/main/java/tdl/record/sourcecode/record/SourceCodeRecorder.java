@@ -129,7 +129,7 @@ public class SourceCodeRecorder {
     private void doRecord(Writer writer, Duration recordingDuration) {
         while (timeSource.currentTimeNano() < recordingDuration.toNanos()) {
             long timestampBeforeProcessing = timeSource.currentTimeNano();
-            log.info("Snap!");
+            log.debug("Sourcecode capture!");
 
             String tag = tagQueue.poll();
             writer.takeSnapshotWithTag(tag);
@@ -143,6 +143,9 @@ public class SourceCodeRecorder {
 
             // Allow a different thread to stop the recording
             if (shouldStopJob.get()) {
+                // Take a final snapshot then stop
+                log.debug("Final sourcecode capture!");
+                writer.takeSnapshot();
                 break;
             }
         }
