@@ -1,6 +1,5 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.RmCommand;
@@ -15,8 +14,15 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import tdl.record.sourcecode.snapshot.Snapshot;
 
-@Slf4j
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 public class ToGitConverter {
 
     private final Path inputFile;
@@ -37,21 +43,21 @@ public class ToGitConverter {
         Reader reader = new Reader(inputFile.toFile());
 
         while (reader.hasNext()) {
+            Header header = reader.getFileHeader();
             Segment segment = reader.nextSegment();
             writeDirFromSnapshot(segment);
-            commitDirectory(segment);
+            commitDirectory(header, segment);
         }
     }
 
     private void writeDirFromSnapshot(Segment segment) throws Exception {
         //TODO: Check if not corrupt.
-        log.info("Processing snapshot at time: "+segment.getTimestamp());
         Snapshot snapshot = segment.getSnapshot();
         snapshot.restoreSnapshot(git);
     }
 
-    private void commitDirectory(Segment segment) throws GitAPIException {
-        Date timestamp = new Date(segment.getTimestamp() * 1000L);
+    private void commitDirectory(Header header, Segment segment) throws GitAPIException {
+        Date timestamp = new Date((header.getTimestamp() + segment.getTimestampSec()) * 1000L);
         PersonIdent origIdent = new PersonIdent(git.getRepository());
         PersonIdent ident = new PersonIdent(origIdent, timestamp);
         String message = timestamp.toString();

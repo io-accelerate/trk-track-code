@@ -184,7 +184,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         Segment segment = new Segment();
         segment.setAddress(address);
         segment.setType(Segment.getTypeByteBytes(readBytes(Segment.MAGIC_BYTES_KEY.length)));
-        segment.setTimestamp(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
+        segment.setTimestampSec(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setTag(new String(readBytes(Segment.TAG_SIZE)));
         segment.setChecksum(readBytes(Segment.CHECKSUM_SIZE));
@@ -201,7 +201,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         segment.setType(Segment.TYPE_KEY);
         byte[] bytes = new byte[0];
         segment.setData(bytes);
-        segment.setTimestamp(0);
+        segment.setTimestampSec(0);
         segment.generateFromData();
         return segment;
     }
@@ -240,7 +240,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         reset();
         do {
             Segment segment = nextSegment();
-            if (segment.getTimestamp() > timestamp) {
+            if (segment.getTimestampSec() > timestamp) {
                 index--;
                 break;
             }

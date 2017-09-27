@@ -13,6 +13,7 @@ import support.TestSourceStreamRecorder;
 import support.content.MultiStepSourceCodeProvider;
 import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.snapshot.file.Segment;
 import tdl.record.sourcecode.snapshot.file.Reader;
@@ -30,13 +31,12 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import org.eclipse.jgit.api.Git;
+
 import org.eclipse.jgit.lib.Ref;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -48,12 +48,12 @@ import static org.junit.Assert.assertTrue;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
-import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 
 public class CanRecordSourceCodeAccTest {
 
-    public static final int TIME_TO_TAKE_A_SNAPSHOT = 1000;
-    public static final Duration INDEFINITE = Duration.of(999, ChronoUnit.HOURS);
+    private static final int TIME_TO_TAKE_A_SNAPSHOT = 1000;
+    private static final Duration INDEFINITE = Duration.of(999, ChronoUnit.HOURS);
+
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
 
@@ -76,10 +76,12 @@ public class CanRecordSourceCodeAccTest {
                 dst -> {
                     /* Empty folder */ });
 
+        SourceCodeRecordingMetricsCollector sourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
                 .withKeySnapshotSpacing(3)
+                .withRecordingListener(sourceCodeRecordingListener)
                 .build();
         sourceCodeRecorder.start(Duration.of(sourceCodeHistory.size(), ChronoUnit.SECONDS));
         sourceCodeRecorder.close();
@@ -96,6 +98,10 @@ public class CanRecordSourceCodeAccTest {
         ToGitConverter converter = new ToGitConverter(outputFilePath, gitExportFolder.toPath());
         converter.convert();
         assertContentMatches(sourceCodeHistory, gitExportFolder);
+
+        // Test the collected recording metrics
+        assertThat(sourceCodeRecordingListener.getTotalSnapshots(), is(sourceCodeHistory.size()));
+        assertThat(sourceCodeRecordingListener.getLastSnapshotProcessingTimeNano(), is(2L));
     }
 
     @Test
@@ -134,7 +140,7 @@ public class CanRecordSourceCodeAccTest {
 
         try (Reader reader = new Reader(outputFilePath.toFile())) {
             List<Segment> snapshots = reader.getSnapshots();
-            assertThat(snapshots.size(), is(2));
+            assertThat(snapshots.size(), is(3)); // 1 initial + 1 tag + 1 final
             assertEquals(snapshots.get(1).getTag().trim(), "testTag");
         }
         File gitDir = testFolder.newFolder();
@@ -152,6 +158,7 @@ public class CanRecordSourceCodeAccTest {
                 .collect(Collectors.toList());
         assertTrue(tags.get(0).trim().endsWith("testTag"));
     }
+
 
     @Test
     public void should_minimize_the_size_of_the_stream() throws Exception {
@@ -172,14 +179,17 @@ public class CanRecordSourceCodeAccTest {
         assertThat("Size reduction", (int) (onlyKeySizeKB / patchesAndKeysSizeKB), equalTo(4));
     }
 
-    //~~~~~ Helpers
+
+
+    //~~~~~~~~~~~~~ Helpers ~~~~~~~~~~
+
     private void writeTextFile(Path destinationFolder, String childFile, String content) throws IOException {
         File newFile1 = destinationFolder.resolve(childFile).toFile();
         FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
     }
 
     private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<Segment> actualSnapshots) {
-        List<Integer> snapshotTypes = actualSnapshots.stream().map(snapshotFileSegment -> snapshotFileSegment.getType())
+        List<Integer> snapshotTypes = actualSnapshots.stream().map(Segment::getType)
                 .collect(Collectors.toList());
         assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
     }
@@ -202,47 +212,6 @@ public class CanRecordSourceCodeAccTest {
             //noinspection ConstantConditions
             assertThat("Data of snapshot " + i, gitExportFolder.toPath(), hasSameData(expected));
         }
-    }
-
-    private Matcher<Segment> hasSameData(SourceCodeProvider sourceCodeProvider) {
-        return new TypeSafeMatcher<Segment>() {
-
-            private Path actual;
-            private Path expected;
-
-            @Override
-            protected boolean matchesSafely(Segment snapshotSegment) {
-                try {
-                    expected = testFolder.newFolder().toPath();
-                    actual = testFolder.newFolder().toPath();
-                    Git git = Git.init().setDirectory(actual.toFile()).call();
-
-                    sourceCodeProvider.retrieveAndSaveTo(expected);
-                    snapshotSegment.getSnapshot().restoreSnapshot(git);
-                    DirectoryPatch patch = DirectoryDiffUtils.diffDirectories(expected, actual);
-                    Map filtered = patch.getPatches().entrySet()
-                            .stream()
-                            .filter(map -> !map.getKey().startsWith(".git"))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    return filtered.isEmpty();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("Matches the contents of the corresponding event");
-            }
-
-            @Override
-            protected void describeMismatchSafely(Segment snapshotSegment, Description mismatchDescription) {
-                mismatchDescription.appendText("there differences detected:\n");
-                mismatchDescription.appendText("expected: ").appendText(expected.toString()).appendText("\n");
-                mismatchDescription.appendText("actual:   ").appendText(actual.toString());
-            }
-        };
     }
 
     private Matcher<Path> hasSameData(Path expected) {
@@ -277,10 +246,11 @@ public class CanRecordSourceCodeAccTest {
         };
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void assertTimestampsAreConsistentWith(int time, TimeUnit unit, List<Segment> snapshots) {
         for (int i = 0; i < snapshots.size(); i++) {
             assertThat("Timestamp of snapshot " + i,
-                    (double) snapshots.get(i).getTimestamp(), closeTo(unit.toSeconds(time * i), 0.01));
+                    (double) snapshots.get(i).getTimestampSec(), closeTo(unit.toSeconds(time * i), 0.01));
         }
     }
 }

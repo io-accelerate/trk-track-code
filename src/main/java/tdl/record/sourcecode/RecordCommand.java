@@ -2,11 +2,12 @@ package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import java.io.IOException;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +26,6 @@ class RecordCommand extends Command {
     @Parameter(names = {"-o", "--output"}, description = "The destination file")
     private String outputPath;
 
-    @Parameter(names = {"-d", "--duration"}, description = "Duration of the recording in seconds")
-    private Integer duration = 60; //in seconds
-
     @Parameter(names = {"-y", "--delay"}, description = "The delay between two consecutive snapshots")
     private Integer delay = 5; //in seconds
 
@@ -35,25 +33,57 @@ class RecordCommand extends Command {
     private Integer keySnapshotSpacing = 5;
 
     private SourceCodeRecorder sourceCodeRecorder;
+    private Scanner stdin;
 
     public void run() {
         try {
-            CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath));
-            Path outputRecordingFilePath = Paths.get(outputPath);
-            sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputRecordingFilePath)
-                    .withTimeSource(new SystemMonotonicTimeSource())
-                    .withSnapshotEvery(delay, TimeUnit.SECONDS)
-                    .withKeySnapshotSpacing(keySnapshotSpacing)
-                    .build();
-
-            registerSigtermHandler();
-            sourceCodeRecorder.start(Duration.of(duration, ChronoUnit.SECONDS));
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            doRun();
+        } catch (SourceCodeRecorderException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
+    private void doRun() throws SourceCodeRecorderException, InterruptedException {
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath));
+        Path outputRecordingFilePath = Paths.get(outputPath);
+        sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputRecordingFilePath)
+                .withTimeSource(new SystemMonotonicTimeSource())
+                .withSnapshotEvery(delay, TimeUnit.SECONDS)
+                .withKeySnapshotSpacing(keySnapshotSpacing)
+                .build();
+
+        registerSigtermHandler();
+
+        //Run the recorder on a different Thread
+        Thread recordingThread = new Thread(() ->  {  try {
+            sourceCodeRecorder.start(Duration.of(999, ChronoUnit.HOURS));
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }});
+        recordingThread.start();
+
+        // Read commands from standard input
+        System.out.println("Enter tag name to trigger a tagged snapshot or \"exit\" to stop recording");
+        stdin = new Scanner(System.in);
+        while(stdin.hasNextLine()) {
+            String line = stdin.nextLine();
+
+            if (line == null || line.startsWith("exit")) {
+                sourceCodeRecorder.stop();
+                break;
+            }
+            sourceCodeRecorder.tagCurrentState(line.trim());
+        }
+
+        //Wait for the recording to finish
+        recordingThread.join();
+    }
+
     private void registerSigtermHandler() {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> sourceCodeRecorder.close()));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            sourceCodeRecorder.stop();
+            stdin.close();
+            sourceCodeRecorder.close();
+        }));
     }
 }

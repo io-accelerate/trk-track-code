@@ -1,7 +1,5 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import tdl.record.sourcecode.snapshot.file.Segment;
-import tdl.record.sourcecode.snapshot.file.Reader;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -93,13 +91,13 @@ public class ReaderTest {
 
         try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             assertTrue(reader.hasNext());
-            assertThat(reader.nextSegment().getTimestamp(), equalTo(0L));
+            assertThat(reader.nextSegment().getTimestampSec(), equalTo(0L));
 
             assertTrue(reader.hasNext());
             reader.skip();
 
             assertTrue(reader.hasNext());
-            assertThat(reader.nextSegment().getTimestamp(), equalTo(2L));
+            assertThat(reader.nextSegment().getTimestampSec(), equalTo(2L));
 
             assertTrue(reader.hasNext());
         }
