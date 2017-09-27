@@ -45,7 +45,7 @@ The following example displays the metrics to the screen every 1 minute:
 ```java
         SourceCodeMetricsCollector sourceCodeMetricsCollector = new SourceCodeMetricsCollector();
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, destinationPath)
-                .withRecordingListener(recordingMetricsCollector)
+                .withRecordingListener(sourceCodeMetricsCollector)
                 .build();
         
         //Issue performance updates
@@ -53,9 +53,10 @@ The following example displays the metrics to the screen every 1 minute:
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                System.out.println("Recorded "+sourceCodeMetricsCollector.getTotalSnapshots() + " snapshots");
+                System.out.println("Recorded "+sourceCodeMetricsCollector.getTotalSnapshots() + " snapshots"+
+                    ", last snapshot processed in "+ sourceCodeRecordingListener.getLastSnapshotProcessingTimeNano() + " nanos");
             }
-        }, 0, 5000);
+        }, 0, 60000);
 ```
 
 To **gracefully stop the recording** you must ensure that you call the `stop()` on the recording.

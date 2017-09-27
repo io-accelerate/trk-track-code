@@ -13,6 +13,7 @@ import support.TestSourceStreamRecorder;
 import support.content.MultiStepSourceCodeProvider;
 import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.snapshot.file.Segment;
 import tdl.record.sourcecode.snapshot.file.Reader;
@@ -71,10 +72,12 @@ public class CanRecordSourceCodeAccTest {
                 dst -> {
                     /* Empty folder */ });
 
+        SourceCodeRecordingMetricsCollector sourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
                 .withKeySnapshotSpacing(3)
+                .withRecordingListener(sourceCodeRecordingListener)
                 .build();
         sourceCodeRecorder.start(Duration.of(sourceCodeHistory.size(), ChronoUnit.SECONDS));
         sourceCodeRecorder.close();
@@ -91,6 +94,10 @@ public class CanRecordSourceCodeAccTest {
         ToGitConverter converter = new ToGitConverter(outputFilePath, gitExportFolder.toPath());
         converter.convert();
         assertContentMatches(sourceCodeHistory, gitExportFolder);
+
+        // Test the collected recording metrics
+        assertThat(sourceCodeRecordingListener.getTotalSnapshots(), is(sourceCodeHistory.size()));
+        assertThat(sourceCodeRecordingListener.getLastSnapshotProcessingTimeNano(), is(2L));
     }
 
     @Test
@@ -148,6 +155,7 @@ public class CanRecordSourceCodeAccTest {
         assertTrue(tags.get(0).trim().endsWith("testTag"));
     }
 
+
     @Test
     public void should_minimize_the_size_of_the_stream() throws Exception {
         Path onlyKeySnapshotsPath = testFolder.newFile("only_key_snapshots.bin").toPath();
@@ -167,7 +175,10 @@ public class CanRecordSourceCodeAccTest {
         assertThat("Size reduction", (int) (onlyKeySizeKB / patchesAndKeysSizeKB), equalTo(4));
     }
 
-    //~~~~~ Helpers
+
+
+    //~~~~~~~~~~~~~ Helpers ~~~~~~~~~~
+
     private void writeTextFile(Path destinationFolder, String childFile, String content) throws IOException {
         File newFile1 = destinationFolder.resolve(childFile).toFile();
         FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
@@ -197,47 +208,6 @@ public class CanRecordSourceCodeAccTest {
             //noinspection ConstantConditions
             assertThat("Data of snapshot " + i, gitExportFolder.toPath(), hasSameData(expected));
         }
-    }
-
-    private Matcher<Segment> hasSameData(SourceCodeProvider sourceCodeProvider) {
-        return new TypeSafeMatcher<Segment>() {
-
-            private Path actual;
-            private Path expected;
-
-            @Override
-            protected boolean matchesSafely(Segment snapshotSegment) {
-                try {
-                    expected = testFolder.newFolder().toPath();
-                    actual = testFolder.newFolder().toPath();
-                    Git git = Git.init().setDirectory(actual.toFile()).call();
-
-                    sourceCodeProvider.retrieveAndSaveTo(expected);
-                    snapshotSegment.getSnapshot().restoreSnapshot(git);
-                    DirectoryPatch patch = DirectoryDiffUtils.diffDirectories(expected, actual);
-                    Map filtered = patch.getPatches().entrySet()
-                            .stream()
-                            .filter(map -> !map.getKey().startsWith(".git"))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                    return filtered.isEmpty();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                description.appendText("Matches the contents of the corresponding event");
-            }
-
-            @Override
-            protected void describeMismatchSafely(Segment snapshotSegment, Description mismatchDescription) {
-                mismatchDescription.appendText("there differences detected:\n");
-                mismatchDescription.appendText("expected: ").appendText(expected.toString()).appendText("\n");
-                mismatchDescription.appendText("actual:   ").appendText(actual.toString());
-            }
-        };
     }
 
     private Matcher<Path> hasSameData(Path expected) {

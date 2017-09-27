@@ -2,6 +2,9 @@ package tdl.record.sourcecode.record;
 
 import lombok.extern.slf4j.Slf4j;
 import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.metrics.SourceCodeRecordingListener;
+import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
+import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
 import tdl.record.sourcecode.snapshot.file.Writer;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 import tdl.record.sourcecode.time.TimeSource;
@@ -18,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.nio.file.StandardOpenOption.CREATE;
-import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
 
 @Slf4j
 public class SourceCodeRecorder {
@@ -30,20 +32,22 @@ public class SourceCodeRecorder {
     private final long recordingStartTimestamp;
     private final int keySnapshotSpacing;
     private final AtomicBoolean shouldStopJob;
+    private final SourceCodeRecordingListener sourceCodeRecordingListener;
     private Queue<String> tagQueue;
 
     SourceCodeRecorder(SourceCodeProvider sourceCodeProvider,
-            Path outputRecordingFilePath,
-            TimeSource timeSource,
-            long recordedTimestamp,
-            long snapshotIntervalMillis,
-            int keySnapshotSpacing) {
+                       Path outputRecordingFilePath,
+                       TimeSource timeSource,
+                       long recordedTimestamp,
+                       long snapshotIntervalMillis,
+                       int keySnapshotSpacing, SourceCodeRecordingListener sourceCodeRecordingListener) {
         this.sourceCodeProvider = sourceCodeProvider;
         this.outputRecordingFilePath = outputRecordingFilePath;
         this.timeSource = timeSource;
         this.recordingStartTimestamp = recordedTimestamp;
         this.snapshotIntervalMillis = snapshotIntervalMillis;
         this.keySnapshotSpacing = keySnapshotSpacing;
+        this.sourceCodeRecordingListener = sourceCodeRecordingListener;
         shouldStopJob = new AtomicBoolean(false);
         tagQueue = new ConcurrentLinkedQueue<>();
     }
@@ -57,6 +61,7 @@ public class SourceCodeRecorder {
         private long bSnapshotIntervalMillis;
         private long bRecordingStartTimestampSec;
         private int bKeySnapshotSpacing;
+        private SourceCodeRecordingListener bSourceCodeRecordingListener;
 
         public Builder(SourceCodeProvider sourceCodeProvider, Path outputRecordingFilePath) {
             bSourceCodeProvider = sourceCodeProvider;
@@ -65,6 +70,7 @@ public class SourceCodeRecorder {
             bTimeSource = new SystemMonotonicTimeSource();
             bSnapshotIntervalMillis = TimeUnit.MINUTES.toMillis(5);
             bKeySnapshotSpacing = 5;
+            bSourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
         }
 
         public Builder withRecordingStartTimestampSec(long recordingStartTimestampSec) {
@@ -87,6 +93,11 @@ public class SourceCodeRecorder {
             return this;
         }
 
+        public Builder withRecordingListener(SourceCodeRecordingListener sourceCodeRecordingListener) {
+            this.bSourceCodeRecordingListener = sourceCodeRecordingListener;
+            return this;
+        }
+
         public SourceCodeRecorder build() {
             return new SourceCodeRecorder(
                     bSourceCodeProvider,
@@ -94,7 +105,8 @@ public class SourceCodeRecorder {
                     bTimeSource,
                     bRecordingStartTimestampSec,
                     bSnapshotIntervalMillis,
-                    bKeySnapshotSpacing
+                    bKeySnapshotSpacing,
+                    bSourceCodeRecordingListener
             );
         }
     }
@@ -117,7 +129,12 @@ public class SourceCodeRecorder {
             throw new SourceCodeRecorderException("Failed to open destination", e);
         }
 
-        doRecord(writer, recordingDuration);
+        try {
+            sourceCodeRecordingListener.notifyRecordingStart(outputRecordingFilePath);
+            doRecord(writer, recordingDuration);
+        } finally {
+            sourceCodeRecordingListener.notifyRecordingEnd();
+        }
     }
 
     public void tagCurrentState(String tag) throws SourceCodeRecorderException {
@@ -129,24 +146,23 @@ public class SourceCodeRecorder {
     private void doRecord(Writer writer, Duration recordingDuration) {
         while (timeSource.currentTimeNano() < recordingDuration.toNanos()) {
             long timestampBeforeProcessing = timeSource.currentTimeNano();
-            log.debug("Sourcecode capture!");
-
+            sourceCodeRecordingListener.notifySnapshotStart(timestampBeforeProcessing, TimeUnit.NANOSECONDS);
             String tag = tagQueue.poll();
             writer.takeSnapshotWithTag(tag);
+            sourceCodeRecordingListener.notifySnapshotEnd(timeSource.currentTimeNano(), TimeUnit.NANOSECONDS);
 
+            // Allow a different thread to stop the recording
+            // This operation should be before wakeUp to allow a final snapshot to be taken ( if the time allows it )
+            if (shouldStopJob.get()) {
+                break;
+            }
+
+            // Prepare the next timestamp
             long nextTimestamp = timestampBeforeProcessing + TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
             try {
                 timeSource.wakeUpAt(nextTimestamp, TimeUnit.NANOSECONDS);
             } catch (InterruptedException | BrokenBarrierException e) {
                 log.debug("Interrupted while sleeping", e);
-            }
-
-            // Allow a different thread to stop the recording
-            if (shouldStopJob.get()) {
-                // Take a final snapshot then stop
-                log.debug("Final sourcecode capture!");
-                writer.takeSnapshot();
-                break;
             }
         }
     }
