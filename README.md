@@ -13,10 +13,24 @@
 
 Recording a folder
 ```
-java -jar build/libs/dev-sourcecode-record-all.jar record --source xyz --output snapshot.srcs
+java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar record \
+    --source xyz/a_source --output snapshot.srcs
 ```
 
-Converting to Git
+List the contents of a SRCS file
 ```
-java -jar build/libs/dev-sourcecode-record-all.jar convert-to-git --in snapshot.srcs --out ./xyz
+java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar list \
+    --input snapshot.srcs
+```
+
+Export one individual snapshot
+```
+java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar export \
+    --input snapshot.srcs --time 0 --output ./xyz/frames
+```
+
+Export entire file to Git
+```
+java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar convert-to-git \
+    --input snapshot.srcs --output ./xyz/to_git
 ```

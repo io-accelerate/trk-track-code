@@ -151,9 +151,13 @@ public class SourceCodeRecorder {
     }
 
     public void stop() {
-        log.info("Stopping recording");
-        shouldStopJob.set(true);
-        timeSource.wakeUpNow();
+        if (!shouldStopJob.get()) {
+            log.info("Stopping recording");
+            shouldStopJob.set(true);
+            timeSource.wakeUpNow();
+        } else {
+            log.info("Recording already stopping");
+        }
     }
 
     public void close() {
