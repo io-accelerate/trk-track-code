@@ -19,6 +19,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
+import tdl.record.sourcecode.snapshot.helpers.FileHelper;
 
 public class SnapshotRecorder implements AutoCloseable {
 
@@ -66,6 +67,7 @@ public class SnapshotRecorder implements AutoCloseable {
     public void syncToGitDirectory() throws IOException {
         cleanGitDirectory();
         sourceCodeProvider.retrieveAndSaveTo(gitDirectory);
+        FileHelper.deleteEmptyFiles(gitDirectory);
     }
 
     private void cleanGitDirectory() {
