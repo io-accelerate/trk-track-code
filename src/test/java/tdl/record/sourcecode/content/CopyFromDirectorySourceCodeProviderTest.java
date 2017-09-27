@@ -48,6 +48,28 @@ public class CopyFromDirectorySourceCodeProviderTest {
         assertFalse(exists(actual, ".git"));
     }
 
+    @Test
+    public void retrieveAndSaveToShouldWorkWithDeletedFiles() throws IOException, GitAPIException {
+        File original = folder.newFolder();
+        Path originalPath = original.toPath();
+        File actual = folder.newFolder();
+
+        Git git = Git.init().setDirectory(original).call();
+        FileTestHelper.appendStringToFile(originalPath, "file.to.keep.txt", "TEST2");
+        FileTestHelper.appendStringToFile(originalPath, "file.to.remove.txt", "TEST1");
+        git.add().addFilepattern(".").call();
+        git.commit().setMessage("commit1").call();
+
+        FileTestHelper.deleteFile(originalPath, "file.to.remove.txt");
+
+        CopyFromDirectorySourceCodeProvider provider = new CopyFromDirectorySourceCodeProvider(originalPath);
+        provider.retrieveAndSaveTo(actual.toPath());
+
+        assertTrue(exists(actual, "file.to.keep.txt"));
+        assertFalse(exists(actual, "file.to.remove.txt"));
+    }
+
+
     private boolean exists(File parent, String path) {
         return Files.exists(parent.toPath().resolve(path));
     }

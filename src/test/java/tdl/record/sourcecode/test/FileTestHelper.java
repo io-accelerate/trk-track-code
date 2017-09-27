@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 import org.apache.commons.codec.binary.Hex;
@@ -16,9 +17,7 @@ import org.apache.commons.io.FileUtils;
 public class FileTestHelper {
 
     public static boolean isDirectoryEqualsWithoutGit(Path dir1, Path dir2) {
-        FileFilter filter = (file) -> {
-            return !file.getAbsolutePath().contains(".git/");
-        };
+        FileFilter filter = (file) -> !file.getAbsolutePath().contains(".git/");
         return isDirectoryEquals(dir1, dir2, filter);
     }
 
@@ -44,17 +43,14 @@ public class FileTestHelper {
         return createDirectoryChecksum(directory, null);
     }
 
-    public static String createDirectoryChecksum(Path directory, FileFilter filter) throws IOException {
+    private static String createDirectoryChecksum(Path directory, FileFilter filter) throws IOException {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
             String aggregateChecksum = Files.walk(directory)
                     .filter(file -> file.toFile().isFile())
-                    .filter(file -> filter == null ? true : filter.accept(file.toFile()))
-                    .sorted((file1, file2)
-                            -> file1.toAbsolutePath()
-                            .compareTo(file2.toAbsolutePath())
-                    )
-                    .map(file -> createFileDigest(file))
+                    .filter(file -> filter == null || filter.accept(file.toFile()))
+                    .sorted(Comparator.comparing(Path::toAbsolutePath))
+                    .map(FileTestHelper::createFileDigest)
                     .collect(Collectors.joining());
             byte[] checksum = md5.digest(aggregateChecksum.getBytes());
             return Hex.encodeHexString(checksum);
@@ -71,8 +67,7 @@ public class FileTestHelper {
                     StandardCharsets.UTF_8
             );
             //Intentionally trim whitespace
-            String hexdigest = Hex.encodeHexString(content.trim().getBytes());
-            return hexdigest;
+            return Hex.encodeHexString(content.trim().getBytes());
         } catch (IOException ex) {
             return "";
         }
@@ -80,5 +75,9 @@ public class FileTestHelper {
 
     public static void appendStringToFile(Path dir, String path, String text) throws IOException {
         FileUtils.writeStringToFile(dir.resolve(path).toFile(), text, Charset.defaultCharset(), true);
+    }
+
+    public static void deleteFile(Path dir, String path) {
+        FileUtils.deleteQuietly(dir.resolve(path).toFile());
     }
 }
