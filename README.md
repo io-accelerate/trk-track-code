@@ -109,7 +109,7 @@ The SRCS file format is divided into two parts.
     After the header, the body will contains several segments that contains
     snapshot of the working directory. The content of the segments are
 
-    a. Magic bytes, 6-bytes string.
+    1. Magic bytes, 6-bytes string.
         
         This contains either `SRCKEY` or `SRCPTC` magic bytes. The first one
         means that the segment is Key Snapshot while the latter means Patch
@@ -121,26 +121,26 @@ The SRCS file format is divided into two parts.
         taken the previous snapshots. There can be more than one Patch Snapshot
         between two Key Snapshots.
 
-    b. Timestamp, 8-bytes long integer in Little Endian format.
+    2. Timestamp, 8-bytes long integer in Little Endian format.
 
         This timestamp stores the number of seconds since the first snapshot was
         taken. Naturally the timestamp of the first snapshot is zero.
 
-    c. Size, 8-bytes long integer in Little Endian format.
+    3. Size, 8-bytes long integer in Little Endian format.
 
         This contains the size of the payload stored in the end of the segment.
 
-    d. Checksum, 20-bytes string.
+    4. Checksum, 20-bytes string.
 
         This contains MD5 hash of the payload data for consistency checking.
 
-    e. Tag, 256-bytes string.
+    5. Tag, 256-bytes string.
 
         This contains the tag name of the current snapshot. When the file is
         being exported to git repository, the tag will be used to make git tag
         of the snapshot's git commit.
 
-    f. Payload.
+    6. Payload.
 
         For Key Snapshot, the payload contains Zip data containing the snapshot.
         As for Patch Snapshot, the payload contains patch in Diff format. The
