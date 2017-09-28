@@ -100,13 +100,51 @@ The SRCS file format is divided into two parts.
 
 1. Header
 
-    The header contains 14 bytes: 6 for magic bytes "SRCSTM" and 8 byte to store
-    UNIX timestamp in little endian format.
+    The header contains 14 bytes: 6 for magic bytes `SRCSTM` and 8 byte to store
+    UNIX timestamp when the snapshot was first recorded. The timestamp is stored
+    in Little Endian format.
 
 2. Segments
 
     After the header, the body will contains several segments that contains
-    snapshot of the working directory.
+    snapshot of the working directory. The content of the segments are
+
+    a. Magic bytes, 6-bytes string.
+        
+        This contains either `SRCKEY` or `SRCPTC` magic bytes. The first one
+        means that the segment is Key Snapshot while the latter means Patch
+        Snapshot.
+
+        Key Snapshot is snapshot that contains the whole files in the working
+        directory at the time snapshot was taken. While Patch Snapshot contains
+        only the difference between the files in the directory and the files
+        taken the previous snapshots. There can be more than one Patch Snapshot
+        between two Key Snapshots.
+
+    b. Timestamp, 8-bytes long integer in Little Endian format.
+
+        This timestamp stores the number of seconds since the first snapshot was
+        taken. Naturally the timestamp of the first snapshot is zero.
+
+    c. Size, 8-bytes long integer in Little Endian format.
+
+        This contains the size of the payload stored in the end of the segment.
+
+    d. Checksum, 20-bytes string.
+
+        This contains MD5 hash of the payload data for consistency checking.
+
+    e. Tag, 256-bytes string.
+
+        This contains the tag name of the current snapshot. When the file is
+        being exported to git repository, the tag will be used to make git tag
+        of the snapshot's git commit.
+
+    f. Payload.
+
+        For Key Snapshot, the payload contains Zip data containing the snapshot.
+        As for Patch Snapshot, the payload contains patch in Diff format. The
+        diff data is compressed using Gzip.
 
 ## Development
 
