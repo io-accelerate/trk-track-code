@@ -70,6 +70,10 @@ public class CanRecordSourceCodeAccTest {
                     writeTextFile(dst, "subdir/test3.txt", "TEST3");
                 },
                 dst -> {
+                    writeTextFile(dst, "test2.txt", "TEST1TEST2");
+                    writeTextFile(dst, "test.empty.txt", "");
+                },
+                dst -> {
                     /* Empty folder */ });
 
         SourceCodeRecordingMetricsCollector sourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
@@ -85,7 +89,7 @@ public class CanRecordSourceCodeAccTest {
         // Test the structure of the file
         try (Reader reader = new Reader(outputFilePath.toFile())) {
             List<Segment> snapshots = reader.getSnapshots();
-            assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_PATCH, TYPE_PATCH, TYPE_KEY, TYPE_PATCH), snapshots);
+            assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_PATCH, TYPE_PATCH, TYPE_KEY, TYPE_PATCH, TYPE_PATCH), snapshots);
             assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
         }
 

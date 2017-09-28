@@ -16,6 +16,7 @@ import java.util.zip.ZipInputStream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
+import org.eclipse.jgit.util.FileUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -105,6 +106,24 @@ public class GitHelperTest {
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
             GitHelper.exportDiff(git, os);
             assertTrue(os.toByteArray().length > 0);
+        }
+    }
+
+    @Test
+    public void exportDiffOnEmptyFiles() throws Exception {
+        File directory = folder.newFolder();
+        Git git = Git.init()
+                .setDirectory(directory)
+                .call();
+        addAndCommit(git);
+        //
+        File newFile = new File(directory, "testfile.txt");
+        FileUtils.createNewFile(newFile);
+        assertTrue(newFile.length() == 0);
+        addAndCommit(git);
+        try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+            GitHelper.exportDiff(git, os);
+            //System.out.println(os.toString());
         }
     }
 
