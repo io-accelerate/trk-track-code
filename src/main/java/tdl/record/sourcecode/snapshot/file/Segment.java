@@ -1,31 +1,32 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.KeySnapshot;
+import tdl.record.sourcecode.snapshot.PatchSnapshot;
+import tdl.record.sourcecode.snapshot.Snapshot;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
-import org.eclipse.jgit.lib.Repository;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.PatchSnapshot;
-import tdl.record.sourcecode.snapshot.Snapshot;
 
 public class Segment {
 
-    /**
-     * 6 magic bytes 8 timestamp 8 size 20 checksum 256 tag.
-     */
-    public static final int HEADER_SIZE = 298;
 
     public static final int SIZE_ADDRESS = 14;
 
     public static final int LONG_SIZE = 8;
 
-    public static final int TAG_SIZE = 256;
+    public static final int TAG_SIZE = 64;
 
     public static final int CHECKSUM_SIZE = 20;
+
+    /**
+     * 6 magic bytes 8 timestamp 8 size 20 checksum 64 tag.
+     */
+    public static final int HEADER_SIZE = SIZE_ADDRESS + LONG_SIZE + TAG_SIZE + CHECKSUM_SIZE;
 
     public static final int TYPE_KEY = 0;
 
@@ -107,21 +108,11 @@ public class Segment {
     }
 
     public void setTag(String tag) {
-        if (tag != null) {
-            tag = tag.trim();
-            if (tag.length() > 0 && !isValidTagName(tag)) {
-                throw new RuntimeException("Invalid tag name");
-            }
-        }
         this.tag = tag;
     }
 
     public boolean hasTag() {
         return tag != null && tag.trim().length() > 0;
-    }
-
-    public static boolean isValidTagName(String tag) {
-        return Repository.isValidRefName("refs/tag/" + tag);
     }
 
     public final byte[] generateChecksum() {

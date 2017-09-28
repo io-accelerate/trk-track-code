@@ -186,7 +186,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         segment.setType(Segment.getTypeByteBytes(readBytes(Segment.MAGIC_BYTES_KEY.length)));
         segment.setTimestampSec(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
-        segment.setTag(new String(readBytes(Segment.TAG_SIZE)));
+        segment.setTag(asString(readBytes(Segment.TAG_SIZE)));
         segment.setChecksum(readBytes(Segment.CHECKSUM_SIZE));
         segment.setData(readBytes((int) segment.getSize()));
         if (!segment.isDataValid()) {
@@ -194,6 +194,17 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         }
         randomAccessFile.seek(lastPosition);
         return segment;
+    }
+
+    private String asString(byte[] bytes) throws IOException {
+        int indexOfZero = Arrays.binarySearch(bytes, (byte) 0);
+
+        int newLength = bytes.length;
+        if (indexOfZero >= 0) {
+            newLength = indexOfZero;
+        }
+
+        return new String(bytes, 0, newLength).trim();
     }
 
     private Segment generateEmptySegment() {

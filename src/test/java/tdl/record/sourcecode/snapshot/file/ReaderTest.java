@@ -36,7 +36,7 @@ public class ReaderTest {
         try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
             List<Integer> addresses = reader.getSegmentAddresses();
             System.out.println(addresses);
-            Integer[] expected = new Integer[]{14, 451, 885, 1365, 2044, 2525, 2965, 3405, 3723, 4041};
+            Integer[] expected = new Integer[]{14, 259, 501, 789, 1276, 1565, 1813, 2061, 2187, 2313};
             assertArrayEquals(addresses.toArray(), expected);
         }
     }
@@ -55,31 +55,31 @@ public class ReaderTest {
             assertEquals(139, segment1.getSize());
 
             int address2 = reader.next();
-            assertEquals(451, address2);
+            assertEquals(259, address2);
             Segment segment2 = reader.readSegmentByAddress(address2);
             assertNotNull(segment2);
             assertEquals(Segment.TYPE_PATCH, segment2.getType());
 
             int address3 = reader.next();
-            assertEquals(885, address3);
+            assertEquals(501, address3);
             Segment segment3 = reader.readSegmentByAddress(address3);
             assertNotNull(segment3);
             assertEquals(Segment.TYPE_PATCH, segment3.getType());
 
             int address4 = reader.next();
-            assertEquals(1365, address4);
+            assertEquals(789, address4);
             Segment segment4 = reader.readSegmentByAddress(address4);
             assertNotNull(segment4);
             assertEquals(Segment.TYPE_KEY, segment4.getType());
 
             int address5 = reader.next();
-            assertEquals(2044, address5);
+            assertEquals(1276, address5);
             Segment segment5 = reader.readSegmentByAddress(address5);
             assertNotNull(segment5);
             assertEquals(Segment.TYPE_PATCH, segment5.getType());
 
             int address6 = reader.next();
-            assertEquals(2525, address6);
+            assertEquals(1565, address6);
             Segment segment6 = reader.readSegmentByAddress(address6);
             assertNotNull(segment6);
             assertEquals(Segment.TYPE_PATCH, segment6.getType());

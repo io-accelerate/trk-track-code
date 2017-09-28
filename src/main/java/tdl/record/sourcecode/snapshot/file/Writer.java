@@ -28,6 +28,8 @@ public final class Writer implements AutoCloseable {
 
     private final SnapshotRecorder recorder;
 
+    private final TagManager tagManager;
+
     public Writer(
             Path outputPath,
             SourceCodeProvider sourceCodeProvider,
@@ -45,6 +47,7 @@ public final class Writer implements AutoCloseable {
         if (outputFile.length() == 0) { //new file
             writeHeader();
         }
+        tagManager = new TagManager();
     }
 
     private void writeHeader() {
@@ -65,7 +68,9 @@ public final class Writer implements AutoCloseable {
     public void takeSnapshotWithTag(String tag) {
         try {
             Segment segment = createSnapshotFromRecorder();
-            segment.setTag(tag);
+            if (TagManager.isTag(tag)) {
+                segment.setTag(tagManager.asValidTag(tag));
+            }
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
             Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);

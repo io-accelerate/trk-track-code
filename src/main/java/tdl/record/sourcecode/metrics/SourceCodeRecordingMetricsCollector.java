@@ -23,7 +23,7 @@ public class SourceCodeRecordingMetricsCollector implements SourceCodeRecordingL
     @Override
     public void notifyRecordingStart(Path destinationPath) {
         this.isCurrentlyRecording = true;
-        log.info("Start recording to \"" + destinationPath.getFileName());
+        log.info("Start recording to \"" + destinationPath.getFileName()+"\"");
     }
 
     @Override

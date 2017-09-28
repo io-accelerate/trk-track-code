@@ -93,6 +93,13 @@ java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar convert-to-git
     --input snapshot.srcs --output ./xyz/to_git
 ```
 
+Useful git commands
+```
+# Show the git tags in reverse creation order
+git tag --sort=-creatordate 
+```
+
+
 
 ## The SRCS file format
 
