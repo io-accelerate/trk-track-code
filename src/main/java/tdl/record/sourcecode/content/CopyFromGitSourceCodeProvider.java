@@ -1,5 +1,6 @@
 package tdl.record.sourcecode.content;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.commons.io.FileUtils;
@@ -41,7 +42,7 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
 
         while (treeWalk.next()) {
             String path = treeWalk.getPathString();
-            copyFile(srcPath, destPath, path);
+            copyFileIfExists(srcPath, destPath, path);
         }
     }
 
@@ -52,7 +53,7 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
             status = git.status().call();
             status.getUntracked().stream().forEach((path) -> {
                 try {
-                    copyFile(srcPath, destPath, path);
+                    copyFileIfExists(srcPath, destPath, path);
                 } catch (IOException ex) {
                     //Do nothing
                 }
@@ -62,10 +63,12 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
         }
     }
 
-    private static void copyFile(Path srcPath, Path destPath, String path) throws IOException {
-        Path destFile = destPath.resolve(path);
-        Path srcFile = srcPath.resolve(path);
-        FileUtils.copyFile(srcFile.toFile(), destFile.toFile());
+    private static void copyFileIfExists(Path srcPath, Path destPath, String path) throws IOException {
+        File srcFile = srcPath.resolve(path).toFile();
+        if (srcFile.exists()) {
+            File destFile = destPath.resolve(path).toFile();
+            FileUtils.copyFile(srcFile, destFile);
+        }
     }
 
     private static TreeWalk createTreeWalkForCopying(Repository repo) throws IOException {
