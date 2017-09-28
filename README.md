@@ -96,7 +96,17 @@ java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar convert-to-git
 
 ## The SRCS file format
 
-TODO 
+The SRCS file format is divided into two parts.
+
+1. Header
+
+    The header contains 14 bytes: 6 for magic bytes "SRCSTM" and 8 byte to store
+    UNIX timestamp in little endian format.
+
+2. Segments
+
+    After the header, the body will contains several segments that contains
+    snapshot of the working directory.
 
 ## Development
 
