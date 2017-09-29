@@ -20,6 +20,7 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
     private Git git;
     private CopyFromDirectorySourceCodeProvider provider;
     private Path sourceFolderPath;
@@ -41,11 +42,14 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
     @Test
     public void shouldWorkWithEmptyRepo() throws IOException, GitAPIException {
+        sourceFolder.createFiles("file1.txt");
+
         assertTrue(provider.isGit());
 
         provider.retrieveAndSaveTo(destination);
 
         assertNotExistsInDestination(".git");
+        assertExistsInDestination("file1.txt");
     }
 
     @Test
@@ -56,12 +60,15 @@ public class CopyFromDirectorySourceCodeProviderTest {
         git.commit().setMessage("commit1").call();
 
         sourceFolder.createFiles("subdir1/untracked.txt");
+        sourceFolder.createFiles("untracked_dir/untracked.txt");
 
         provider.retrieveAndSaveTo(destination);
 
         assertExistsInDestination(
                 "subdir1/file1.txt",
-                "subdir1/untracked.txt");
+                "subdir1/untracked.txt",
+                "untracked_dir/untracked.txt"
+        );
     }
 
 

@@ -3,6 +3,9 @@ package tdl.record.sourcecode.content;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
@@ -20,7 +23,7 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
 
     private final Git git;
 
-    public CopyFromGitSourceCodeProvider(Path sourceFolderPath) throws IOException {
+    CopyFromGitSourceCodeProvider(Path sourceFolderPath) throws IOException {
         git = Git.open(sourceFolderPath.toFile());
     }
 
@@ -31,11 +34,16 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
 
     private void walkGitAndCopyFiles(Path destPath) throws IOException {
         copyTree(git, destPath);
-        copyUntracked(git, destPath);
+        copyUntrackedAndUncommited(git, destPath);
     }
 
     private static void copyTree(Git git, Path destPath) throws IOException {
         Repository repo = git.getRepository();
+
+        //Exit early if there is no tree (no commits)
+        if (repo.resolve(Constants.HEAD) == null) {
+            return;
+        }
 
         TreeWalk treeWalk = createTreeWalkForCopying(repo);
         Path srcPath = repo.getWorkTree().toPath();
@@ -46,12 +54,17 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
         }
     }
 
-    private static void copyUntracked(Git git, Path destPath) {
+    private static void copyUntrackedAndUncommited(Git git, Path destPath) {
         Path srcPath = git.getRepository().getWorkTree().toPath();
         try {
             Status status;
             status = git.status().call();
-            status.getUntracked().stream().forEach((path) -> {
+
+            Set<String> filesToCopy = new HashSet<>();
+            filesToCopy.addAll(status.getUntracked());
+            filesToCopy.addAll(status.getUncommittedChanges());
+
+            filesToCopy.forEach((path) -> {
                 try {
                     copyFileIfExists(srcPath, destPath, path);
                 } catch (IOException ex) {
