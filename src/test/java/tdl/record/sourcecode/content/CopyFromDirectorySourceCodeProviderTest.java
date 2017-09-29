@@ -39,10 +39,13 @@ public class CopyFromDirectorySourceCodeProviderTest {
         provider = new CopyFromDirectorySourceCodeProvider(this.sourceFolderPath);
     }
 
-
     @Test
-    public void shouldDetectGitRepo() throws Exception {
+    public void shouldWorkWithEmptyRepo() throws IOException, GitAPIException {
         assertTrue(provider.isGit());
+
+        provider.retrieveAndSaveTo(destination);
+
+        assertNotExistsInDestination(".git");
     }
 
     @Test
@@ -88,18 +91,42 @@ public class CopyFromDirectorySourceCodeProviderTest {
     public void shouldWorkWithDeletedFiles() throws IOException, GitAPIException {
         sourceFolder.createFiles(
                 "file.to.keep.txt",
-                "file.to.remove.txt");
+                "file.to.remove.tracked.txt",
+                "file.to.remove.untracked.txt");
         git.add().addFilepattern(".").call();
         git.commit().setMessage("commit1").call();
 
-        sourceFolder.deleteFiles("file.to.remove.txt");
+        sourceFolder.deleteFiles("file.to.remove.tracked.txt");
+        git.add().addFilepattern(".").call();
+
+        sourceFolder.deleteFiles("file.to.remove.untracked.txt");
+
 
         provider.retrieveAndSaveTo(destination);
 
         assertExistsInDestination("file.to.keep.txt");
-        assertNotExistsInDestination("file.to.remove.txt");
+        assertNotExistsInDestination(
+                "file.to.remove.tracked.txt",
+                "file.to.remove.untracked.txt"
+        );
     }
 
+
+    @Test
+    public void shouldWorkWithUncommitedFiles() throws IOException, GitAPIException {
+        git.commit().setMessage("initialCommit").call();
+
+        sourceFolder.createFiles("uncommited.txt");
+        git.add().addFilepattern(".").call();
+
+        sourceFolder.createFiles("untracked.txt");
+
+        provider.retrieveAndSaveTo(destination);
+
+        assertExistsInDestination(
+                "uncommited.txt",
+                "untracked.txt");
+    }
 
 
     //~~~~~~~~~~~ Helpers
@@ -116,6 +143,7 @@ public class CopyFromDirectorySourceCodeProviderTest {
             }
         }
 
+        @SuppressWarnings("SameParameterValue")
         private void appendTo(String file, String content) throws IOException {
             FileTestHelper.appendStringToFile(sourceFolderPath, file, content);
         }
