@@ -34,7 +34,7 @@ public class Segment {
 
     public static final byte[] MAGIC_BYTES_KEY = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x4b /*K*/, 0x45 /*E*/, 0x59 /*Y*/};
 
-    public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x50, 0x54, 0x43};
+    public static final byte[] MAGIC_BYTES_PATCH = new byte[]{0x53 /*S*/, 0x52 /*R*/, 0x43 /*C*/, 0x50 /*P*/, 0x54 /*T*/, 0x43 /*C*/};
 
     private byte[] data;
 
