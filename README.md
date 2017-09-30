@@ -100,9 +100,14 @@ The SRCS file format is divided into two parts.
 
 1. Header
 
-    The header contains 14 bytes: 6 for magic bytes `SRCSTM` and 8 byte to store
-    UNIX timestamp when the snapshot was first recorded. The timestamp is stored
-    in Little Endian format. The format also applies for all long integer data.
+    The header contains:
+
+    | Field       | Bytes  | Type   | Description |
+    | ---         | ---    | ---    |  ---        |
+    | Magic bytes | 6      | String | Contains string `SRCSTM`. |
+    | Timestamp   | 8      | Long   | UNIX timestamp when the snapshot first recorded. |
+
+    All long integer data will be stored in Little Endian format.
 
 2. Segments
 
