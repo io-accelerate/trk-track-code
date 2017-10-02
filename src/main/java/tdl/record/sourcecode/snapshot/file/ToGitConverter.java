@@ -8,12 +8,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
 import java.io.File;
@@ -22,6 +16,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class ToGitConverter {
 
@@ -38,7 +33,7 @@ public class ToGitConverter {
     }
 
     public void convert() throws Exception {
-        FileUtils.cleanDirectory(outputDir.toFile());
+        //FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
         Reader reader = new Reader(inputFile.toFile());
 
@@ -88,8 +83,12 @@ public class ToGitConverter {
         }
     }
 
-    private void initGit() throws GitAPIException {
-        git = Git.init().setDirectory(outputDir.toFile()).call();
+    private void initGit() throws GitAPIException, IOException {
+        if (!GitHelper.isGitDirectory(outputDir)) {
+            git = Git.init().setDirectory(outputDir.toFile()).call();
+        } else {
+            git = Git.open(outputDir.toFile());
+        }
     }
 
     private void throwExceptionIfOutputDirInvalid() throws IOException {
