@@ -80,4 +80,8 @@ public class FileTestHelper {
     public static void deleteFile(Path dir, String path) {
         FileUtils.deleteQuietly(dir.resolve(path).toFile());
     }
+    
+    public static boolean doesFileExist(Path dir, String path) {
+        return dir.resolve(path).toFile().exists();
+    }
 }

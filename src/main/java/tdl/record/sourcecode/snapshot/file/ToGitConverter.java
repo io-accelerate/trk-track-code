@@ -26,10 +26,24 @@ public class ToGitConverter {
 
     private Git git;
 
-    public ToGitConverter(Path inputFile, Path outputDir) throws IOException {
+    private ProgressListener listener;
+
+    @FunctionalInterface
+    public static interface ProgressListener {
+
+        public void commitSegment(Segment segment);
+
+    }
+
+    public ToGitConverter(Path inputFile, Path outputDir, ProgressListener listener) throws IOException {
         this.inputFile = inputFile;
         this.outputDir = outputDir;
+        this.listener = listener;
         throwExceptionIfOutputDirInvalid();
+    }
+
+    public ToGitConverter(Path inputFile, Path outputDir) throws IOException {
+        this(inputFile, outputDir, createDefaultListener());
     }
 
     public void convert() throws Exception {
@@ -41,6 +55,7 @@ public class ToGitConverter {
             Header header = reader.getFileHeader();
             Segment segment = reader.nextSegment();
             writeDirFromSnapshot(segment);
+            listener.commitSegment(segment);
             commitDirectory(header, segment);
         }
     }
@@ -99,5 +114,11 @@ public class ToGitConverter {
         if (!dir.isDirectory()) {
             throw new IOException("No sourceCodeProvider found.");
         }
+    }
+
+    private static ProgressListener createDefaultListener() {
+        return (segment) -> {
+            //do nothing.
+        };
     }
 }
