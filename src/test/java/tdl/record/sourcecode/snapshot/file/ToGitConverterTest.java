@@ -25,7 +25,7 @@ public class ToGitConverterTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void run() throws Exception {
+    public void runOnEmptyDirectory() throws Exception {
         Path original = Paths.get("src/test/resources/directory_snapshot/dir1");
         File snapshotFile = folder.newFile();
         Path workDir = folder.newFolder().toPath();
@@ -40,6 +40,11 @@ public class ToGitConverterTest {
         //FileUtils.copyFile(snapshotFile, new File("/tmp/test.srcs"));
         //FileUtils.copyDirectory(gitDir.toFile(), new File("/tmp/test"));
         assertTrue(gitDir.resolve(".git").toFile().exists());
+    }
+    
+    @Test
+    public void runOnExistingGitRepo() throws Exception {
+        //TODO
     }
 
     private void createRandomSnapshot(Path snapshotFile, Path workDir) throws Exception {

@@ -15,6 +15,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static tdl.record.sourcecode.test.GitTestHelper.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -165,16 +166,5 @@ public class SnapshotRecorderTest {
             recorder.commitAllChanges();
             assertEquals(3, getCommitCount(git));
         }
-    }
-
-    public static int getCommitCount(Git git) throws GitAPIException {
-        Iterable<RevCommit> commits = git.log().call();
-        int count = 0;
-        Iterator it = commits.iterator();
-        while (it.hasNext()) {
-            it.next();
-            count++;
-        }
-        return count;
     }
 }

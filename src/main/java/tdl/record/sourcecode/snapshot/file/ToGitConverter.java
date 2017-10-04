@@ -8,12 +8,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 import tdl.record.sourcecode.snapshot.Snapshot;
 
 import java.io.File;
@@ -22,6 +16,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class ToGitConverter {
 
@@ -31,14 +26,28 @@ public class ToGitConverter {
 
     private Git git;
 
-    public ToGitConverter(Path inputFile, Path outputDir) throws IOException {
+    private ProgressListener listener;
+
+    @FunctionalInterface
+    public static interface ProgressListener {
+
+        public void commitSegment(Segment segment);
+
+    }
+
+    public ToGitConverter(Path inputFile, Path outputDir, ProgressListener listener) throws IOException {
         this.inputFile = inputFile;
         this.outputDir = outputDir;
+        this.listener = listener;
         throwExceptionIfOutputDirInvalid();
     }
 
+    public ToGitConverter(Path inputFile, Path outputDir) throws IOException {
+        this(inputFile, outputDir, createDefaultListener());
+    }
+
     public void convert() throws Exception {
-        FileUtils.cleanDirectory(outputDir.toFile());
+        //FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
         Reader reader = new Reader(inputFile.toFile());
 
@@ -46,6 +55,7 @@ public class ToGitConverter {
             Header header = reader.getFileHeader();
             Segment segment = reader.nextSegment();
             writeDirFromSnapshot(segment);
+            listener.commitSegment(segment);
             commitDirectory(header, segment);
         }
     }
@@ -88,8 +98,12 @@ public class ToGitConverter {
         }
     }
 
-    private void initGit() throws GitAPIException {
-        git = Git.init().setDirectory(outputDir.toFile()).call();
+    private void initGit() throws GitAPIException, IOException {
+        if (!GitHelper.isGitDirectory(outputDir)) {
+            git = Git.init().setDirectory(outputDir.toFile()).call();
+        } else {
+            git = Git.open(outputDir.toFile());
+        }
     }
 
     private void throwExceptionIfOutputDirInvalid() throws IOException {
@@ -100,5 +114,11 @@ public class ToGitConverter {
         if (!dir.isDirectory()) {
             throw new IOException("No sourceCodeProvider found.");
         }
+    }
+
+    private static ProgressListener createDefaultListener() {
+        return (segment) -> {
+            //do nothing.
+        };
     }
 }
