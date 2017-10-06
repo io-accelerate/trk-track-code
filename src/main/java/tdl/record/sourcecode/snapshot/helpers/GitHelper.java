@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Path;
+
+import jgit.hack.ApplyCommandFixed;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -16,7 +18,7 @@ import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 public class GitHelper {
 
-    public static String ARCHIVE_FORMAT_ZIP = "zip";
+    private static String ARCHIVE_FORMAT_ZIP = "zip";
 
     public static boolean isGitDirectory(Path path) {
         File directory = path.toFile();
@@ -59,7 +61,8 @@ public class GitHelper {
     }
 
     public static void applyDiff(Git git, InputStream inputStream) throws Exception {
-        git.apply()
+        // Had to use hacked command to prevent bug affecting empty files and binary files
+        new ApplyCommandFixed(git.getRepository())
                 .setPatch(inputStream)
                 .call();
     }
