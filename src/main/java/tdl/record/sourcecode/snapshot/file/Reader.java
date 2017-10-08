@@ -14,7 +14,7 @@ import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
 public class Reader implements Iterator<Integer>, AutoCloseable {
 
-    private final File file;
+    protected final File file;
 
     private final RandomAccessFile randomAccessFile;
 
