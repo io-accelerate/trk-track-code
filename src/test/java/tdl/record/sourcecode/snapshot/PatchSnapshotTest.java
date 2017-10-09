@@ -67,8 +67,7 @@ public class PatchSnapshotTest {
         PatchSnapshot snapshot = PatchSnapshot.takeSnapshotFromGit(git1);
         snapshot.restoreSnapshot(git2);
 
-        assertTrue(FileTestHelper.isDirectoryEquals(directory1.toPath(), directory2.toPath(),
-                FileTestHelper.ignoreInnerGitFolder()));
+        assertTrue(FileTestHelper.isDirectoryEqualsWithoutGit(directory1.toPath(), directory2.toPath()));
     }
 
 }

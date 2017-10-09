@@ -18,7 +18,8 @@ import org.apache.commons.io.FileUtils;
 public class FileTestHelper {
 
     public static boolean isDirectoryEqualsWithoutGit(Path dir1, Path dir2) {
-        return isDirectoryEquals(dir1, dir2, ignoreInnerGitFolder());
+        return isDirectoryEquals(dir1, dir2,
+                (file) -> !file.getAbsolutePath().contains(".git" + File.separator));
     }
 
     public static boolean isDirectoryEquals(Path dir1, Path dir2, FileFilter filter) {
@@ -85,7 +86,4 @@ public class FileTestHelper {
         return dir.resolve(path).toFile().exists();
     }
 
-    public static FileFilter ignoreInnerGitFolder() {
-        return (file) -> !file.getAbsolutePath().contains(".git"+ File.separator);
-    }
 }
