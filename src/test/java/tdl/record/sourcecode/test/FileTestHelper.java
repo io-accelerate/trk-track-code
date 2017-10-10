@@ -1,5 +1,6 @@
 package tdl.record.sourcecode.test;
 
+import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -17,8 +18,8 @@ import org.apache.commons.io.FileUtils;
 public class FileTestHelper {
 
     public static boolean isDirectoryEqualsWithoutGit(Path dir1, Path dir2) {
-        FileFilter filter = (file) -> !file.getAbsolutePath().contains(".git/");
-        return isDirectoryEquals(dir1, dir2, filter);
+        return isDirectoryEquals(dir1, dir2,
+                (file) -> !file.getAbsolutePath().contains(".git" + File.separator));
     }
 
     public static boolean isDirectoryEquals(Path dir1, Path dir2, FileFilter filter) {
@@ -84,4 +85,5 @@ public class FileTestHelper {
     public static boolean doesFileExist(Path dir, String path) {
         return dir.resolve(path).toFile().exists();
     }
+
 }

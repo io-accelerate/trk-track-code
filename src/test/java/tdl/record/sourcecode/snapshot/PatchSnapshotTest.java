@@ -1,14 +1,9 @@
 package tdl.record.sourcecode.snapshot;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import org.apache.commons.codec.binary.Hex;
+
 import tdl.record.sourcecode.test.FileTestHelper;
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import static org.junit.Assert.assertEquals;
@@ -43,7 +38,7 @@ public class PatchSnapshotTest {
     }
 
     @Test
-    public void takeAndRestoreSnapshotFromGit() throws GitAPIException, IOException, Exception {
+    public void takeAndRestoreSnapshotFromGit() throws Exception {
         File directory1 = temporary.newFolder();
         File directory2 = temporary.newFolder();
 
@@ -72,10 +67,7 @@ public class PatchSnapshotTest {
         PatchSnapshot snapshot = PatchSnapshot.takeSnapshotFromGit(git1);
         snapshot.restoreSnapshot(git2);
 
-        FileFilter filter = (file) -> {
-            return !file.getAbsolutePath().contains(".git/");
-        };
-        assertTrue(FileTestHelper.isDirectoryEquals(directory1.toPath(), directory2.toPath(), filter));
+        assertTrue(FileTestHelper.isDirectoryEqualsWithoutGit(directory1.toPath(), directory2.toPath()));
     }
 
 }

@@ -78,7 +78,7 @@ public class GitHelperTest {
     }
 
     @Test
-    public void exportPatchAndApply() throws IOException, GitAPIException, Exception {
+    public void exportPatchAndApply() throws Exception {
         File directory = folder.newFolder();
         Git git = Git.init().setDirectory(directory).call();
         addAndCommit(git);
@@ -135,7 +135,7 @@ public class GitHelperTest {
     }
 
     @Test
-    public void applyPatch() throws IOException, GitAPIException, Exception {
+    public void applyPatch() throws Exception {
         File directory1 = folder.newFolder();
         File directory2 = folder.newFolder();
 
@@ -170,9 +170,7 @@ public class GitHelperTest {
         try (ByteArrayInputStream is = new ByteArrayInputStream(diff)) {
             GitHelper.applyDiff(git2, is);
         }
-        FileFilter filter = (file) -> {
-            return !file.getAbsolutePath().contains(".git/");
-        };
-        assertTrue(FileTestHelper.isDirectoryEquals(directory1.toPath(), directory2.toPath(), filter));
+
+        assertTrue(FileTestHelper.isDirectoryEqualsWithoutGit(directory1.toPath(), directory2.toPath()));
     }
 }
