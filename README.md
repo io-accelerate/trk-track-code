@@ -161,4 +161,5 @@ The command will increment the release number and create and annotated tag:
 ```bash
 ./gradlew release
 git push --tags
+git push --all
 ```
