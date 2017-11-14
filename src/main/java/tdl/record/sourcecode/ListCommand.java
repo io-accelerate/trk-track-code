@@ -14,6 +14,7 @@ import tdl.record.sourcecode.snapshot.file.Reader;
 @Parameters(commandDescription = "List snapshots in the file.")
 public class ListCommand extends Command {
 
+    @SuppressWarnings("WeakerAccess")
     @Parameter(names = {"-i", "--input"}, description = "The SRCS input file.", required = true)
     public String inputFilePath;
 
@@ -38,7 +39,7 @@ public class ListCommand extends Command {
         String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
         long size = segment.getSize() + Segment.HEADER_SIZE;
         String checksum = Hex.encodeHexString(segment.getChecksum());
-        String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %5d | checksum %8s.. | tag %s",
+        String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %7d | checksum %8s.. | tag %s",
                 index, segment.getTimestampSec(), type, segment.getAddress(), size, checksum.substring(0, 8), segment.getTag());
         System.out.println(infoLine);
     }

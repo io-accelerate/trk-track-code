@@ -172,22 +172,14 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
                 String hunkLine = hunkLines.get(j);
                 switch (hunkLine.charAt(0)) {
                     case ' ':
-                        if (!newLines.get(hh.getNewStartLine() - 1 + pos).equals(
-                                hunkLine.substring(1))) {
-                            throw new PatchApplyException(MessageFormat.format(
-                                    JGitText.get().patchApplyException, hh));
-                        }
+                        ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, pos);
                         pos++;
                         break;
                     case '-':
                         if (hh.getNewStartLine() == 0) {
                             newLines.clear();
                         } else {
-                            if (!newLines.get(hh.getNewStartLine() - 1 + pos)
-                                    .equals(hunkLine.substring(1))) {
-                                throw new PatchApplyException(MessageFormat.format(
-                                        JGitText.get().patchApplyException, hh));
-                            }
+                            ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, pos);
                             newLines.remove(hh.getNewStartLine() - 1 + pos);
                         }
                         break;
@@ -230,8 +222,21 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
         return false;
     }
 
+    private void ensureLineContentMatchesDestination(String expected,
+                                                     List<String> newLines,
+                                                     HunkHeader hh,
+                                                     int pos) throws PatchApplyException {
+        //BUG FIX - if the patch is bigger than the destination, ignore the comparison checks, this prevents some nasty null pointers
+        int destinationIndex = hh.getNewStartLine() - 1 + pos;
+        if (destinationIndex < newLines.size() && !newLines.get(destinationIndex).equals(
+                expected)) {
+            throw new PatchApplyException(MessageFormat.format(
+                    JGitText.get().patchApplyException, hh));
+        }
+    }
+
     private boolean isNoNewlineAtEndOfFile(FileHeader fh) {
-        //The following check prevents a null pointer or an array index out of bounds
+        //BUG FIX - The following check prevents a null pointer or an array index out of bounds
         if (fh.getHunks() != null &&  fh.getHunks().size() > 0) {
             HunkHeader lastHunk = fh.getHunks().get(fh.getHunks().size() - 1);
             RawText lhrt = new RawText(lastHunk.getBuffer());
