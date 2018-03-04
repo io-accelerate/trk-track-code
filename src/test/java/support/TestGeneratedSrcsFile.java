@@ -1,13 +1,5 @@
 package support;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
@@ -16,7 +8,14 @@ import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 
-public class TemporarySourceCodeRecorder extends ExternalResource {
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+public class TestGeneratedSrcsFile extends ExternalResource {
 
     private final TemporaryFolder temp = new TemporaryFolder();
 
@@ -24,11 +23,20 @@ public class TemporarySourceCodeRecorder extends ExternalResource {
 
     private final List<SourceCodeProvider> history;
 
-    public TemporarySourceCodeRecorder(List<SourceCodeProvider> history) {
-        this.history = history;
+    private final List<String> tags;
+
+
+    public TestGeneratedSrcsFile(List<SourceCodeProvider> history) {
+        this(history, new ArrayList<>());
     }
 
-    public Path getOutputFilePath() {
+    public TestGeneratedSrcsFile(List<SourceCodeProvider> history, List<String> tags) {
+        this.history = history;
+        this.tags = tags;
+    }
+
+
+    public Path getFilePath() {
         return outputFilePath;
     }
 
@@ -44,6 +52,11 @@ public class TemporarySourceCodeRecorder extends ExternalResource {
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
                 .withKeySnapshotSpacing(3)
                 .build();
+
+        for (String tag : tags) {
+            recorder.tagCurrentState(tag);
+        }
+
         recorder.start(Duration.of(history.size(), ChronoUnit.SECONDS));
         recorder.close();
     }
@@ -52,15 +65,6 @@ public class TemporarySourceCodeRecorder extends ExternalResource {
     protected void after() {
         FileUtils.deleteQuietly(outputFilePath.toFile());
         temp.delete();
-    }
-
-    public static void writeFile(Path destinationFolder, String childFile, String content) {
-        try {
-            File newFile1 = destinationFolder.resolve(childFile).toFile();
-            FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
 }

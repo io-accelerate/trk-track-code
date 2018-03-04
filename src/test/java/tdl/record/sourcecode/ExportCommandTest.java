@@ -9,10 +9,12 @@ import java.util.Arrays;
 import org.apache.commons.io.FileUtils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static support.TestUtils.*;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import support.TemporarySourceCodeRecorder;
+import support.TestGeneratedSrcsFile;
 
 public class ExportCommandTest {
 
@@ -20,25 +22,25 @@ public class ExportCommandTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Rule
-    public TemporarySourceCodeRecorder recorder = new TemporarySourceCodeRecorder(Arrays.asList(
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1"), //key
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test2.txt", "TEST1TEST2"), //patch
+    public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
+            dst -> writeFile(dst, "test1.txt", "TEST1"), //key
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test2.txt", "TEST1TEST2"), //patch
             dst -> { //key
-                TemporarySourceCodeRecorder.writeFile(dst, "test2.txt", "TEST1TEST2");
-                TemporarySourceCodeRecorder.writeFile(dst, "subdir/test3.txt", "TEST3");
+                writeFile(dst, "test2.txt", "TEST1TEST2");
+                writeFile(dst, "subdir/test3.txt", "TEST3");
             },
             dst -> {/* Empty folder */ }, //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //key
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2") //key
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //key
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2") //key
     ));
 
     @Test
     public void run() throws IOException {
-        Path inputFilePath = recorder.getOutputFilePath();
+        Path inputFilePath = recorder.getFilePath();
         
         
         Path dir1 = folder.newFolder().toPath();
@@ -70,11 +72,11 @@ public class ExportCommandTest {
         assertEquals("TEST1TEST2", readFile(dir4, "test2.txt"));
     }
 
-    public boolean exists(Path parent, String path) {
+    private boolean exists(Path parent, String path) {
         return Files.exists(parent.resolve(path));
     }
 
-    public String readFile(Path parent, String path) {
+    private String readFile(Path parent, String path) {
         File file = parent.resolve(path).toFile();
         try {
             return FileUtils.readFileToString(file, Charset.defaultCharset());

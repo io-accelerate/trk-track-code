@@ -9,31 +9,33 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
+import static support.TestUtils.*;
+
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
-import support.TemporarySourceCodeRecorder;
+import support.TestGeneratedSrcsFile;
 
 public class ReaderTest {
 
     @Rule
-    public TemporarySourceCodeRecorder recorder = new TemporarySourceCodeRecorder(Arrays.asList(
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1"), //key
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test2.txt", "TEST1TEST2"), //patch
+    public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
+            dst -> writeFile(dst, "test1.txt", "TEST1"), //key
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test2.txt", "TEST1TEST2"), //patch
             dst -> { //key
-                TemporarySourceCodeRecorder.writeFile(dst, "test2.txt", "TEST1TEST2");
-                TemporarySourceCodeRecorder.writeFile(dst, "subdir/test3.txt", "TEST3");
+                writeFile(dst, "test2.txt", "TEST1TEST2");
+                writeFile(dst, "subdir/test3.txt", "TEST3");
             },
             dst -> {/* Empty folder */ }, //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //key
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> TemporarySourceCodeRecorder.writeFile(dst, "test1.txt", "TEST1TEST2") //key
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //key
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
+            dst -> writeFile(dst, "test1.txt", "TEST1TEST2") //key
     ));
 
     @Test
     public void getSegmentAddresses() throws IOException {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             List<Integer> addresses = reader.getSegmentAddresses();
             System.out.println(addresses);
             Integer[] expected = new Integer[]{14, 259, 501, 789, 1276, 1565, 1813, 2061, 2187, 2313};
@@ -43,7 +45,7 @@ public class ReaderTest {
 
     @Test
     public void next() throws IOException {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             assertEquals(Header.SIZE, reader.getFilePointer());
             assertTrue(reader.hasNext());
 
@@ -89,7 +91,7 @@ public class ReaderTest {
     @Test
     public void skip() throws IOException {
 
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             assertTrue(reader.hasNext());
             assertThat(reader.nextSegment().getTimestampSec(), equalTo(0L));
 
@@ -105,7 +107,7 @@ public class ReaderTest {
 
     @Test
     public void reset() throws IOException {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             assertTrue(reader.hasNext());
             Segment snapshot1 = reader.nextSegment();
 
@@ -127,7 +129,7 @@ public class ReaderTest {
 
     @Test
     public void getSnapshotAt() throws Exception {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 139},
                 {1, 136},
@@ -144,7 +146,7 @@ public class ReaderTest {
 
     @Test
     public void getFirstKeySnapshotBefore() throws Exception {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 0},
                 {1, 0},
@@ -164,8 +166,8 @@ public class ReaderTest {
     }
 
     @Test
-    public void getSnapshotSegmentsByRange() throws SourceCodeRecorderException, IOException, Exception {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+    public void getSnapshotSegmentsByRange() throws Exception {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 3, 3},
                 {1, 2, 1},
@@ -183,8 +185,8 @@ public class ReaderTest {
     }
 
     @Test
-    public void getReplayableSnapshotSegmentsUntil() throws SourceCodeRecorderException, IOException, Exception {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+    public void getReplayableSnapshotSegmentsUntil() throws Exception {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 1},
                 {1, 2},
@@ -206,7 +208,7 @@ public class ReaderTest {
 
     @Test
     public void getIndexBeforeOrEqualsTimestamp() throws Exception {
-        try (Reader reader = new Reader(recorder.getOutputFilePath().toFile())) {
+        try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
                 {0, 0},
                 {1, 1},
