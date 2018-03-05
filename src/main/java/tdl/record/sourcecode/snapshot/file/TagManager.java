@@ -3,13 +3,14 @@ package tdl.record.sourcecode.snapshot.file;
 import org.eclipse.jgit.lib.Repository;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 class TagManager {
 
     private final Set<String> existingTags;
 
-    public TagManager() {
+    TagManager() {
         existingTags = new HashSet<>();
     }
 
@@ -17,13 +18,21 @@ class TagManager {
         return tag != null && tag.trim().length() > 0;
     }
 
-    String asValidTag(String tag) {
-        String normalizedTag = Repository.normalizeBranchName(tag);
-        String trimmedTag = normalizedTag.substring(0, Math.min(normalizedTag.length(), Segment.TAG_SIZE));
+    public void addExisting(List<String> tags) {
+        existingTags.addAll(tags);
+    }
 
-        String selectedTag = ensureUnique(trimmedTag);
+    String asUniqueTag(String tag) {
+        String sanitisedTag = sanitize(tag);
+        String selectedTag = ensureUnique(sanitisedTag);
         existingTags.add(selectedTag);
         return selectedTag;
+    }
+
+    String asValidTag(String tag) {
+        String trimmedTag = sanitize(tag);
+        existingTags.add(trimmedTag);
+        return trimmedTag;
     }
 
     private String ensureUnique(String trimmedTag) {
@@ -42,5 +51,10 @@ class TagManager {
             selectedTag = trimmedTag;
         }
         return selectedTag;
+    }
+
+    private static String sanitize(String tag) {
+        String normalizedTag = Repository.normalizeBranchName(tag);
+        return normalizedTag.substring(0, Math.min(normalizedTag.length(), Segment.TAG_SIZE));
     }
 }

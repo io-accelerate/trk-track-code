@@ -6,6 +6,8 @@ import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
@@ -47,13 +49,12 @@ public class TagManagerTest {
     }
 
     @Test
-    public void keepTrackOfUsedTags() {
+    public void ensure_tag_uniqueness() {
         TagManager tagManager = new TagManager();
+        tagManager.addExisting(Arrays.asList("tag", "tag_1"));
 
-        assertThat("first tag changed", tagManager.asValidTag("tag"), is("tag"));
-        assertThat("tag reuse 2", tagManager.asValidTag("tag"), is("tag_2"));
-        assertThat("tag reuse 3", tagManager.asValidTag("tag"), is("tag_3"));
-        assertThat("tag clash", tagManager.asValidTag("tag_2"), is("tag_2_2"));
+        assertThat("tag reuse 2", tagManager.asUniqueTag("tag"), is("tag_2"));
+        assertThat("tag reuse 3", tagManager.asUniqueTag("tag"), is("tag_3"));
+        assertThat("tag clash", tagManager.asUniqueTag("tag_2"), is("tag_2_2"));
     }
-
 }

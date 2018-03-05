@@ -1,14 +1,12 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.RmCommand;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.PersonIdent;
 import tdl.record.sourcecode.snapshot.Snapshot;
-
-import tdl.record.sourcecode.snapshot.Snapshot;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +14,6 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class ToGitConverter {
 
@@ -28,10 +25,11 @@ public class ToGitConverter {
 
     private ProgressListener listener;
 
-    @FunctionalInterface
-    public static interface ProgressListener {
+    private final TagManager tagManager;
 
-        public void commitSegment(Segment segment);
+    @FunctionalInterface
+    public interface ProgressListener {
+        void commitSegment(Segment segment);
 
     }
 
@@ -39,7 +37,9 @@ public class ToGitConverter {
         this.inputFile = inputFile;
         this.outputDir = outputDir;
         this.listener = listener;
+        this.tagManager = new TagManager();
         throwExceptionIfOutputDirInvalid();
+
     }
 
     public ToGitConverter(Path inputFile, Path outputDir) throws IOException {
@@ -81,7 +81,7 @@ public class ToGitConverter {
         if (segment.hasTag()) {
             git.tag()
                     .setTagger(ident)
-                    .setName(segment.getTag().trim())
+                    .setName(tagManager.asUniqueTag(segment.getTag()))
                     .call();
         }
     }
@@ -93,7 +93,7 @@ public class ToGitConverter {
         deletedFiles.addAll(status.getRemoved());
         if (!deletedFiles.isEmpty()) {
             RmCommand rm = git.rm();
-            deletedFiles.stream().forEach(rm::addFilepattern);
+            deletedFiles.forEach(rm::addFilepattern);
             rm.call();
         }
     }
@@ -103,6 +103,7 @@ public class ToGitConverter {
             git = Git.init().setDirectory(outputDir.toFile()).call();
         } else {
             git = Git.open(outputDir.toFile());
+            tagManager.addExisting(GitHelper.getTags(git));
         }
     }
 

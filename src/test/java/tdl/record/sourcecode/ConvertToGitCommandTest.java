@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 import java.io.File;
 import java.util.Arrays;
@@ -14,7 +15,6 @@ import static org.junit.Assert.*;
 import static support.TestUtils.writeFile;
 import static tdl.record.sourcecode.test.FileTestHelper.appendStringToFile;
 import static tdl.record.sourcecode.test.FileTestHelper.doesFileExist;
-import static tdl.record.sourcecode.test.GitTestHelper.*;
 
 public class ConvertToGitCommandTest {
 
@@ -36,7 +36,7 @@ public class ConvertToGitCommandTest {
             dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
             dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
             dst -> writeFile(dst, "test1.txt", "TEST1TEST2") //key
-    ), Arrays.asList("tag","tag1"));
+    ), Arrays.asList("tag", "tag"));
 
     @Test
     public void runShouldCreateDirectoryIfFile() throws Exception {
@@ -67,16 +67,17 @@ public class ConvertToGitCommandTest {
 
         Git git = Git.init().setDirectory(outputDir).call();
         appendStringToFile(outputDir.toPath(), "randomfile.txt", "Lorem Ipsum");
-        addAndCommit(git);
-        git.tag().setName("tag").call();
-        assertEquals(getCommitCount(git), 1);
+        GitHelper.addAndCommit(git);
+        GitHelper.tag(git, "tag");
+        GitHelper.tag(git, "tag_1");
+        assertEquals(GitHelper.getCommitCount(git), 1);
 
         command.inputFilePath = srcsFile.getFilePath().toString();
         command.outputDirectoryPath = outputDir.toString();
         command.run();
 
-        assertThat(getCommitCount(git), equalTo(11));
-        assertThat(getTags(git), equalTo(Arrays.asList("tag", "tag1")));
+        assertThat(GitHelper.getCommitCount(git), equalTo(11));
+        assertThat(GitHelper.getTags(git), equalTo(Arrays.asList("tag", "tag_1", "tag_2", "tag_3")));
     }
     
     @Test
@@ -86,14 +87,14 @@ public class ConvertToGitCommandTest {
 
         Git git = Git.init().setDirectory(outputDir).call();
         appendStringToFile(outputDir.toPath(), "randomfile.txt", "Lorem Ipsum");
-        addAndCommit(git);
-        assertEquals(getCommitCount(git), 1);
+        GitHelper.addAndCommit(git);
+        assertEquals(GitHelper.getCommitCount(git), 1);
 
         command.inputFilePath = srcsFile.getFilePath().toString();
         command.outputDirectoryPath = outputDir.toString();
         command.appendGit = false;
         command.run();
 
-        assertThat(getCommitCount(git), equalTo(10));
+        assertThat(GitHelper.getCommitCount(git), equalTo(10));
     }
 }

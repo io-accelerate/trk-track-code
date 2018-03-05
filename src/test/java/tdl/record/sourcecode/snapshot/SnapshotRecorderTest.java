@@ -1,25 +1,21 @@
 package tdl.record.sourcecode.snapshot;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
-import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.revwalk.RevCommit;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static tdl.record.sourcecode.test.GitTestHelper.*;
+
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 import tdl.record.sourcecode.test.FileTestHelper;
 
 public class SnapshotRecorderTest {
@@ -155,16 +151,16 @@ public class SnapshotRecorderTest {
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Git git = recorder.getGit();
 
-            assertEquals(1, getCommitCount(git));
+            assertEquals(1, GitHelper.getCommitCount(git));
             FileTestHelper.appendStringToFile(tmpDir, "file1.txt", "Hello World!");
             FileTestHelper.appendStringToFile(tmpDir, "file2.txt", "Lorem Ipsum!");
 
             recorder.syncToGitDirectory();
             recorder.commitAllChanges();
-            assertEquals(2, getCommitCount(git));
+            assertEquals(2, GitHelper.getCommitCount(git));
 
             recorder.commitAllChanges();
-            assertEquals(3, getCommitCount(git));
+            assertEquals(3, GitHelper.getCommitCount(git));
         }
     }
 }

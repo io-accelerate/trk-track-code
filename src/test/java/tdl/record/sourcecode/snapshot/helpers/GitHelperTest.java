@@ -1,31 +1,19 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.util.FileUtils;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import tdl.record.sourcecode.snapshot.SnapshotRecorderTest;
 import tdl.record.sourcecode.test.FileTestHelper;
+
+import java.io.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import static org.junit.Assert.*;
+import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
 public class GitHelperTest {
 
@@ -125,13 +113,6 @@ public class GitHelperTest {
             GitHelper.exportDiff(git, os);
             //System.out.println(os.toString());
         }
-    }
-
-    private static void addAndCommit(Git git) throws GitAPIException {
-        git.add()
-                .addFilepattern(".")
-                .call();
-        git.commit().setAll(true).setMessage("Commit").call();
     }
 
     @Test

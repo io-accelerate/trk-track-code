@@ -20,6 +20,7 @@ import tdl.record.sourcecode.snapshot.file.Reader;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryPatch;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 
 import java.io.File;
@@ -29,16 +30,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.eclipse.jgit.lib.Ref;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
@@ -150,13 +148,7 @@ public class CanRecordSourceCodeAccTest {
         //See the git tags
         Git git = Git.open(gitDir);
 
-        List<String> tags = git
-                .tagList()
-                .call()
-                .stream()
-                .map(Ref::getName)
-                .collect(Collectors.toList());
-        assertTrue(tags.get(0).trim().endsWith("testTag"));
+        assertThat(GitHelper.getTags(git), equalTo(singletonList("testTag")));
     }
 
 
