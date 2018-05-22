@@ -2,15 +2,16 @@ package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import tdl.record.sourcecode.snapshot.file.Reader;
+import tdl.record.sourcecode.snapshot.file.Segment;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import tdl.record.sourcecode.snapshot.file.Segment;
-import tdl.record.sourcecode.snapshot.file.Reader;
 
 @Parameters(commandDescription = "Export a snapshot of a SCRS file.")
 public class ExportCommand extends Command {
@@ -21,25 +22,44 @@ public class ExportCommand extends Command {
     @Parameter(names = {"-o", "--output"}, required = true, description = "The directory. This will be cleaned.")
     private String outputDirPath;
 
-    @Parameter(names = {"-t", "--time"}, required = true, description = "The time in seconds.")
-    private long time;
+    @Parameter(names = {"-ts", "--timestamp"}, description = "Export the state of the repo at the given timestamp.")
+    private long time = 0;
 
-    public ExportCommand() {
+    @Parameter(names = {"--tag"}, description = "Export a specific tag")
+    private String tag = "";
+
+
+    ExportCommand() {
     }
 
-    public ExportCommand(String inputFilePath, String outputDirPath, long time) {
+    ExportCommand(String inputFilePath, String outputDirPath, long time) {
         this.inputFilePath = inputFilePath;
         this.outputDirPath = outputDirPath;
         this.time = time;
+        this.tag = "";
+    }
+
+    ExportCommand(String inputFilePath, String outputDirPath, String tag) {
+        this.inputFilePath = inputFilePath;
+        this.outputDirPath = outputDirPath;
+        this.time = 0;
+        this.tag = tag;
     }
 
     @Override
     public void run() {
         File file = Paths.get(inputFilePath).toFile();
 
+
         try (Reader reader = new Reader(file)) {
             Git git = initGit();
-            int index = reader.getIndexBeforeOrEqualsTimestamp(time);
+
+            int index;
+            if (!tag.isEmpty()) {
+                index = reader.getIndexBeforeForTag(tag);
+            } else {
+                index = reader.getIndexBeforeOrEqualsTimestamp(time);
+            }
             List<Segment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
             segments.forEach(segment -> {
                 try {

@@ -36,52 +36,65 @@ public class ExportCommandTest {
             dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
             dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
             dst -> writeFile(dst, "test1.txt", "TEST1TEST2") //key
-    ));
+    ), Arrays.asList("tag1", "x", "tag12", "tag3", "tag3"));
 
     @Test
     public void run() throws IOException {
         Path inputFilePath = recorder.getFilePath();
-        
-        
-        Path dir1 = folder.newFolder().toPath();
-        int time1 = 0;
-        (new ExportCommand(inputFilePath.toString(), dir1.toString(), time1)).run();
-        assertTrue(exists(dir1, "test1.txt"));
-        assertEquals("TEST1", readFile(dir1, "test1.txt"));
 
-        Path dir2 = folder.newFolder().toPath();
-        int time2 = 1;
-        (new ExportCommand(inputFilePath.toString(), dir2.toString(), time2)).run();
-        assertTrue(exists(dir2, "test1.txt"));
-        assertEquals("TEST1TEST2", readFile(dir2, "test1.txt"));
-        
-        Path dir3 = folder.newFolder().toPath();
-        int time3 = 2;
-        (new ExportCommand(inputFilePath.toString(), dir3.toString(), time3)).run();
-        //assertTrue(exists(dir3, "test1.txt"));
-        assertTrue(exists(dir3, "test2.txt"));
-        //assertEquals("TEST1TEST2", readFile(dir3, "test1.txt"));
-        assertEquals("TEST1TEST2", readFile(dir3, "test2.txt"));
-        
-        Path dir4 = folder.newFolder().toPath();
-        int time4 = 3;
-        (new ExportCommand(inputFilePath.toString(), dir4.toString(), time4)).run();
-        assertTrue(exists(dir4, "subdir/test3.txt"));
-        assertTrue(exists(dir4, "test2.txt"));
-        assertEquals("TEST3", readFile(dir4, "subdir/test3.txt"));
-        assertEquals("TEST1TEST2", readFile(dir4, "test2.txt"));
-    }
-
-    private boolean exists(Path parent, String path) {
-        return Files.exists(parent.resolve(path));
-    }
-
-    private String readFile(Path parent, String path) {
-        File file = parent.resolve(path).toFile();
-        try {
-            return FileUtils.readFileToString(file, Charset.defaultCharset());
-        } catch (IOException ex) {
-            return "";
+        {
+            Path destDir = exportTimestamp(inputFilePath, 0);
+            assertEquals("TEST1", readFile(destDir, "test1.txt"));
         }
+
+        {
+            Path destDir = exportTimestamp(inputFilePath, 1);
+            assertEquals("TEST1TEST2", readFile(destDir, "test1.txt"));
+        }
+
+        {
+            Path destDir = exportTimestamp(inputFilePath, 2);
+            assertEquals("TEST1TEST2", readFile(destDir, "test2.txt"));
+        }
+
+        {
+            Path destDir = exportTimestamp(inputFilePath, 3);
+            assertEquals("TEST3", readFile(destDir, "subdir/test3.txt"));
+            assertEquals("TEST1TEST2", readFile(destDir, "test2.txt"));
+        }
+
+        {
+            Path destDir = exportTag(inputFilePath, "tag12");
+            assertEquals("TEST1TEST2", readFile(destDir, "test2.txt"));
+        }
+
+        {
+            Path destDir = exportTag(inputFilePath, "tag3");
+            assertEquals("TEST3", readFile(destDir, "subdir/test3.txt"));
+        }
+    }
+
+    private Path exportTimestamp(Path inputFilePath, int timestamp) throws IOException {
+        Path dir = folder.newFolder().toPath();
+        ExportCommand exportCommand = new ExportCommand(inputFilePath.toString(), dir.toString(), timestamp);
+        exportCommand.run();
+        return dir;
+    }
+
+    private Path exportTag(Path inputFilePath, String tag) throws IOException {
+        Path dir = folder.newFolder().toPath();
+        ExportCommand exportCommand = new ExportCommand(inputFilePath.toString(), dir.toString(), tag);
+        exportCommand.run();
+        return dir;
+    }
+
+    private String readFile(Path parent, String path) throws IOException {
+        Path resolvedPath = parent.resolve(path);
+        if (!Files.exists(resolvedPath)) {
+            throw new AssertionError("File does not exist: "+resolvedPath);
+        }
+
+        File file = resolvedPath.toFile();
+        return FileUtils.readFileToString(file, Charset.defaultCharset());
     }
 }

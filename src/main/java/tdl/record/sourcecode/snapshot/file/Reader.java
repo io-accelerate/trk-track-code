@@ -4,10 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
@@ -20,7 +17,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
 
     private Header fileHeader;
 
-    public Reader(File file) throws FileNotFoundException, IOException {
+    public Reader(File file) throws IOException {
         this.file = file;
         this.randomAccessFile = new RandomAccessFile(file, "r");
         reset();
@@ -115,7 +112,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         return fileHeader;
     }
 
-    public void skip() throws IOException {
+    public void skip() {
         next();
     }
 
@@ -128,13 +125,11 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
 
     /**
      * @param index Inclusive.
-     * @return
-     * @throws java.lang.Exception
      */
     public List<Segment> getReplayableSnapshotSegmentsUntil(int index) throws Exception {
         Segment snapshot = getSnapshotAt(index);
         if (snapshot.getSnapshot() instanceof KeySnapshot) {
-            return Arrays.asList(new Segment[]{snapshot});
+            return Arrays.asList(snapshot);
         }
         int first = getFirstKeySnapshotBefore(index);
         return getSnapshotSegmentsByRange(first, index + 1);
@@ -143,8 +138,6 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
     /**
      * @param start inclusive.
      * @param end exclusive.
-     * @return
-     * @throws java.io.IOException
      */
     public List<Segment> getSnapshotSegmentsByRange(int start, int end) throws IOException {
         List<Segment> list = new ArrayList<>();
@@ -196,7 +189,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         return segment;
     }
 
-    private String asString(byte[] bytes) throws IOException {
+    private String asString(byte[] bytes) {
         int indexOfZero = Arrays.binarySearch(bytes, (byte) 0);
 
         int newLength = bytes.length;
@@ -246,6 +239,20 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         return list;
     }
 
+    public int getIndexBeforeForTag(String tag) throws IOException {
+        int index = 0;
+        reset();
+        do {
+            Segment segment = nextSegment();
+            if (Objects.equals(segment.getTag(), tag)) {
+                break;
+            }
+            index++;
+        } while (hasNext());
+        reset();
+        return index;
+    }
+
     public int getIndexBeforeOrEqualsTimestamp(long timestamp) throws IOException {
         int index = 0;
         reset();
@@ -273,5 +280,4 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
     public File getFile() {
         return file;
     }
-
 }
