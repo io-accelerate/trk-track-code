@@ -24,6 +24,7 @@ import static java.nio.file.StandardOpenOption.CREATE;
 
 @Slf4j
 public class SourceCodeRecorder {
+    private static final int VERY_SHORT_DURATION = 1000;
 
     private final SourceCodeProvider sourceCodeProvider;
     private final Path outputRecordingFilePath;
@@ -137,7 +138,7 @@ public class SourceCodeRecorder {
         }
     }
 
-    public void tagCurrentState(String tag) throws SourceCodeRecorderException {
+    public void tagCurrentState(String tag) {
         log.info("Tag state with: " + tag);
         tagQueue.offer(tag);
         timeSource.wakeUpNow();
@@ -157,8 +158,17 @@ public class SourceCodeRecorder {
                 break;
             }
 
+            long timeToSleep;
+            if (tagQueue.size() > 0) {
+                // Wake up quickly is we need to process a new tag
+                timeToSleep = TimeUnit.MILLISECONDS.toNanos(VERY_SHORT_DURATION);
+            } else {
+                // Wake up as scheduled
+                timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
+            }
+
             // Prepare the next timestamp
-            long nextTimestamp = timestampBeforeProcessing + TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
+            long nextTimestamp = timestampBeforeProcessing + timeToSleep;
             try {
                 timeSource.wakeUpAt(nextTimestamp, TimeUnit.NANOSECONDS);
             } catch (InterruptedException | BrokenBarrierException e) {
