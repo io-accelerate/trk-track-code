@@ -22,11 +22,11 @@ class ConvertToGitCommand extends Command {
     @Parameter(names = {"-o", "--output"}, required = true, description = "The destination sourceCodeProvider. Warning! It will be cleared if exists.")
     public String outputDirectoryPath;
 
-    @Parameter(names = {"--append-git"}, description = "Append commits if already git repository")
-    public boolean appendGit = true;
+    @Parameter(names = {"--clean-dest"}, description = "Remove destination, even if git repo.")
+    public boolean wipeDestinationRepo = false;
 
-    @Parameter(names = {"--stop-on-errors"}, description = "Continue processing even if errors occur")
-    public boolean stopOnErrors = true;
+    @Parameter(names = {"--ignore-errors"}, description = "Continue processing even if errors occur")
+    public boolean ignoreErrors = false;
 
     @Override
     public void run() {
@@ -37,10 +37,8 @@ class ConvertToGitCommand extends Command {
             ToGitConverter converter = new ToGitConverter(
                     Paths.get(inputFilePath),
                     outputPath,
-                    (segment) -> {
-                        System.out.println("Committing timestamp: " + segment.getTimestampSec());
-                    },
-                    stopOnErrors
+                    (segment) -> System.out.println("Committing timestamp: " + segment.getTimestampSec()),
+                    !ignoreErrors
             );
             converter.convert();
         } catch (Exception ex) {
@@ -63,13 +61,12 @@ class ConvertToGitCommand extends Command {
     }
 
     private void cleanDirectoryIfOkay() {
-        if (GitHelper.isGitDirectory(outputPath) && appendGit) {
-            return;
-        }
-        try {
-            FileUtils.cleanDirectory(outputPath.toFile());
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        if (!GitHelper.isGitDirectory(outputPath) || wipeDestinationRepo) {
+            try {
+                FileUtils.cleanDirectory(outputPath.toFile());
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
 }
