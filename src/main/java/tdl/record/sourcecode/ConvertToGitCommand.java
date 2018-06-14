@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
+@SuppressWarnings("WeakerAccess")
 @Parameters(commandDescription = "Convert a SRCS file to git repository.")
 class ConvertToGitCommand extends Command {
 
@@ -24,6 +25,9 @@ class ConvertToGitCommand extends Command {
     @Parameter(names = {"--append-git"}, description = "Append commits if already git repository")
     public boolean appendGit = true;
 
+    @Parameter(names = {"--stop-on-errors"}, description = "Continue processing even if errors occur")
+    public boolean stopOnErrors = true;
+
     @Override
     public void run() {
         outputPath = Paths.get(outputDirectoryPath);
@@ -35,7 +39,8 @@ class ConvertToGitCommand extends Command {
                     outputPath,
                     (segment) -> {
                         System.out.println("Committing timestamp: " + segment.getTimestampSec());
-                    }
+                    },
+                    stopOnErrors
             );
             converter.convert();
         } catch (Exception ex) {

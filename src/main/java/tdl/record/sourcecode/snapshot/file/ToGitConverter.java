@@ -24,6 +24,7 @@ public class ToGitConverter {
     private Git git;
 
     private ProgressListener listener;
+    private boolean stopOnErrors;
 
     private final TagManager tagManager;
 
@@ -33,17 +34,17 @@ public class ToGitConverter {
 
     }
 
-    public ToGitConverter(Path inputFile, Path outputDir, ProgressListener listener) throws IOException {
+    public ToGitConverter(Path inputFile, Path outputDir, ProgressListener listener, boolean stopOnErrors) throws IOException {
         this.inputFile = inputFile;
         this.outputDir = outputDir;
         this.listener = listener;
+        this.stopOnErrors = stopOnErrors;
         this.tagManager = new TagManager();
         throwExceptionIfOutputDirInvalid();
-
     }
 
     public ToGitConverter(Path inputFile, Path outputDir) throws IOException {
-        this(inputFile, outputDir, createDefaultListener());
+        this(inputFile, outputDir, createDefaultListener(), true);
     }
 
     public void convert() throws Exception {
@@ -52,11 +53,23 @@ public class ToGitConverter {
         Reader reader = new Reader(inputFile.toFile());
 
         while (reader.hasNext()) {
+            processSegment(reader);
+        }
+    }
+
+    private void processSegment(Reader reader) throws Exception {
+        try {
             Header header = reader.getFileHeader();
             Segment segment = reader.nextSegment();
             writeDirFromSnapshot(segment);
             listener.commitSegment(segment);
             commitDirectory(header, segment);
+        } catch (Exception e) {
+            if (stopOnErrors) {
+                throw e;
+            } else {
+                System.err.println(e.getMessage());
+            }
         }
     }
 
