@@ -17,14 +17,15 @@ import org.eclipse.jgit.util.FileUtils;
 import org.eclipse.jgit.util.IO;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * WARNING!!!
- *
+ * <p>
  * This class is a HACK!!!
  * It had to be copied from the JGit in order to fix a bug in the private method `isNoNewlineAtEndOfFile`
  */
@@ -32,6 +33,7 @@ import java.util.List;
 public class ApplyCommandFixed extends GitCommand<ApplyResult> {
 
     private InputStream in;
+    private FilterFileRenames filterFileRenames;
 
     /**
      * Constructs the command if the patch is to be applied to the index.
@@ -40,6 +42,7 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
      */
     public ApplyCommandFixed(Repository repo) {
         super(repo);
+        filterFileRenames = new FilterFileRenames();
     }
 
     /**
@@ -78,7 +81,10 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             }
             if (!p.getErrors().isEmpty())
                 throw new PatchFormatException(p.getErrors());
-            for (FileHeader fh : p.getFiles()) {
+
+
+            List<FileHeader> files = filterFileRenames.apply(p);
+            for (FileHeader fh : files) {
                 DiffEntry.ChangeType type = fh.getChangeType();
                 File f = null;
                 switch (type) {
@@ -134,9 +140,13 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
         File f = new File(getRepository().getWorkTree(), path);
         if (create)
             try {
-                File parent = f.getParentFile();
-                FileUtils.mkdirs(parent, true);
-                FileUtils.createNewFile(f);
+                if (f.exists()) {
+                    Files.write(f.toPath(), new byte[0], StandardOpenOption.TRUNCATE_EXISTING);
+                } else {
+                    File parent = f.getParentFile();
+                    FileUtils.mkdirs(parent, true);
+                    FileUtils.createNewFile(f);
+                }
             } catch (IOException e) {
                 throw new PatchApplyException(MessageFormat.format(
                         JGitText.get().createNewFileFailed, f), e);
@@ -237,7 +247,7 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
 
     private boolean isNoNewlineAtEndOfFile(FileHeader fh) {
         //BUG FIX - The following check prevents a null pointer or an array index out of bounds
-        if (fh.getHunks() != null &&  fh.getHunks().size() > 0) {
+        if (fh.getHunks() != null && fh.getHunks().size() > 0) {
             HunkHeader lastHunk = fh.getHunks().get(fh.getHunks().size() - 1);
             RawText lhrt = new RawText(lastHunk.getBuffer());
             return lhrt.getString(lhrt.size() - 1).equals(
