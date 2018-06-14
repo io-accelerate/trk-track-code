@@ -81,7 +81,7 @@ public class ConvertToGitCommandTest {
     }
     
     @Test
-    public void whenAppendFalse_runShouldRemoveGit() throws Exception {
+    public void whenWipeTrue_runShouldRemoveGit() throws Exception {
         ConvertToGitCommand command = new ConvertToGitCommand();
         File outputDir = folder.newFolder();
 
@@ -92,7 +92,7 @@ public class ConvertToGitCommandTest {
 
         command.inputFilePath = srcsFile.getFilePath().toString();
         command.outputDirectoryPath = outputDir.toString();
-        command.appendGit = false;
+        command.wipeDestinationRepo = true;
         command.run();
 
         assertThat(GitHelper.getCommitCount(git), equalTo(10));
