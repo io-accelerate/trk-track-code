@@ -15,8 +15,9 @@ import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
-import tdl.record.sourcecode.snapshot.file.Segment;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import tdl.record.sourcecode.snapshot.file.Reader;
+import tdl.record.sourcecode.snapshot.file.Segment;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.DirectoryPatch;
@@ -34,16 +35,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.eclipse.jgit.lib.Ref;
-
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
 import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
 
@@ -72,7 +67,8 @@ public class CanRecordSourceCodeAccTest {
                     writeTextFile(dst, "test.empty.txt", "");
                 },
                 dst -> {
-                    /* Empty folder */ });
+                    /* Empty folder */
+                });
 
         SourceCodeRecordingMetricsCollector sourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
@@ -112,19 +108,8 @@ public class CanRecordSourceCodeAccTest {
         );
 
         // Run a recording on a separate thread
-        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
-                .withTimeSource(new SystemMonotonicTimeSource())
-                .withSnapshotEvery(999, TimeUnit.HOURS)
-                .withKeySnapshotSpacing(1)
-                .build();
-        Thread recordingThread = new Thread(() -> {
-            try {
-                sourceCodeRecorder.start(INDEFINITE);
-            } catch (SourceCodeRecorderException e) {
-                e.printStackTrace();
-            }
-            sourceCodeRecorder.close();
-        });
+        SourceCodeRecorder sourceCodeRecorder = indefiniteRecorder(outputFilePath, sourceCodeHistory);
+        Thread recordingThread = createRecordingThread(sourceCodeRecorder);
         recordingThread.start();
 
         // Trigger the tagged snapshot
@@ -151,6 +136,35 @@ public class CanRecordSourceCodeAccTest {
         assertThat(GitHelper.getTags(git), equalTo(singletonList("testTag")));
     }
 
+    @Test
+    public void on_stop_should_process_all_the_tags_before_stopping() throws Exception {
+        Path outputFilePath = testFolder.newFile("burst_tags.srcs").toPath();
+
+        List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
+                dst -> writeTextFile(dst, "test1.txt", "TEST1"),
+                dst -> writeTextFile(dst, "test1.txt", "TEST2")
+        );
+
+        // Run a recording on a separate thread
+        SourceCodeRecorder sourceCodeRecorder = indefiniteRecorder(outputFilePath, sourceCodeHistory);
+        Thread recordingThread = createRecordingThread(sourceCodeRecorder);
+        recordingThread.start();
+
+        // Trigger the tagged snapshot
+        Thread.sleep(TIME_TO_TAKE_A_SNAPSHOT);
+        int numTags = 3;
+        for (int i = 0; i < numTags; i++) {
+            sourceCodeRecorder.tagCurrentState("testTag" + i);
+        }
+        sourceCodeRecorder.stop();
+
+        // Wait for recording to finish
+        recordingThread.join();
+
+        // Ensure all tags have been captured
+        List<String> tags = extractTags(outputFilePath);
+        assertThat(tags.size(), is(4)); // 3 tags + final snapshot
+    }
 
     @Test
     public void should_minimize_the_size_of_the_stream() throws Exception {
@@ -172,8 +186,37 @@ public class CanRecordSourceCodeAccTest {
     }
 
 
-
     //~~~~~~~~~~~~~ Helpers ~~~~~~~~~~
+
+    private Thread createRecordingThread(SourceCodeRecorder sourceCodeRecorder) {
+        return new Thread(() -> {
+            try {
+                sourceCodeRecorder.start(INDEFINITE);
+            } catch (SourceCodeRecorderException e) {
+                e.printStackTrace();
+            }
+            sourceCodeRecorder.close();
+        });
+    }
+
+    private SourceCodeRecorder indefiniteRecorder(Path outputFilePath,
+                                                  List<SourceCodeProvider> sourceCodeHistory) {
+        return new SourceCodeRecorder.Builder(
+                new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
+                .withTimeSource(new SystemMonotonicTimeSource())
+                .withSnapshotEvery(999, TimeUnit.HOURS)
+                .withKeySnapshotSpacing(1)
+                .build();
+    }
+
+    private List<String> extractTags(Path outputFilePath) throws IOException {
+        List<String> tags;
+        try (Reader reader = new Reader(outputFilePath.toFile())) {
+            List<Segment> snapshots = reader.getSnapshots();
+            tags = snapshots.stream().map(Segment::getTag).map(String::trim).collect(Collectors.toList());
+        }
+        return tags;
+    }
 
     private void writeTextFile(Path destinationFolder, String childFile, String content) throws IOException {
         File newFile1 = destinationFolder.resolve(childFile).toFile();

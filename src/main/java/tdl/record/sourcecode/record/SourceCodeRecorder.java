@@ -36,12 +36,12 @@ public class SourceCodeRecorder {
     private final SourceCodeRecordingListener sourceCodeRecordingListener;
     private Queue<String> tagQueue;
 
-    SourceCodeRecorder(SourceCodeProvider sourceCodeProvider,
-                       Path outputRecordingFilePath,
-                       TimeSource timeSource,
-                       long recordedTimestamp,
-                       long snapshotIntervalMillis,
-                       int keySnapshotSpacing, SourceCodeRecordingListener sourceCodeRecordingListener) {
+    private SourceCodeRecorder(SourceCodeProvider sourceCodeProvider,
+                               Path outputRecordingFilePath,
+                               TimeSource timeSource,
+                               long recordedTimestamp,
+                               long snapshotIntervalMillis,
+                               int keySnapshotSpacing, SourceCodeRecordingListener sourceCodeRecordingListener) {
         this.sourceCodeProvider = sourceCodeProvider;
         this.outputRecordingFilePath = outputRecordingFilePath;
         this.timeSource = timeSource;
@@ -148,26 +148,23 @@ public class SourceCodeRecorder {
         while (timeSource.currentTimeNano() < recordingDuration.toNanos()) {
             long timestampBeforeProcessing = timeSource.currentTimeNano();
             sourceCodeRecordingListener.notifySnapshotStart(timestampBeforeProcessing, TimeUnit.NANOSECONDS);
-            String tag = tagQueue.poll();
-            writer.takeSnapshotWithTag(tag);
+            writer.takeSnapshotWithTag(tagQueue.poll());
             sourceCodeRecordingListener.notifySnapshotEnd(timeSource.currentTimeNano(), TimeUnit.NANOSECONDS);
 
             // Allow a different thread to stop the recording
             // This operation should be before wakeUp to allow a final snapshot to be taken ( if the time allows it )
-            if (shouldStopJob.get()) {
+            if (shouldStopJob.get() && noTags()) {
                 break;
             }
 
-            long timeToSleep;
-            if (tagQueue.size() > 0) {
-                // Wake up quickly is we need to process a new tag
-                timeToSleep = TimeUnit.MILLISECONDS.toNanos(VERY_SHORT_DURATION);
-            } else {
-                // Wake up as scheduled
-                timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
-            }
-
             // Prepare the next timestamp
+            long timeToSleep = 0;
+            if (noTags()) {
+                timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
+            } else
+            if (tags()) {
+                timeToSleep = TimeUnit.MILLISECONDS.toNanos(VERY_SHORT_DURATION);
+            }
             long nextTimestamp = timestampBeforeProcessing + timeToSleep;
             try {
                 timeSource.wakeUpAt(nextTimestamp, TimeUnit.NANOSECONDS);
@@ -175,6 +172,14 @@ public class SourceCodeRecorder {
                 log.debug("Interrupted while sleeping", e);
             }
         }
+    }
+
+    private boolean noTags() {
+        return tagQueue.size() == 0;
+    }
+
+    private boolean tags() {
+        return tagQueue.size() > 0;
     }
 
     public void stop() {
