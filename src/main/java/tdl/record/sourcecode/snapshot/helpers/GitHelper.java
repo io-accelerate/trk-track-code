@@ -1,5 +1,20 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
+import jgit.hack.ApplyCommandFixed;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.archive.ArchiveFormats;
+import org.eclipse.jgit.diff.DiffAlgorithm;
+import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.lib.ConfigConstants;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectReader;
+import org.eclipse.jgit.lib.Ref;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,18 +22,6 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import jgit.hack.ApplyCommandFixed;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Ref;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.archive.ArchiveFormats;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
 public class GitHelper {
 
@@ -45,6 +48,11 @@ public class GitHelper {
 
     public static void exportDiff(Git git, OutputStream outputStream) throws Exception {
         Repository repository = git.getRepository();
+        fixDiffAlgorithmIfNotSupported(
+                repository,
+                DiffAlgorithm.SupportedAlgorithm.HISTOGRAM.toString().toLowerCase()
+        );
+
         ObjectId oldHead = repository.resolve("HEAD^^{tree}");
         ObjectId head = repository.resolve("HEAD^{tree}");
         if (oldHead == null) {
@@ -61,6 +69,32 @@ public class GitHelper {
                     .setOldTree(oldTreeIter)
                     .setOutputStream(outputStream)
                     .call();
+        }
+
+
+    }
+
+    private static void fixDiffAlgorithmIfNotSupported(Repository repository,
+                                                       String fallbackDiffAlgorithm) throws IOException, ConfigInvalidException {
+        repository.getConfig().load();
+        String configuredDiffAlgorithm = repository
+                .getConfig()
+                .getString(
+                        ConfigConstants.CONFIG_DIFF_SECTION,
+                        null,
+                        ConfigConstants.CONFIG_KEY_ALGORITHM
+                );
+
+        if ("patience".equals(configuredDiffAlgorithm)) {
+            repository.getConfig().setString(
+                    ConfigConstants.CONFIG_DIFF_SECTION,
+                    null,
+                    ConfigConstants.CONFIG_KEY_ALGORITHM,
+                    fallbackDiffAlgorithm
+            );
+            
+            System.out.println("Warning: local or global git config file is set to use an unsupported diff algorithm: " + configuredDiffAlgorithm);
+            System.out.println("It has been overridden to use the 'histogram' diff algorithm.");
         }
     }
 
