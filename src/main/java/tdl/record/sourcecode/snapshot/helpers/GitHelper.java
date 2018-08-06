@@ -85,16 +85,25 @@ public class GitHelper {
                         ConfigConstants.CONFIG_KEY_ALGORITHM
                 );
 
-        if ("patience".equals(configuredDiffAlgorithm)) {
-            repository.getConfig().setString(
-                    ConfigConstants.CONFIG_DIFF_SECTION,
-                    null,
-                    ConfigConstants.CONFIG_KEY_ALGORITHM,
-                    fallbackDiffAlgorithm
-            );
-            
-            System.out.println("Warning: local or global git config file is set to use an unsupported diff algorithm: " + configuredDiffAlgorithm);
-            System.out.println("It has been overridden to use the 'histogram' diff algorithm.");
+        DiffAlgorithm.SupportedAlgorithm supportedAlgorithm = null;
+        try {
+            if (configuredDiffAlgorithm != null) {
+                supportedAlgorithm = DiffAlgorithm.SupportedAlgorithm.valueOf(configuredDiffAlgorithm.toUpperCase());
+            }
+        } catch (IllegalArgumentException ex) {
+            // do nothing - means git config might has been set to an unsupported diff algorithm
+        } finally {
+            if (supportedAlgorithm == null) {
+                repository.getConfig().setString(
+                        ConfigConstants.CONFIG_DIFF_SECTION,
+                        null,
+                        ConfigConstants.CONFIG_KEY_ALGORITHM,
+                        fallbackDiffAlgorithm
+                );
+
+                System.out.println("Warning: local or global git config file is set to use an unsupported diff algorithm: " + configuredDiffAlgorithm);
+                System.out.println("It has been overridden to use the 'histogram' diff algorithm.");
+            }
         }
     }
 

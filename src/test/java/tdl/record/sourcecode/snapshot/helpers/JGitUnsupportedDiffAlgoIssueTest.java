@@ -9,23 +9,46 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import tdl.record.sourcecode.test.FileTestHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 
 import static org.junit.Assert.assertTrue;
 import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
-public class DiffAlgoPatienceJGitIssueTest {
+@RunWith(Parameterized.class)
+public class JGitUnsupportedDiffAlgoIssueTest {
 
     private File directory;
     private Git git;
+    private final String diffAlgorithm;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                { "patience" },
+                { "myers" },
+                { "histogram" },
+                { "xxxx" },
+                { "" },
+                { " " },
+                { null },
+        });
+    }
+
+    public JGitUnsupportedDiffAlgoIssueTest(String diffAlgorithm) {
+        this.diffAlgorithm = diffAlgorithm;
+    }
 
     @Before
     public void setup() throws IOException, GitAPIException {
@@ -36,7 +59,7 @@ public class DiffAlgoPatienceJGitIssueTest {
             ConfigConstants.CONFIG_DIFF_SECTION,
             null,
             ConfigConstants.CONFIG_KEY_ALGORITHM,
-            "patience");
+                diffAlgorithm);
     }
 
     @Test
