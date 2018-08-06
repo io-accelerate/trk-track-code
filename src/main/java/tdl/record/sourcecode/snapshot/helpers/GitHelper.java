@@ -27,6 +27,8 @@ public class GitHelper {
 
     private static String ARCHIVE_FORMAT_ZIP = "zip";
 
+    private static final String FALLBACK_DIFF_ALGORITHM = DiffAlgorithm.SupportedAlgorithm.HISTOGRAM.toString().toLowerCase();
+
     public static boolean isGitDirectory(Path path) {
         File directory = path.toFile();
         FileRepositoryBuilder builder = new FileRepositoryBuilder();
@@ -48,10 +50,7 @@ public class GitHelper {
 
     public static void exportDiff(Git git, OutputStream outputStream) throws Exception {
         Repository repository = git.getRepository();
-        fixDiffAlgorithmIfNotSupported(
-                repository,
-                DiffAlgorithm.SupportedAlgorithm.HISTOGRAM.toString().toLowerCase()
-        );
+        fixDiffAlgorithmIfNotSupported(repository);
 
         ObjectId oldHead = repository.resolve("HEAD^^{tree}");
         ObjectId head = repository.resolve("HEAD^{tree}");
@@ -74,8 +73,7 @@ public class GitHelper {
 
     }
 
-    private static void fixDiffAlgorithmIfNotSupported(Repository repository,
-                                                       String fallbackDiffAlgorithm) throws IOException, ConfigInvalidException {
+    private static void fixDiffAlgorithmIfNotSupported(Repository repository) throws IOException, ConfigInvalidException {
         repository.getConfig().load();
         String configuredDiffAlgorithm = repository
                 .getConfig()
@@ -98,7 +96,7 @@ public class GitHelper {
                         ConfigConstants.CONFIG_DIFF_SECTION,
                         null,
                         ConfigConstants.CONFIG_KEY_ALGORITHM,
-                        fallbackDiffAlgorithm
+                        FALLBACK_DIFF_ALGORITHM
                 );
 
                 System.out.println("Warning: local or global git config file is set to use an unsupported diff algorithm: " + configuredDiffAlgorithm);
