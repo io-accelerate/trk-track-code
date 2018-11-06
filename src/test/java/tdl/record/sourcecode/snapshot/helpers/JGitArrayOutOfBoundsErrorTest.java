@@ -107,6 +107,9 @@ public class JGitArrayOutOfBoundsErrorTest {
         // Root cause of the Issue 25: the user is some how pushing code after removing the last empty line (dev-sourcecode-record isn't able
         // to pick this up), which is that nullifying the purpose of applying he hunk to that part of the code leading to an ArrayIndexOutOfBound
         // exception (java.lang.AssertionError: Should not have thrown exception: Index: 50, Size: 50) WITHOUT the fix
+        // Possible causes:
+        //   IDE post commit action - to remove blank lines at the end of the file and push commits
+        //   Post commit git hook action - to remove blank lines at the end of the file and push commits
         FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_LAST_LINE_REMOVED.toString());
         addAndCommit(targetGitRepo);
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
