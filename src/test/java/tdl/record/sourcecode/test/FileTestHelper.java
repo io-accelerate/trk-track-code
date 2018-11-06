@@ -1,5 +1,9 @@
 package tdl.record.sourcecode.test;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.diff.RawText;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -11,9 +15,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Comparator;
 import java.util.stream.Collectors;
-
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.io.FileUtils;
 
 public class FileTestHelper {
 
@@ -85,9 +86,23 @@ public class FileTestHelper {
     public static void deleteFile(Path dir, String path) {
         FileUtils.deleteQuietly(dir.resolve(path).toFile());
     }
-    
+
     public static boolean doesFileExist(Path dir, String path) {
         return dir.resolve(path).toFile().exists();
     }
 
+    public static String readFileFromResource(String filePathAsResourceName) {
+        ClassLoader classLoader = FileTestHelper.class.getClassLoader();
+        File file = new File(classLoader.getResource(filePathAsResourceName).getFile());
+
+        RawText rawText;
+        try {
+            rawText = new RawText(file);
+            return rawText.getString(0, rawText.size(), false);
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Unable to read file " + filePathAsResourceName + " from resource due to an error", e
+            );
+        }
+    }
 }
