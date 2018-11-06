@@ -30,12 +30,12 @@ public class JGitArrayOutOfBoundsErrorGitIssue24Test {
         Git targetGitRepo = Git.init().setDirectory(targetDirectory).call();
         addAndCommit(targetGitRepo);
 
-        FileTestHelper.appendStringToFile(sourceDirectory.toPath(), "file1.txt", FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-one-extra-line.txt"));
-        FileTestHelper.appendStringToFile(targetDirectory.toPath(), "file1.txt", FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-one-extra-line.txt"));
+        FileTestHelper.appendStringToFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_EXTRA_NEW_LINE());
+        FileTestHelper.appendStringToFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_EXTRA_NEW_LINE());
         addAndCommit(sourceGitRepo);
         addAndCommit(targetGitRepo);
 
-        FileTestHelper.changeContentOfFile(sourceDirectory.toPath(), "file1.txt", FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/newfile.txt"));
+        FileTestHelper.changeContentOfFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE());
         addAndCommit(sourceGitRepo);
 
         byte[] exportedDiffAsByteArray;
@@ -48,7 +48,7 @@ public class JGitArrayOutOfBoundsErrorGitIssue24Test {
         // Root cause of the Issue 24: The api that reads the file is reading files incorrectly. If a file ends with a carriage return on reading
         // it this carriage return disappears and not counted as a line. While the file still contains that line.
         // This is seen from the presence of two functions trying to correct the situation - i.e. isNoNewlineAtEndOfFile and isMissingNewlineAtEnd
-        FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-exact-number-of-lines.txt"));
+        FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_EXACT_NUMBER_OF_LINES());
         addAndCommit(targetGitRepo);
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -63,5 +63,17 @@ public class JGitArrayOutOfBoundsErrorGitIssue24Test {
                 Assert.fail("Should not have thrown exception: " + ex.getMessage());
             }
         }
+    }
+
+    private String BLOCK_OF_CODE_WITH_EXACT_NUMBER_OF_LINES() {
+        return FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-exact-number-of-lines.txt");
+    }
+
+    private String BLOCK_OF_CODE() {
+        return FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/newfile.txt");
+    }
+
+    private String BLOCK_OF_CODE_WITH_EXTRA_NEW_LINE() {
+        return FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-one-extra-line.txt");
     }
 }
