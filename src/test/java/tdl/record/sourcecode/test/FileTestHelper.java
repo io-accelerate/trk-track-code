@@ -78,6 +78,10 @@ public class FileTestHelper {
         FileUtils.writeStringToFile(dir.resolve(path).toFile(), text, Charset.defaultCharset(), true);
     }
 
+    public static void changeContentOfFile(Path dir, String path, String text) throws IOException {
+        FileUtils.writeStringToFile(dir.resolve(path).toFile(), text, Charset.defaultCharset(), false);
+    }
+
     public static void deleteFile(Path dir, String path) {
         FileUtils.deleteQuietly(dir.resolve(path).toFile());
     }
