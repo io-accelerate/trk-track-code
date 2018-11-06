@@ -17,8 +17,60 @@ import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 public class JGitArrayOutOfBoundsErrorGitIssue25Test {
 
     private static final String lineSeparator = System.lineSeparator();
-    private static final StringBuilder BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END =
-            new StringBuilder()
+
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
+    @Test
+    public void applyPatchToSourceWhenTheLastLineIsMissingBeforeHunkCanBeApplied() throws Exception {
+        File sourceDirectory = folder.newFolder();
+        File targetDirectory = folder.newFolder();
+
+        Git sourceGitRepo = Git.init().setDirectory(sourceDirectory).call();
+        addAndCommit(sourceGitRepo);
+
+        Git targetGitRepo = Git.init().setDirectory(targetDirectory).call();
+        addAndCommit(targetGitRepo);
+
+        FileTestHelper.appendStringToFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END());
+        FileTestHelper.appendStringToFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END());
+
+        addAndCommit(sourceGitRepo);
+        addAndCommit(targetGitRepo);
+
+        FileTestHelper.changeContentOfFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END());
+
+        addAndCommit(sourceGitRepo);
+
+        byte[] exportedDiffAsByteArray;
+        try (ByteArrayOutputStream exportDiffAsStream = new ByteArrayOutputStream()) {
+            GitHelper.exportDiff(sourceGitRepo, exportDiffAsStream);
+            exportedDiffAsByteArray = exportDiffAsStream.toByteArray();
+        }
+
+        // >>>>>>>>>>>>> This block is necessary to be able to reproduce the issue 25 at hand <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        // Root cause of the Issue 25: The api that reads the file is reading files incorrectly. If a file ends with a carriage return on reading
+        // it this carriage return disappears and not counted as a line. While the file still contains that line.
+        // This is seen from the presence of two functions trying to correct the situation - i.e. isNoNewlineAtEndOfFile and isMissingNewlineAtEnd
+        FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END());
+        addAndCommit(targetGitRepo);
+        // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+        try (ByteArrayInputStream patch = new ByteArrayInputStream(exportedDiffAsByteArray)) {
+            try {
+                GitHelper.applyDiff(targetGitRepo, patch);
+                assertTrue(FileTestHelper.isDirectoryEqualsWithoutGit(
+                        sourceDirectory.toPath(),
+                        targetDirectory.toPath())
+                );
+            } catch (Exception ex) {
+                Assert.fail("Should not have thrown exception: " + ex.getMessage());
+            }
+        }
+    }
+
+    private String BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END() {
+        return new StringBuilder()
                 .append(lineSeparator)
                 .append(lineSeparator)
                 .append("# noinspection PyUnusedLocal" + lineSeparator)
@@ -68,59 +120,12 @@ public class JGitArrayOutOfBoundsErrorGitIssue25Test {
                 .append("            prices.append(item_price)" + lineSeparator)
                 .append("        else:" + lineSeparator)
                 .append("            prices.append(-1)" + lineSeparator)
-                .append("    return sum(prices)" + lineSeparator);
+                .append("    return sum(prices)" + lineSeparator).toString();
+    }
 
-    private static final StringBuilder
-            BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END = new StringBuilder(BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END).append(lineSeparator);
-
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
-
-    @Test
-    public void applyPatchToSourceWhenTheLastLineIsMissingBeforeHunkCanBeApplied() throws Exception {
-        File sourceDirectory = folder.newFolder();
-        File targetDirectory = folder.newFolder();
-
-        Git sourceGitRepo = Git.init().setDirectory(sourceDirectory).call();
-        addAndCommit(sourceGitRepo);
-
-        Git targetGitRepo = Git.init().setDirectory(targetDirectory).call();
-        addAndCommit(targetGitRepo);
-
-        FileTestHelper.appendStringToFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END.toString());
-        FileTestHelper.appendStringToFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END.toString());
-
-        addAndCommit(sourceGitRepo);
-        addAndCommit(targetGitRepo);
-
-        FileTestHelper.changeContentOfFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END.toString());
-
-        addAndCommit(sourceGitRepo);
-
-        byte[] exportedDiffAsByteArray;
-        try (ByteArrayOutputStream exportDiffAsStream = new ByteArrayOutputStream()) {
-            GitHelper.exportDiff(sourceGitRepo, exportDiffAsStream);
-            exportedDiffAsByteArray = exportDiffAsStream.toByteArray();
-        }
-
-        // >>>>>>>>>>>>> This block is necessary to be able to reproduce the issue 25 at hand <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        // Root cause of the Issue 25: The api that reads the file is reading files incorrectly. If a file ends with a carriage return on reading
-        // it this carriage return disappears and not counted as a line. While the file still contains that line.
-        // This is seen from the presence of two functions trying to correct the situation - i.e. isNoNewlineAtEndOfFile and isMissingNewlineAtEnd
-        FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END.toString());
-        addAndCommit(targetGitRepo);
-        // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-        try (ByteArrayInputStream patch = new ByteArrayInputStream(exportedDiffAsByteArray)) {
-            try {
-                GitHelper.applyDiff(targetGitRepo, patch);
-                assertTrue(FileTestHelper.isDirectoryEqualsWithoutGit(
-                        sourceDirectory.toPath(),
-                        targetDirectory.toPath())
-                );
-            } catch (Exception ex) {
-                Assert.fail("Should not have thrown exception: " + ex.getMessage());
-            }
-        }
+    private String BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END() {
+        return new StringBuilder()
+                .append(BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END())
+                .append(lineSeparator).toString();
     }
 }

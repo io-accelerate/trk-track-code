@@ -65,15 +65,17 @@ public class JGitArrayOutOfBoundsErrorGitIssue24Test {
         }
     }
 
+    private static final String RESOURCE_FOLDER = "array_out_of_bounds_folder/git_issue_24/";
+
     private String BLOCK_OF_CODE_WITH_EXACT_NUMBER_OF_LINES() {
-        return FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-exact-number-of-lines.txt");
+        return FileTestHelper.readFileFromResource(RESOURCE_FOLDER + "oldfile-exact-number-of-lines.txt");
     }
 
     private String BLOCK_OF_CODE() {
-        return FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/newfile.txt");
+        return FileTestHelper.readFileFromResource(RESOURCE_FOLDER + "newfile.txt");
     }
 
     private String BLOCK_OF_CODE_WITH_EXTRA_NEW_LINE() {
-        return FileTestHelper.readFileFromResource("array_out_of_bounds_folder/git_issue_24/oldfile-one-extra-line.txt");
+        return FileTestHelper.readFileFromResource(RESOURCE_FOLDER + "oldfile-one-extra-line.txt");
     }
 }
