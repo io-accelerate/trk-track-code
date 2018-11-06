@@ -2,7 +2,6 @@ package tdl.record.sourcecode.test;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.diff.RawText;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -95,10 +94,8 @@ public class FileTestHelper {
         ClassLoader classLoader = FileTestHelper.class.getClassLoader();
         File file = new File(classLoader.getResource(filePathAsResourceName).getFile());
 
-        RawText rawText;
         try {
-            rawText = new RawText(file);
-            return rawText.getString(0, rawText.size(), false);
+            return FileUtils.readFileToString(file, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException(
                     "Unable to read file " + filePathAsResourceName + " from resource due to an error", e
