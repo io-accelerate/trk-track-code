@@ -14,10 +14,10 @@ import java.io.File;
 import static org.junit.Assert.assertTrue;
 import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
-public class JGitArrayOutOfBoundsErrorTest {
+public class JGitArrayOutOfBoundsErrorGitIssue25Test {
 
     private static final String lineSeparator = System.lineSeparator();
-    private static final StringBuilder BLOCK_OF_CODE_WITH_LAST_LINE_REMOVED =
+    private static final StringBuilder BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END =
             new StringBuilder()
                 .append(lineSeparator)
                 .append(lineSeparator)
@@ -71,13 +71,13 @@ public class JGitArrayOutOfBoundsErrorTest {
                 .append("    return sum(prices)" + lineSeparator);
 
     private static final StringBuilder
-            BLOCK_OF_CODE_WITH_LAST_EMPTY_LINE = new StringBuilder(BLOCK_OF_CODE_WITH_LAST_LINE_REMOVED).append(lineSeparator);
+            BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END = new StringBuilder(BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END).append(lineSeparator);
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void applyPatchToSourceWhenTheLastLineAlreadyAppliedBeforeHunkCanBeApplied() throws Exception {
+    public void applyPatchToSourceWhenTheLastLineIsMissingBeforeHunkCanBeApplied() throws Exception {
         File sourceDirectory = folder.newFolder();
         File targetDirectory = folder.newFolder();
 
@@ -87,13 +87,13 @@ public class JGitArrayOutOfBoundsErrorTest {
         Git targetGitRepo = Git.init().setDirectory(targetDirectory).call();
         addAndCommit(targetGitRepo);
 
-        FileTestHelper.appendStringToFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_LAST_EMPTY_LINE.toString());
-        FileTestHelper.appendStringToFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_LAST_EMPTY_LINE.toString());
+        FileTestHelper.appendStringToFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END.toString());
+        FileTestHelper.appendStringToFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_NEW_LINE_AT_THE_END.toString());
 
         addAndCommit(sourceGitRepo);
         addAndCommit(targetGitRepo);
 
-        FileTestHelper.changeContentOfFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_LAST_LINE_REMOVED.toString());
+        FileTestHelper.changeContentOfFile(sourceDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END.toString());
 
         addAndCommit(sourceGitRepo);
 
@@ -104,13 +104,10 @@ public class JGitArrayOutOfBoundsErrorTest {
         }
 
         // >>>>>>>>>>>>> This block is necessary to be able to reproduce the issue 25 at hand <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-        // Root cause of the Issue 25: the user is some how pushing code after removing the last empty line (dev-sourcecode-record isn't able
-        // to pick this up), which is that nullifying the purpose of applying he hunk to that part of the code leading to an ArrayIndexOutOfBound
-        // exception (java.lang.AssertionError: Should not have thrown exception: Index: 50, Size: 50) WITHOUT the fix
-        // Possible causes:
-        //   IDE post commit action - to remove blank lines at the end of the file and push commits
-        //   Post commit git hook action - to remove blank lines at the end of the file and push commits
-        FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_WITH_LAST_LINE_REMOVED.toString());
+        // Root cause of the Issue 25: The api that reads the file is reading files incorrectly. If a file ends with a carriage return on reading
+        // it this carriage return disappears and not counted as a line. While the file still contains that line.
+        // This is seen from the presence of two functions trying to correct the situation - i.e. isNoNewlineAtEndOfFile and isMissingNewlineAtEnd
+        FileTestHelper.changeContentOfFile(targetDirectory.toPath(), "file1.txt", BLOCK_OF_CODE_MISSING_NEW_LINE_AT_THE_END.toString());
         addAndCommit(targetGitRepo);
         // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
