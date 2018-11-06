@@ -182,26 +182,26 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             List<String> hunkLines = new ArrayList<>(hrt.size());
             for (int i = 0; i < hrt.size(); i++)
                 hunkLines.add(hrt.getString(i));
-            int pos = 0;
+            int counterRelatedToTheHunk = 0;
             for (int j = 1; j < hunkLines.size(); j++) {
                 String hunkLine = hunkLines.get(j);
+                int atThisIndex = hh.getNewStartLine() - 1 + counterRelatedToTheHunk;
                 switch (hunkLine.charAt(0)) {
                     case ' ':
-                        ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, pos);
-                        pos++;
+                        ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, counterRelatedToTheHunk);
+                        counterRelatedToTheHunk++;
                         break;
                     case '-':
                         if (hh.getNewStartLine() == 0) {
                             newLines.clear();
                         } else {
-                            ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, pos);
-                            newLines.remove(hh.getNewStartLine() - 1 + pos);
+                            ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, counterRelatedToTheHunk);
+                            newLines.remove(atThisIndex);
                         }
                         break;
                     case '+':
-                        newLines.add(hh.getNewStartLine() - 1 + pos,
-                                hunkLine.substring(1));
-                        pos++;
+                        newLines.add(atThisIndex, hunkLine.substring(1));
+                        counterRelatedToTheHunk++;
                         break;
                 }
             }

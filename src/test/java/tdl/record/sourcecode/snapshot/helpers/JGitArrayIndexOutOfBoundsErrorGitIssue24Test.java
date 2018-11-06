@@ -14,7 +14,7 @@ import java.io.File;
 import static org.junit.Assert.assertTrue;
 import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
-public class JGitArrayOutOfBoundsErrorGitIssue24Test {
+public class JGitArrayIndexOutOfBoundsErrorGitIssue24Test {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -65,7 +65,7 @@ public class JGitArrayOutOfBoundsErrorGitIssue24Test {
         }
     }
 
-    private static final String RESOURCE_FOLDER = "array_out_of_bounds_folder/git_issue_24/";
+    private static final String RESOURCE_FOLDER = "array_index_out_of_bounds_folder/git_issue_24/";
 
     private String BLOCK_OF_CODE_WITH_EXACT_NUMBER_OF_LINES() {
         return FileTestHelper.readFileFromResource(RESOURCE_FOLDER + "oldfile-exact-number-of-lines.txt");

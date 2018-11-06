@@ -14,7 +14,7 @@ import java.io.File;
 import static org.junit.Assert.assertTrue;
 import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
-public class JGitArrayOutOfBoundsErrorGitIssue25Test {
+public class JGitArrayIndexOutOfBoundsErrorGitIssue25Test {
 
     private static final String lineSeparator = System.lineSeparator();
 
