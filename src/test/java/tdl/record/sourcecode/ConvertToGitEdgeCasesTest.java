@@ -1,6 +1,7 @@
 package tdl.record.sourcecode;
 
 import org.eclipse.jgit.api.Git;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -47,9 +48,56 @@ public class ConvertToGitEdgeCasesTest {
         String commit = "HEAD";
         git.checkout().setName("master").setStartPoint(commit).call();
         Path testFile = outputDir.toPath().resolve("Test.txt");
-        assertTrue("File  "+testFile + " does not exist in "+commit,
+        assertTrue("File  " + testFile + " does not exist in " + commit,
                 testFile.toFile().exists());
 
         assertThat(Files.readAllLines(testFile), hasItems("MSG2"));
+    }
+
+    @Test
+    public void applyPatchToSourceWhenTheLastLineIsMissingFromTheHunk() throws Exception {
+        ListCommand listCommand = new ListCommand();
+        String srcsFilePath = getSrcsFileFor("git_issue_24");
+        listCommand.inputFilePath = srcsFilePath;
+        listCommand.run();
+
+        ConvertToGitCommand command = new ConvertToGitCommand();
+        File outputDir = folder.newFolder();
+
+        command.inputFilePath = srcsFilePath;
+        command.outputDirectoryPath = outputDir.toString();
+
+        try {
+            command.run();
+        } catch (Exception ex) {
+            Assert.fail("Did not complete commit, due to exception: " + ex.getMessage());
+        }
+    }
+
+    @Test
+    public void applyPatchToSourceWhenTheLastLineIsMissingBeforeHunkCanBeApplied() throws Exception {
+        String srcsFilePath = getSrcsFileFor("git_issue_25");
+
+        ListCommand listCommand = new ListCommand();
+        listCommand.inputFilePath = srcsFilePath;
+        listCommand.run();
+
+        ConvertToGitCommand command = new ConvertToGitCommand();
+        File outputDir = folder.newFolder();
+
+        command.inputFilePath = srcsFilePath;
+        command.outputDirectoryPath = outputDir.toString();
+
+        try {
+            command.run();
+        } catch (Exception ex) {
+            Assert.fail("Did not complete commit, due to exception: " + ex.getMessage());
+        }
+    }
+
+    private String getSrcsFileFor(final String gitIssue) {
+        ClassLoader classLoader = ConvertToGitEdgeCasesTest.class.getClassLoader();
+        File file = new File(classLoader.getResource("array_index_out_of_bounds_folder/" + gitIssue + "/snapshots.srcs").getFile());
+        return file.toPath().toString();
     }
 }
