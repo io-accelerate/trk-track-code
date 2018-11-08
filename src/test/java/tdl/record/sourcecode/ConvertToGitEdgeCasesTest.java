@@ -27,18 +27,29 @@ public class ConvertToGitEdgeCasesTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Rule
-    public TestGeneratedSrcsFile srcsFile = new TestGeneratedSrcsFile(Arrays.asList(
+    public TestGeneratedSrcsFile srcsFileWithRename = new TestGeneratedSrcsFile(Arrays.asList(
             dst -> writeFile(dst, "test.txt", "MSG1"), //key
             // Case 1 = Patch with rename
             dst -> writeFile(dst, "Test.txt", "MSG2")
     ), Collections.emptyList());
+
+    @Rule
+    public TestGeneratedSrcsFile srcsFileWithFinalLineRemoval = new TestGeneratedSrcsFile(Arrays.asList(
+            // Step 1 - content with line plus ending statement
+            dst -> writeFile(dst, "test.txt", "BODY\n\ncontent-no-newline"), //key
+            // Step 1 - remove the ending statement
+            dst -> writeFile(dst, "test.txt", "BODY\n\n"), //patch
+            // Step 2 - re-add the ending statement
+            dst -> writeFile(dst, "test.txt", "BODY\n\ncontent-with-newline") //patch
+    ), Collections.emptyList());
+
 
     @Test
     public void patchWithRenameShouldIgnoreTheRename() throws Exception {
         ConvertToGitCommand command = new ConvertToGitCommand();
         File outputDir = folder.newFolder();
 
-        command.inputFilePath = srcsFile.getFilePath().toString();
+        command.inputFilePath = srcsFileWithRename.getFilePath().toString();
         command.outputDirectoryPath = outputDir.toString();
         command.run();
 
@@ -53,6 +64,16 @@ public class ConvertToGitEdgeCasesTest {
                 testFile.toFile().exists());
 
         assertThat(Files.readAllLines(testFile), hasItems("MSG2"));
+    }
+
+    @Test
+    public void usersShouldBeAbleToSafelyRemoveTheLastLine() throws Exception {
+        ConvertToGitCommand command = new ConvertToGitCommand();
+        File outputDir = folder.newFolder();
+
+        command.inputFilePath = srcsFileWithFinalLineRemoval.getFilePath().toString();
+        command.outputDirectoryPath = outputDir.toString();
+        command.run();
     }
 
     @Test
