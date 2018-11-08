@@ -61,8 +61,8 @@ public class ToGitConverter {
         try {
             Header header = reader.getFileHeader();
             Segment segment = reader.nextSegment();
-            writeDirFromSnapshot(segment);
             listener.commitSegment(segment);
+            writeDirFromSnapshot(segment);
             commitDirectory(header, segment);
         } catch (Exception e) {
             if (stopOnErrors) {
