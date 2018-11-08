@@ -9,6 +9,7 @@ import support.TestGeneratedSrcsFile;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -56,29 +57,17 @@ public class ConvertToGitEdgeCasesTest {
 
     @Test
     public void applyPatchToSourceWhenTheLastLineIsMissingFromTheHunk() throws Exception {
-        ListCommand listCommand = new ListCommand();
-        String srcsFilePath = getSrcsFileFor("git_issue_24");
-        listCommand.inputFilePath = srcsFilePath;
-        listCommand.run();
-
-        ConvertToGitCommand command = new ConvertToGitCommand();
-        File outputDir = folder.newFolder();
-
-        command.inputFilePath = srcsFilePath;
-        command.outputDirectoryPath = outputDir.toString();
-
-        try {
-            command.run();
-        } catch (Exception ex) {
-            Assert.fail("Did not complete commit, due to exception: " + ex.getMessage());
-        }
+        replayApplyingCommitUsingSrcsSegementsFor("git_issue_24");
     }
 
     @Test
     public void applyPatchToSourceWhenTheLastLineIsMissingBeforeHunkCanBeApplied() throws Exception {
-        String srcsFilePath = getSrcsFileFor("git_issue_25");
+        replayApplyingCommitUsingSrcsSegementsFor("git_issue_25");
+    }
 
+    private void replayApplyingCommitUsingSrcsSegementsFor(String gitIssue) throws IOException {
         ListCommand listCommand = new ListCommand();
+        String srcsFilePath = getSrcsFileFor(gitIssue);
         listCommand.inputFilePath = srcsFilePath;
         listCommand.run();
 
