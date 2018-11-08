@@ -57,11 +57,23 @@ public class ConvertToGitEdgeCasesTest {
 
     @Test
     public void applyPatchToSourceWhenTheLastLineIsMissingFromTheHunk() throws Exception {
+//  Export segment 7222L from the sourcecode_20180405T111942.srcs
+//        ExportSegmentsCommand exportSegmentsCommand = new ExportSegmentsCommand(
+//                "/path/to/sourcecode_20180405T111942.srcs",
+//                "/path/to/dev-sourcecode-record/src/test/resources/array_index_out_of_bounds_folder/git_issue_24/snapshots.srcs",
+//                Arrays.asList(7402L));
+//        exportSegmentsCommand.run();
         replayApplyingCommitUsingSrcsSegementsFor("git_issue_24");
     }
 
     @Test
     public void applyPatchToSourceWhenTheLastLineIsMissingBeforeHunkCanBeApplied() throws Exception {
+//  Export segment 3224L from the sourcecode_20180811T125110.srcs
+//        ExportSegmentsCommand exportSegmentsCommand = new ExportSegmentsCommand(
+//                "/path/to/sourcecode_20180811T125110.srcs",
+//                "/path/to/dev-sourcecode-record/src/test/resources/array_index_out_of_bounds_folder/git_issue_25/snapshots.srcs",
+//                Arrays.asList(3224L));
+//        exportSegmentsCommand.run();
         replayApplyingCommitUsingSrcsSegementsFor("git_issue_25");
     }
 

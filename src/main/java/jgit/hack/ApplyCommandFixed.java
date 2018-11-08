@@ -172,7 +172,6 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
 //            oldLines.add(""); //$NON-NLS-1$
 
         List<String> newLines = new ArrayList<>(oldLines);
-        System.out.println(fh.getHunks());
         for (HunkHeader hh : fh.getHunks()) {
 
             byte[] b = new byte[hh.getEndOffset() - hh.getStartOffset()];
