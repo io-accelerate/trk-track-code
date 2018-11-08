@@ -1,12 +1,17 @@
 package tdl.record.sourcecode;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,9 +20,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static support.TestUtils.writeFile;
 
 public class ExportSegmentsCommandTest {
+
+    private static final boolean STOP_ON_ERRORS = true;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -52,6 +60,8 @@ public class ExportSegmentsCommandTest {
             assertThat(info.size(), is(greaterThan(0)));
             assertThat(info.get(0), containsString("type KEY"));
             assertThat(info.get(0), containsString("tag1"));
+
+            verifyFileAndFileContents(newSrcsFilePath, "test1.txt", "TEST1");
         }
 
         {
@@ -64,6 +74,8 @@ public class ExportSegmentsCommandTest {
             assertThat(info.get(0), containsString("tag1"));
             assertThat(info.get(1), containsString("x"));
             assertThat(info.get(1), containsString("type PATCH"));
+
+            verifyFileAndFileContents(newSrcsFilePath, "test1.txt", "TEST1TEST2");
         }
 
         {
@@ -78,6 +90,8 @@ public class ExportSegmentsCommandTest {
             assertThat(info.get(1), containsString("type PATCH"));
             assertThat(info.get(1), containsString("tag x"));
             assertThat(info.get(2), containsString("tag tag12"));
+
+            verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
         }
 
         {
@@ -89,6 +103,9 @@ public class ExportSegmentsCommandTest {
             assertThat(info.size(), is(greaterThan(0)));
             assertThat(info.get(0), containsString("tag tag3"));
             assertThat(info.get(0), containsString("type KEY"));
+
+            verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
+            verifyFileAndFileContents(newSrcsFilePath, "subdir/test3.txt", "TEST3");
         }
 
         {
@@ -103,6 +120,8 @@ public class ExportSegmentsCommandTest {
             assertThat(info.get(1), containsString("tag tag12"));
             assertThat(info.get(1), containsString("type PATCH"));
             assertThat(info.get(2), containsString("tag tag12"));
+
+            verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
         }
 
         {
@@ -114,7 +133,35 @@ public class ExportSegmentsCommandTest {
             assertThat(info.size(), is(greaterThan(0)));
             assertThat(info.get(0), containsString("tag tag3"));
             assertThat(info.get(0), containsString("type KEY"));
+            
+            verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
         }
+    }
+
+    private void verifyFileAndFileContents(Path newSrcsFilePath, String fileName, String fileContent) throws IOException {
+        Path outputDir = folder.newFolder().toPath();
+        ToGitConverter toGitConverter = new ToGitConverter(
+                newSrcsFilePath,
+                outputDir,
+                System.out::println,
+                STOP_ON_ERRORS);
+
+        try {
+            toGitConverter.convert();
+            Path targetFile = concatenate(outputDir, "/" + fileName);
+            assertThat(String.format("File %s does not exists or incorrect path/filename", fileName),
+                    Files.exists(targetFile),
+                    is(true));
+            assertThat(String.format("File %s does not contain the expected string: %s", fileName, fileContent),
+                    FileUtils.readFileToString(targetFile.toFile(), StandardCharsets.UTF_8),
+                    is(fileContent));
+        } catch (Exception e) {
+            fail("Failed to convert the srcs file due to: " + e.getMessage());
+        }
+    }
+
+    private Path concatenate(Path outputDir, String fileName) {
+        return Paths.get(outputDir.toString() + fileName);
     }
 
     private List<String> listInfoFrom(Path newFilePath) {
