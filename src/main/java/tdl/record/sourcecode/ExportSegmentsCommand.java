@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,7 +28,7 @@ public class ExportSegmentsCommand extends Command {
     private String outputFilePath;
 
     @Parameter(names = {"-ts", "--timestamp"}, description = "Export the state of the repo at the given timestamp.")
-    private List<Long> time = Collections.EMPTY_LIST;
+    private long timeStamp = 0;
 
     @Parameter(names = {"--tag"}, description = "Export a specific tag")
     private String tag = "";
@@ -40,17 +39,17 @@ public class ExportSegmentsCommand extends Command {
     ExportSegmentsCommand() {
     }
 
-    ExportSegmentsCommand(String inputFilePath, String outputFilePath, List<Long> time) {
+    ExportSegmentsCommand(String inputFilePath, String outputFilePath, long timeStamp) {
         this.inputFilePath = inputFilePath;
         this.outputFilePath = outputFilePath;
-        this.time = time;
+        this.timeStamp = timeStamp;
         this.tag = "";
     }
 
     ExportSegmentsCommand(String inputFilePath, String outputFilePath, String tag) {
         this.inputFilePath = inputFilePath;
         this.outputFilePath = outputFilePath;
-        this.time = Collections.EMPTY_LIST;
+        this.timeStamp = 0;
         this.tag = tag;
     }
 
@@ -60,16 +59,13 @@ public class ExportSegmentsCommand extends Command {
 
         try (Reader reader = new Reader(file)) {
             int index;
-            for (Long eachTimeSegment : time) {
-                if (!tag.isEmpty()) {
-                    index = reader.getIndexBeforeForTag(tag);
-                } else {
-                    index = reader.getIndexBeforeOrEqualsTimestamp(eachTimeSegment);
-                }
-                List<Segment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
-                writeSegmentsToFile(segments);
-                break;
+            if (!tag.isEmpty()) {
+                index = reader.getIndexBeforeForTag(tag);
+            } else {
+                index = reader.getIndexBeforeOrEqualsTimestamp(timeStamp);
             }
+            List<Segment> segments = reader.getReplayableSnapshotSegmentsUntil(index);
+            writeSegmentsToFile(segments);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -84,7 +80,7 @@ public class ExportSegmentsCommand extends Command {
         TagManager tagManager = new TagManager();
 
         outputStream = new FileOutputStream(outputFile, APPEND_TO_THE_END_OF_THE_FILE);
-        recordedTimestamp = time.get(0);
+        recordedTimestamp = timeStamp;
 
         if (outputFile.length() == 0) { //new file
             writeHeader();
