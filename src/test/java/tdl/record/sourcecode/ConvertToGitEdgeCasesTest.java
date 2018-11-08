@@ -44,6 +44,20 @@ public class ConvertToGitEdgeCasesTest {
     ), Collections.emptyList());
 
 
+    @Rule
+    public TestGeneratedSrcsFile srcsFileWithMissingLineRemoval = new TestGeneratedSrcsFile(Arrays.asList(
+            // Step 1 - content with no line ending
+            dst -> writeFile(dst, "test.txt", "BODY"), //key
+            // Step 2 - content with 3 new lines and then a line of text
+            dst -> writeFile(dst, "test.txt", "BODY\n\n\ncheckout"), //patch
+            // Step 3 - content with 1 new line removed from the middle
+            dst -> writeFile(dst, "test.txt", "BODY\n\ncheckout"), //patch
+            // Step 4 - content with last two lines removed (new line and a line of text)
+            dst -> writeFile(dst, "test.txt", "BODY\n"), //patch
+            // Step 5 - content with new line removed from the end (back to original file)
+            dst -> writeFile(dst, "test.txt", "BODY") //patch
+    ), Collections.emptyList());
+
     @Test
     public void patchWithRenameShouldIgnoreTheRename() throws Exception {
         ConvertToGitCommand command = new ConvertToGitCommand();
@@ -72,6 +86,16 @@ public class ConvertToGitEdgeCasesTest {
         File outputDir = folder.newFolder();
 
         command.inputFilePath = srcsFileWithFinalLineRemoval.getFilePath().toString();
+        command.outputDirectoryPath = outputDir.toString();
+        command.run();
+    }
+
+    @Test
+    public void usersShouldBeAbleToSaveFilesWithNoLineEndings() throws Exception {
+        ConvertToGitCommand command = new ConvertToGitCommand();
+        File outputDir = folder.newFolder();
+
+        command.inputFilePath = srcsFileWithMissingLineRemoval.getFilePath().toString();
         command.outputDirectoryPath = outputDir.toString();
         command.run();
     }

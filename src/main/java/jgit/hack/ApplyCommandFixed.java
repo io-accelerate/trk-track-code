@@ -168,8 +168,8 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             oldLines.add(rt.getString(i));
 
         // Fixes the elusive issue with missing new-line at the end of the target file
-        if (!rt.isMissingNewlineAtEnd())
-            oldLines.add(""); //$NON-NLS-1$
+//        if (!rt.isMissingNewlineAtEnd())
+//            oldLines.add(""); //$NON-NLS-1$
 
         List<String> newLines = new ArrayList<>(oldLines);
         for (HunkHeader hh : fh.getHunks()) {
@@ -185,7 +185,7 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             int counterRelatedToTheHunk = 0;
             for (int j = 1; j < hunkLines.size(); j++) {
                 String hunkLine = hunkLines.get(j);
-                int atThisIndex = hh.getNewStartLine() - 1 + counterRelatedToTheHunk;
+                int atTheCurrentIndex = hh.getNewStartLine() - 1 + counterRelatedToTheHunk;
                 switch (hunkLine.charAt(0)) {
                     case ' ':
                         ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, counterRelatedToTheHunk);
@@ -196,11 +196,11 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
                             newLines.clear();
                         } else {
                             ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, counterRelatedToTheHunk);
-                            newLines.remove(atThisIndex);
+                            newLines.remove(atTheCurrentIndex);
                         }
                         break;
                     case '+':
-                        newLines.add(atThisIndex, hunkLine.substring(1));
+                        newLines.add(atTheCurrentIndex, hunkLine.substring(1));
                         counterRelatedToTheHunk++;
                         break;
                 }
