@@ -2,13 +2,14 @@ package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.apache.commons.io.FileUtils;
+import tdl.record.sourcecode.snapshot.file.ToGitConverter;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.apache.commons.io.FileUtils;
-import tdl.record.sourcecode.snapshot.file.ToGitConverter;
-import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 @SuppressWarnings("WeakerAccess")
 @Parameters(commandDescription = "Convert a SRCS file to git repository.")
@@ -37,7 +38,10 @@ class ConvertToGitCommand extends Command {
             ToGitConverter converter = new ToGitConverter(
                     Paths.get(inputFilePath),
                     outputPath,
-                    (segment) -> System.out.println("Committing timestamp: " + segment.getTimestampSec()),
+                    (segment) ->
+                            System.out.printf("Committing timestamp: %d (type: %s)%n",
+                                    segment.getTimestampSec(),
+                                    segment.getType() == 0 ? "Key snapshot" : "Patch snapshot"),
                     !ignoreErrors
             );
             converter.convert();
