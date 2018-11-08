@@ -182,6 +182,13 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             List<String> hunkLines = new ArrayList<>(hrt.size());
             for (int i = 0; i < hrt.size(); i++)
                 hunkLines.add(hrt.getString(i));
+
+            System.out.println("-------------------------");
+            System.out.println(hh);
+            print6LineFrom(newLines);
+            printLinesFrom(hunkLines);
+            System.out.println("-------------------------");
+            
             int counterRelatedToTheHunk = 0;
             for (int j = 1; j < hunkLines.size(); j++) {
                 String hunkLine = hunkLines.get(j);
@@ -226,6 +233,24 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
         fw.close();
 
         getRepository().getFS().setExecute(f, fh.getNewMode() == FileMode.EXECUTABLE_FILE);
+    }
+
+    private void print6LineFrom(List<String> lines) {
+        System.out.println("***6 lines from newLines:");
+        int maxLines = lines.size() < 6 ? lines.size() : 6;
+
+        for (int index=0; index < maxLines; index++) {
+            int currentIndex = lines.size() - maxLines + index;
+            System.out.format("%d: %s%n", currentIndex, lines.get(currentIndex));
+        }
+    }
+
+    private void printLinesFrom(List<String> lines) {
+        System.out.println("***Lines from hunkLines:");
+        int currentIndex=0;
+        for (String line: lines) {
+            System.out.format("%d: %s%n", ++currentIndex, line);
+        }
     }
 
     private static boolean isChanged(List<String> ol, List<String> nl) {
