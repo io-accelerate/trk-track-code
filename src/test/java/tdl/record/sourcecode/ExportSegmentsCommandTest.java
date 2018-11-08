@@ -14,8 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -55,11 +55,7 @@ public class ExportSegmentsCommandTest {
             Path newSrcsFilePath = exportTimestamp(inputFilePath, 0);
             assertTrue(newSrcsFilePath.toFile().exists());
 
-            List<String> info = listInfoFrom(newSrcsFilePath);
-
-            assertThat(info.size(), is(greaterThan(0)));
-            assertThat(info.get(0), containsString("type KEY"));
-            assertThat(info.get(0), containsString("tag1"));
+            verifySegmentsInfo(newSrcsFilePath, Arrays.asList("type KEY", "tag1"));
 
             verifyFileAndFileContents(newSrcsFilePath, "test1.txt", "TEST1");
         }
@@ -68,12 +64,7 @@ public class ExportSegmentsCommandTest {
             Path newSrcsFilePath = exportTimestamp(inputFilePath, 1);
             assertTrue(newSrcsFilePath.toFile().exists());
 
-            List<String> info = listInfoFrom(newSrcsFilePath);
-
-            assertThat(info.size(), is(greaterThan(0)));
-            assertThat(info.get(0), containsString("tag1"));
-            assertThat(info.get(1), containsString("x"));
-            assertThat(info.get(1), containsString("type PATCH"));
+            verifySegmentsInfo(newSrcsFilePath, Arrays.asList("tag1", "x", "type PATCH"));
 
             verifyFileAndFileContents(newSrcsFilePath, "test1.txt", "TEST1TEST2");
         }
@@ -82,14 +73,7 @@ public class ExportSegmentsCommandTest {
             Path newSrcsFilePath = exportTimestamp(inputFilePath, 2);
             assertTrue(newSrcsFilePath.toFile().exists());
 
-            List<String> info = listInfoFrom(newSrcsFilePath);
-
-            assertThat(info.size(), is(greaterThan(0)));
-            assertThat(info.get(0), containsString("tag tag1"));
-            assertThat(info.get(1), containsString("tag x"));
-            assertThat(info.get(1), containsString("type PATCH"));
-            assertThat(info.get(1), containsString("tag x"));
-            assertThat(info.get(2), containsString("tag tag12"));
+            verifySegmentsInfo(newSrcsFilePath, Arrays.asList("tag tag1", "tag x", "type PATCH", "tag x", "tag tag12"));
 
             verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
         }
@@ -98,11 +82,7 @@ public class ExportSegmentsCommandTest {
             Path newSrcsFilePath = exportTimestamp(inputFilePath, 3);
             assertTrue(newSrcsFilePath.toFile().exists());
 
-            List<String> info = listInfoFrom(newSrcsFilePath);
-
-            assertThat(info.size(), is(greaterThan(0)));
-            assertThat(info.get(0), containsString("tag tag3"));
-            assertThat(info.get(0), containsString("type KEY"));
+            verifySegmentsInfo(newSrcsFilePath, Arrays.asList("tag tag3", "type KEY"));
 
             verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
             verifyFileAndFileContents(newSrcsFilePath, "subdir/test3.txt", "TEST3");
@@ -112,14 +92,7 @@ public class ExportSegmentsCommandTest {
             Path newSrcsFilePath = exportTag(inputFilePath, "tag12");
             assertTrue(newSrcsFilePath.toFile().exists());
 
-            List<String> info = listInfoFrom(newSrcsFilePath);
-
-            assertThat(info.size(), is(greaterThan(0)));
-            assertThat(info.get(0), containsString("tag tag12"));
-            assertThat(info.get(0), containsString("type KEY"));
-            assertThat(info.get(1), containsString("tag tag12"));
-            assertThat(info.get(1), containsString("type PATCH"));
-            assertThat(info.get(2), containsString("tag tag12"));
+            verifySegmentsInfo(newSrcsFilePath, Arrays.asList("tag tag12", "type KEY", "tag tag12", "type PATCH", "tag tag12"));
 
             verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
         }
@@ -128,13 +101,22 @@ public class ExportSegmentsCommandTest {
             Path newSrcsFilePath = exportTag(inputFilePath, "tag3");
             assertTrue(newSrcsFilePath.toFile().exists());
 
-            List<String> info = listInfoFrom(newSrcsFilePath);
+            verifySegmentsInfo(newSrcsFilePath, Arrays.asList("tag tag3", "type KEY"));
 
-            assertThat(info.size(), is(greaterThan(0)));
-            assertThat(info.get(0), containsString("tag tag3"));
-            assertThat(info.get(0), containsString("type KEY"));
-            
             verifyFileAndFileContents(newSrcsFilePath, "test2.txt", "TEST1TEST2");
+        }
+    }
+
+    private void verifySegmentsInfo(Path newSrcsFilePath, List<String> searchValues) {
+        List<String> info = listInfoFrom(newSrcsFilePath);
+        assertThat(info.size(), is(greaterThan(0)));
+        for (String value: searchValues) {
+            assertThat(String.format("%s could not be found", value),
+                    info.stream()
+                    .filter(eachString -> eachString.contains(value))
+                    .collect(Collectors.toList())
+                    .size(),
+                    is(greaterThan(0)));
         }
     }
 

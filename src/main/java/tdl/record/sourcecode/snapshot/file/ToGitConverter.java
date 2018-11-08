@@ -48,7 +48,6 @@ public class ToGitConverter {
     }
 
     public void convert() throws Exception {
-        //FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
         Reader reader = new Reader(inputFile.toFile());
 
