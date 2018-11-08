@@ -2,14 +2,17 @@ package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import org.apache.commons.codec.binary.Hex;
+import tdl.record.sourcecode.snapshot.KeySnapshot;
+import tdl.record.sourcecode.snapshot.file.Reader;
+import tdl.record.sourcecode.snapshot.file.Segment;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Date;
-import org.apache.commons.codec.binary.Hex;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.file.Segment;
-import tdl.record.sourcecode.snapshot.file.Reader;
+import java.util.List;
 
 @Parameters(commandDescription = "List snapshots in the file.")
 public class ListCommand extends Command {
@@ -17,6 +20,7 @@ public class ListCommand extends Command {
     @SuppressWarnings("WeakerAccess")
     @Parameter(names = {"-i", "--input"}, description = "The SRCS input file.", required = true)
     public String inputFilePath;
+    private List<String> gatheredInfo;
 
     @Override
     public void run() {
@@ -25,22 +29,31 @@ public class ListCommand extends Command {
             Date start = new Date(reader.getFileHeader().getTimestamp());
             System.out.println("Recording Start Time: " + start.toString());
             int index = 0;
+            gatheredInfo = new ArrayList<>();
             while (reader.hasNext()) {
                 Segment segment = reader.nextSegment();
-                printSnapshot(segment, index);
+                gatherInfo(segment, index);
                 index++;
             }
+            printSnapshot();
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    private void printSnapshot(Segment segment, int index) {
+    public List<String> getGatheredInfo() {
+        return gatheredInfo;
+    }
+
+    private void printSnapshot() {
+        System.out.println(gatheredInfo);
+    }
+
+    private void gatherInfo(Segment segment, int index) {
         String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
         long size = segment.getSize() + Segment.HEADER_SIZE;
         String checksum = Hex.encodeHexString(segment.getChecksum());
-        String infoLine = String.format("#%4d | time %4s | type %-5s | offset %5d | size %7d | checksum %8s.. | tag %s",
-                index, segment.getTimestampSec(), type, segment.getAddress(), size, checksum.substring(0, 8), segment.getTag());
-        System.out.println(infoLine);
+        gatheredInfo.add(String.format("#%4d | time %4s | type %-5s | offset %5d | size %7d | checksum %8s.. | tag %s",
+                index, segment.getTimestampSec(), type, segment.getAddress(), size, checksum.substring(0, 8), segment.getTag()));
     }
 }

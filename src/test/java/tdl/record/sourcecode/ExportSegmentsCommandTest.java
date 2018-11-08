@@ -1,18 +1,19 @@
 package tdl.record.sourcecode;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import support.TestGeneratedSrcsFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertTrue;
 import static support.TestUtils.writeFile;
 
@@ -43,34 +44,84 @@ public class ExportSegmentsCommandTest {
         Path inputFilePath = recorder.getFilePath();
 
         {
-            Path newFilePath = exportTimestamp(inputFilePath, 0);
-            assertTrue(newFilePath.toFile().exists());
+            Path newSrcsFilePath = exportTimestamp(inputFilePath, 0);
+            assertTrue(newSrcsFilePath.toFile().exists());
+
+            List<String> info = listInfoFrom(newSrcsFilePath);
+
+            assertThat(info.size(), is(greaterThan(0)));
+            assertThat(info.get(0), containsString("type KEY"));
+            assertThat(info.get(0), containsString("tag1"));
         }
 
         {
-            Path newFilePath = exportTimestamp(inputFilePath, 1);
-            assertTrue(newFilePath.toFile().exists());
+            Path newSrcsFilePath = exportTimestamp(inputFilePath, 1);
+            assertTrue(newSrcsFilePath.toFile().exists());
+
+            List<String> info = listInfoFrom(newSrcsFilePath);
+
+            assertThat(info.size(), is(greaterThan(0)));
+            assertThat(info.get(0), containsString("tag1"));
+            assertThat(info.get(1), containsString("x"));
+            assertThat(info.get(1), containsString("type PATCH"));
         }
 
         {
-            Path newFilePath = exportTimestamp(inputFilePath, 2);
-            assertTrue(newFilePath.toFile().exists());
+            Path newSrcsFilePath = exportTimestamp(inputFilePath, 2);
+            assertTrue(newSrcsFilePath.toFile().exists());
+
+            List<String> info = listInfoFrom(newSrcsFilePath);
+
+            assertThat(info.size(), is(greaterThan(0)));
+            assertThat(info.get(0), containsString("tag tag1"));
+            assertThat(info.get(1), containsString("tag x"));
+            assertThat(info.get(1), containsString("type PATCH"));
+            assertThat(info.get(1), containsString("tag x"));
+            assertThat(info.get(2), containsString("tag tag12"));
         }
 
         {
-            Path newFilePath = exportTimestamp(inputFilePath, 3);
-            assertTrue(newFilePath.toFile().exists());
+            Path newSrcsFilePath = exportTimestamp(inputFilePath, 3);
+            assertTrue(newSrcsFilePath.toFile().exists());
+
+            List<String> info = listInfoFrom(newSrcsFilePath);
+
+            assertThat(info.size(), is(greaterThan(0)));
+            assertThat(info.get(0), containsString("tag tag3"));
+            assertThat(info.get(0), containsString("type KEY"));
         }
 
         {
-            Path newFilePath = exportTag(inputFilePath, "tag12");
-            assertTrue(newFilePath.toFile().exists());
+            Path newSrcsFilePath = exportTag(inputFilePath, "tag12");
+            assertTrue(newSrcsFilePath.toFile().exists());
+
+            List<String> info = listInfoFrom(newSrcsFilePath);
+
+            assertThat(info.size(), is(greaterThan(0)));
+            assertThat(info.get(0), containsString("tag tag12"));
+            assertThat(info.get(0), containsString("type KEY"));
+            assertThat(info.get(1), containsString("tag tag12"));
+            assertThat(info.get(1), containsString("type PATCH"));
+            assertThat(info.get(2), containsString("tag tag12"));
         }
 
         {
-            Path newFilePath = exportTag(inputFilePath, "tag3");
-            assertTrue(newFilePath.toFile().exists());
+            Path newSrcsFilePath = exportTag(inputFilePath, "tag3");
+            assertTrue(newSrcsFilePath.toFile().exists());
+
+            List<String> info = listInfoFrom(newSrcsFilePath);
+
+            assertThat(info.size(), is(greaterThan(0)));
+            assertThat(info.get(0), containsString("tag tag3"));
+            assertThat(info.get(0), containsString("type KEY"));
         }
+    }
+
+    private List<String> listInfoFrom(Path newFilePath) {
+        ListCommand listCommand = new ListCommand();
+        listCommand.inputFilePath = newFilePath.toString();
+        listCommand.run();
+        return listCommand.getGatheredInfo();
     }
 
     private Path exportTimestamp(Path inputFilePath, int timestamp) throws IOException {
@@ -85,15 +136,5 @@ public class ExportSegmentsCommandTest {
         ExportSegmentsCommand exportSegmentsCommand = new ExportSegmentsCommand(inputFilePath.toString(), filePath.toString(), tag);
         exportSegmentsCommand.run();
         return filePath;
-    }
-
-    private String readFile(Path parent, String path) throws IOException {
-        Path resolvedPath = parent.resolve(path);
-        if (!Files.exists(resolvedPath)) {
-            throw new AssertionError("File does not exist: "+resolvedPath);
-        }
-
-        File file = resolvedPath.toFile();
-        return FileUtils.readFileToString(file, Charset.defaultCharset());
     }
 }
