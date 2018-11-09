@@ -45,5 +45,4 @@ public class ConvertToGit_RemoveEndLine_EdgeTest {
         command.outputDirectoryPath = outputDir.toString();
         command.run();
     }
-
 }
