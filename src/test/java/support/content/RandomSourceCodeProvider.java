@@ -2,6 +2,7 @@ package support.content;
 
 import org.apache.commons.io.FileUtils;
 import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,8 +13,9 @@ import java.util.UUID;
 
 public class RandomSourceCodeProvider implements SourceCodeProvider{
     @Override
-    public void retrieveAndSaveTo(Path destinationFolder) throws IOException {
+    public SnapshotTypeHint retrieveAndSaveTo(Path destinationFolder) throws IOException {
         createRandomFile(destinationFolder);
+        return SnapshotTypeHint.ANY;
     }
 
     private void createRandomFile(Path directoryPath) throws IOException {

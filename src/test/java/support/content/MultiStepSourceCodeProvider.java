@@ -1,6 +1,7 @@
 package support.content;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,10 +17,12 @@ public class MultiStepSourceCodeProvider implements SourceCodeProvider {
     }
 
     @Override
-    public void retrieveAndSaveTo(Path destinationFolder) throws IOException {
+    public SnapshotTypeHint retrieveAndSaveTo(Path destinationFolder) throws IOException {
+        SnapshotTypeHint snapshotTypeHint = SnapshotTypeHint.ANY;
         if (index < sourceCodeProviders.size()) {
-            sourceCodeProviders.get(index).retrieveAndSaveTo(destinationFolder);
+            snapshotTypeHint = sourceCodeProviders.get(index).retrieveAndSaveTo(destinationFolder);
             index++;
         }
+        return snapshotTypeHint;
     }
 }

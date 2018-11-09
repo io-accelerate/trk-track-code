@@ -18,6 +18,7 @@ import org.eclipse.jgit.revwalk.DepthWalk;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 
 public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
 
@@ -28,8 +29,9 @@ public class CopyFromGitSourceCodeProvider implements SourceCodeProvider {
     }
 
     @Override
-    public void retrieveAndSaveTo(Path destinationFolder) throws IOException {
+    public SnapshotTypeHint retrieveAndSaveTo(Path destinationFolder) throws IOException {
         walkGitAndCopyFiles(destinationFolder);
+        return SnapshotTypeHint.ANY;
     }
 
     private void walkGitAndCopyFiles(Path destPath) throws IOException {

@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.apache.commons.io.filefilter.IOFileFilter;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
@@ -38,12 +39,13 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
     }
 
     @Override
-    public void retrieveAndSaveTo(Path destinationFolder) throws IOException {
+    public SnapshotTypeHint retrieveAndSaveTo(Path destinationFolder) throws IOException {
         if (!isGit()) {
             copyDirectory(destinationFolder);
         } else {
             gitSourceCodeProvider.retrieveAndSaveTo(destinationFolder);
         }
+        return SnapshotTypeHint.ANY;
     }
 
     private void copyDirectory(Path destinationFolder) throws IOException {

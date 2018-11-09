@@ -1,15 +1,11 @@
 package tdl.record.sourcecode.snapshot;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Date;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -17,7 +13,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.helpers.DirectoryDiffUtils;
 import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.FileHelper;
 
@@ -60,24 +55,24 @@ public class SnapshotRecorder implements AutoCloseable {
         return git;
     }
 
-    public Path getGitDirectory() {
+    Path getGitDirectory() {
         return gitDirectory;
     }
 
-    public void syncToGitDirectory() throws IOException {
+    SnapshotTypeHint syncToGitDirectory() throws IOException {
         cleanGitDirectory();
-        sourceCodeProvider.retrieveAndSaveTo(gitDirectory);
+        SnapshotTypeHint snapshotTypeHint = sourceCodeProvider.retrieveAndSaveTo(gitDirectory);
         FileHelper.deleteEmptyFiles(gitDirectory);
+        return snapshotTypeHint;
     }
 
     private void cleanGitDirectory() {
         IOFileFilter filter = new ExcludeGitDirectoryFileFilter(gitDirectory);
         FileUtils.listFiles(gitDirectory.toFile(), filter, TrueFileFilter.INSTANCE)
-                .stream()
                 .forEach(File::delete);
     }
 
-    public void commitAllChanges() {
+    void commitAllChanges() {
         try {
             String message = new Date().toString();
             git.add()
@@ -95,27 +90,39 @@ public class SnapshotRecorder implements AutoCloseable {
     public Snapshot takeSnapshot() throws IOException {
         Snapshot snapshot;
 
-        syncToGitDirectory();
+        SnapshotTypeHint snapshotTypeHint = syncToGitDirectory();
         commitAllChanges();
-        if (shouldTakeSnapshot()) {
-            counter = 0;
-            snapshot = takeKeySnapshot();
-        } else {
-            snapshot = takePatchSnapshot();
+
+        switch (decideOnSnapshotType(snapshotTypeHint)) {
+            case PATCH:
+                snapshot = takePatchSnapshot();
+                break;
+            default:
+                snapshot = takeKeySnapshot();
+                break;
         }
-        counter++;
         return snapshot;
     }
 
-    private boolean shouldTakeSnapshot() {
-        return counter % keySnapshotPacing == 0;
+    private SnapshotTypeHint decideOnSnapshotType(SnapshotTypeHint hintFromProvider) {
+        SnapshotTypeHint snapshotTypeHint = hintFromProvider;
+        if (hintFromProvider == SnapshotTypeHint.ANY) {
+            if  (counter % keySnapshotPacing == 0) {
+                snapshotTypeHint = SnapshotTypeHint.KEY;
+            } else {
+                snapshotTypeHint = SnapshotTypeHint.PATCH;
+            }
+        }
+
+        counter++;
+        return snapshotTypeHint;
     }
 
-    private KeySnapshot takeKeySnapshot() throws IOException {
+    private KeySnapshot takeKeySnapshot() {
         return KeySnapshot.takeSnapshotFromGit(git);
     }
 
-    private PatchSnapshot takePatchSnapshot() throws IOException {
+    private PatchSnapshot takePatchSnapshot() {
         return PatchSnapshot.takeSnapshotFromGit(git);
     }
 

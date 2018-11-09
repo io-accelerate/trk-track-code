@@ -6,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 import java.io.File;
@@ -28,34 +29,63 @@ public class ConvertToGitEdgeCasesTest {
 
     @Rule
     public TestGeneratedSrcsFile srcsFileWithRename = new TestGeneratedSrcsFile(Arrays.asList(
-            dst -> writeFile(dst, "test.txt", "MSG1"), //key
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "MSG1");
+                return SnapshotTypeHint.KEY;
+            },
             // Case 1 = Patch with rename
-            dst -> writeFile(dst, "Test.txt", "MSG2")
+            (Path dst) -> {
+                writeFile(dst, "Test.txt", "MSG2");
+                return SnapshotTypeHint.PATCH;
+            }
     ), Collections.emptyList());
 
     @Rule
     public TestGeneratedSrcsFile srcsFileWithFinalLineRemoval = new TestGeneratedSrcsFile(Arrays.asList(
             // Step 1 - content with line plus ending statement
-            dst -> writeFile(dst, "test.txt", "BODY\n\ncontent-no-newline"), //key
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY\n\ncontent-no-newline");
+                return SnapshotTypeHint.KEY;
+            },
             // Step 1 - remove the ending statement
-            dst -> writeFile(dst, "test.txt", "BODY\n\n"), //patch
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY\n\n");
+                return SnapshotTypeHint.PATCH;
+            },
             // Step 2 - re-add the ending statement
-            dst -> writeFile(dst, "test.txt", "BODY\n\ncontent-with-newline") //patch
-    ), Collections.emptyList());
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY\n\ncontent-with-newline");
+                return SnapshotTypeHint.PATCH;
+            }), Collections.emptyList());
 
 
     @Rule
     public TestGeneratedSrcsFile srcsFileWithMissingLineRemoval = new TestGeneratedSrcsFile(Arrays.asList(
             // Step 1 - content with no line ending
-            dst -> writeFile(dst, "test.txt", "BODY"), //key
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY");
+                return SnapshotTypeHint.KEY;
+            }, //key
             // Step 2 - content with 3 new lines and then a line of text
-            dst -> writeFile(dst, "test.txt", "BODY\n\n\ncheckout"), //patch
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY\n\n\ncheckout");
+                return SnapshotTypeHint.PATCH;
+            }, //patch
             // Step 3 - content with 1 new line removed from the middle
-            dst -> writeFile(dst, "test.txt", "BODY\n\ncheckout"), //patch
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY\n\ncheckout");
+                return SnapshotTypeHint.PATCH;
+            }, //patch
             // Step 4 - content with last two lines removed (new line and a line of text)
-            dst -> writeFile(dst, "test.txt", "BODY\n"), //patch
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY\n");
+                return SnapshotTypeHint.PATCH;
+            }, //patch
             // Step 5 - content with new line removed from the end (back to original file)
-            dst -> writeFile(dst, "test.txt", "BODY") //patch
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "BODY");
+                return SnapshotTypeHint.PATCH;
+            } //patch
     ), Collections.emptyList());
 
     @Test

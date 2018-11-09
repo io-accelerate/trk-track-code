@@ -9,11 +9,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.Snapshot;
-import tdl.record.sourcecode.snapshot.SnapshotRecorder;
+import tdl.record.sourcecode.snapshot.*;
 import org.apache.commons.io.IOUtils;
-import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
 import tdl.record.sourcecode.time.TimeSource;
 
 public final class Writer implements AutoCloseable {
@@ -61,7 +58,7 @@ public final class Writer implements AutoCloseable {
         }
     }
 
-    public void takeSnapshot() {
+    void takeSnapshot() {
         takeSnapshotWithTag("");
     }
 

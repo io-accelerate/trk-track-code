@@ -168,8 +168,8 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             oldLines.add(rt.getString(i));
 
         // Fixes the elusive issue with missing new-line at the end of the target file
-        if (!rt.isMissingNewlineAtEnd())
-            oldLines.add(""); //$NON-NLS-1$
+//        if (!rt.isMissingNewlineAtEnd())
+//            oldLines.add(""); //$NON-NLS-1$
 
         List<String> newLines = new ArrayList<>(oldLines);
         for (HunkHeader hh : fh.getHunks()) {
