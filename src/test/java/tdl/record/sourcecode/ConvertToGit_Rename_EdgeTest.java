@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 import java.io.File;
@@ -17,28 +18,32 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static support.TestUtils.exportToGit;
 import static support.TestUtils.writeFile;
 
-public class ConvertToGitEdgeCasesTest {
+public class ConvertToGit_Rename_EdgeTest {
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Rule
     public TestGeneratedSrcsFile srcsFile = new TestGeneratedSrcsFile(Arrays.asList(
-            dst -> writeFile(dst, "test.txt", "MSG1"), //key
+            (Path dst) -> {
+                writeFile(dst, "test.txt", "MSG1");
+                return SnapshotTypeHint.KEY;
+            },
             // Case 1 = Patch with rename
-            dst -> writeFile(dst, "Test.txt", "MSG2")
+            (Path dst) -> {
+                writeFile(dst, "Test.txt", "MSG2");
+                return SnapshotTypeHint.PATCH;
+            }
     ), Collections.emptyList());
+
 
     @Test
     public void patchWithRenameShouldIgnoreTheRename() throws Exception {
-        ConvertToGitCommand command = new ConvertToGitCommand();
         File outputDir = folder.newFolder();
-
-        command.inputFilePath = srcsFile.getFilePath().toString();
-        command.outputDirectoryPath = outputDir.toString();
-        command.run();
+        exportToGit(srcsFile, outputDir);
 
         Git git = Git.init().setDirectory(outputDir).call();
         assertThat("Does not have the commits",
@@ -47,9 +52,10 @@ public class ConvertToGitEdgeCasesTest {
         String commit = "HEAD";
         git.checkout().setName("master").setStartPoint(commit).call();
         Path testFile = outputDir.toPath().resolve("Test.txt");
-        assertTrue("File  "+testFile + " does not exist in "+commit,
+        assertTrue("File  " + testFile + " does not exist in " + commit,
                 testFile.toFile().exists());
 
         assertThat(Files.readAllLines(testFile), hasItems("MSG2"));
     }
+
 }

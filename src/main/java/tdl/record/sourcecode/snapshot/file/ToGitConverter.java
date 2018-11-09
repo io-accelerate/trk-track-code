@@ -48,7 +48,6 @@ public class ToGitConverter {
     }
 
     public void convert() throws Exception {
-        //FileUtils.cleanDirectory(outputDir.toFile());
         initGit();
         Reader reader = new Reader(inputFile.toFile());
 
@@ -61,8 +60,8 @@ public class ToGitConverter {
         try {
             Header header = reader.getFileHeader();
             Segment segment = reader.nextSegment();
-            writeDirFromSnapshot(segment);
             listener.commitSegment(segment);
+            writeDirFromSnapshot(segment);
             commitDirectory(header, segment);
         } catch (Exception e) {
             if (stopOnErrors) {

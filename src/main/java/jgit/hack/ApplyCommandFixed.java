@@ -166,6 +166,11 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
         List<String> oldLines = new ArrayList<>(rt.size());
         for (int i = 0; i < rt.size(); i++)
             oldLines.add(rt.getString(i));
+
+        // Fixes the elusive issue with missing new-line at the end of the target file
+        if (!rt.isMissingNewlineAtEnd())
+            oldLines.add(""); //$NON-NLS-1$
+
         List<String> newLines = new ArrayList<>(oldLines);
         for (HunkHeader hh : fh.getHunks()) {
 
@@ -177,34 +182,33 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
             List<String> hunkLines = new ArrayList<>(hrt.size());
             for (int i = 0; i < hrt.size(); i++)
                 hunkLines.add(hrt.getString(i));
-            int pos = 0;
+
+            int counterRelatedToTheHunk = 0;
             for (int j = 1; j < hunkLines.size(); j++) {
                 String hunkLine = hunkLines.get(j);
+                int atTheCurrentIndex = hh.getNewStartLine() - 1 + counterRelatedToTheHunk;
                 switch (hunkLine.charAt(0)) {
                     case ' ':
-                        ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, pos);
-                        pos++;
+                        ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, counterRelatedToTheHunk);
+                        counterRelatedToTheHunk++;
                         break;
                     case '-':
                         if (hh.getNewStartLine() == 0) {
                             newLines.clear();
                         } else {
-                            ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, pos);
-                            newLines.remove(hh.getNewStartLine() - 1 + pos);
+                            ensureLineContentMatchesDestination(hunkLine.substring(1), newLines, hh, counterRelatedToTheHunk);
+                            newLines.remove(atTheCurrentIndex);
                         }
                         break;
                     case '+':
-                        newLines.add(hh.getNewStartLine() - 1 + pos,
-                                hunkLine.substring(1));
-                        pos++;
+                        newLines.add(atTheCurrentIndex, hunkLine.substring(1));
+                        counterRelatedToTheHunk++;
                         break;
                 }
             }
         }
         if (!isNoNewlineAtEndOfFile(fh))
             newLines.add(""); //$NON-NLS-1$
-        if (!rt.isMissingNewlineAtEnd())
-            oldLines.add(""); //$NON-NLS-1$
         if (!isChanged(oldLines, newLines))
             return; // don't touch the file
         StringBuilder sb = new StringBuilder();

@@ -69,8 +69,6 @@ public class GitHelper {
                     .setOutputStream(outputStream)
                     .call();
         }
-
-
     }
 
     private static void fixDiffAlgorithmIfNotSupported(Repository repository) throws IOException, ConfigInvalidException {

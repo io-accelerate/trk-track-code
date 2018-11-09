@@ -6,15 +6,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-class TagManager {
+public class TagManager {
 
     private final Set<String> existingTags;
 
-    TagManager() {
+    public TagManager() {
         existingTags = new HashSet<>();
     }
 
-    static boolean isTag(String tag) {
+    public static boolean isTag(String tag) {
         return tag != null && tag.trim().length() > 0;
     }
 
@@ -29,7 +29,7 @@ class TagManager {
         return selectedTag;
     }
 
-    String asValidTag(String tag) {
+    public String asValidTag(String tag) {
         String trimmedTag = sanitize(tag);
         existingTags.add(trimmedTag);
         return trimmedTag;

@@ -16,6 +16,7 @@ import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.file.Reader;
 import tdl.record.sourcecode.snapshot.file.Segment;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
@@ -55,19 +56,31 @@ public class CanRecordSourceCodeAccTest {
         Path outputFilePath = testFolder.newFile("output.srcs").toPath();
 
         List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
-                dst -> writeTextFile(dst, "test1.txt", "TEST1"),
-                dst -> writeTextFile(dst, "test1.txt", "TEST1TEST2"),
-                dst -> writeTextFile(dst, "test2.txt", "TEST1TEST2"),
-                dst -> {
+                (Path dst) -> {
+                    writeTextFile(dst, "test1.txt", "TEST1");
+                    return SnapshotTypeHint.ANY;
+                },
+                (Path dst) -> {
+                    writeTextFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.ANY;
+                },
+                (Path dst) -> {
+                    writeTextFile(dst, "test2.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.ANY;
+                },
+                (Path dst) -> {
                     writeTextFile(dst, "test2.txt", "TEST1TEST2");
                     writeTextFile(dst, "subdir/test3.txt", "TEST3");
+                    return SnapshotTypeHint.ANY;
                 },
-                dst -> {
+                (Path dst) -> {
                     writeTextFile(dst, "test2.txt", "TEST1TEST2");
                     writeTextFile(dst, "test.empty.txt", "");
+                    return SnapshotTypeHint.ANY;
                 },
-                dst -> {
+                (Path dst) -> {
                     /* Empty folder */
+                    return SnapshotTypeHint.ANY;
                 });
 
         SourceCodeRecordingMetricsCollector sourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
@@ -103,8 +116,14 @@ public class CanRecordSourceCodeAccTest {
         Path outputFilePath = testFolder.newFile("tagged_snapshots.srcs").toPath();
 
         List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
-                dst -> writeTextFile(dst, "test1.txt", "TEST1"),
-                dst -> writeTextFile(dst, "test1.txt", "TEST2")
+                (Path dst) -> {
+                    writeTextFile(dst, "test1.txt", "TEST1");
+                    return SnapshotTypeHint.ANY;
+                },
+                (Path dst) -> {
+                    writeTextFile(dst, "test1.txt", "TEST2");
+                    return SnapshotTypeHint.ANY;
+                }
         );
 
         // Run a recording on a separate thread
@@ -141,8 +160,14 @@ public class CanRecordSourceCodeAccTest {
         Path outputFilePath = testFolder.newFile("burst_tags.srcs").toPath();
 
         List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
-                dst -> writeTextFile(dst, "test1.txt", "TEST1"),
-                dst -> writeTextFile(dst, "test1.txt", "TEST2")
+                dst -> {
+                    writeTextFile(dst, "test1.txt", "TEST1");
+                    return SnapshotTypeHint.ANY;
+                },
+                dst -> {
+                    writeTextFile(dst, "test1.txt", "TEST2");
+                    return SnapshotTypeHint.ANY;
+                }
         );
 
         // Run a recording on a separate thread

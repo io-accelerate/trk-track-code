@@ -2,35 +2,62 @@ package tdl.record.sourcecode.snapshot.file;
 
 import org.junit.Rule;
 import org.junit.Test;
+import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
-import static support.TestUtils.*;
-
-import tdl.record.sourcecode.record.SourceCodeRecorderException;
-import support.TestGeneratedSrcsFile;
+import static support.TestUtils.writeFile;
 
 public class ReaderTest {
 
     @Rule
     public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
-            dst -> writeFile(dst, "test1.txt", "TEST1"), //key
-            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> writeFile(dst, "test2.txt", "TEST1TEST2"), //patch
-            dst -> { //key
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1");
+                return SnapshotTypeHint.KEY;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1TEST2");
+                return SnapshotTypeHint.PATCH;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test2.txt", "TEST1TEST2");
+                return SnapshotTypeHint.PATCH;
+            },
+            (Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 writeFile(dst, "subdir/test3.txt", "TEST3");
+                return SnapshotTypeHint.KEY;
             },
-            dst -> {/* Empty folder */ }, //patch
-            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //key
-            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> writeFile(dst, "test1.txt", "TEST1TEST2"), //patch
-            dst -> writeFile(dst, "test1.txt", "TEST1TEST2") //key
+            (Path dst) -> {/* Empty folder */
+                return SnapshotTypeHint.PATCH;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1TEST2");
+                return SnapshotTypeHint.PATCH;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1TEST2");
+                return SnapshotTypeHint.KEY;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1TEST2");
+                return SnapshotTypeHint.PATCH;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1TEST2");
+                return SnapshotTypeHint.PATCH;
+            },
+            (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST1TEST2");
+                return SnapshotTypeHint.KEY;
+            }
     ));
 
     @Test
@@ -131,9 +158,9 @@ public class ReaderTest {
     public void getSnapshotAt() throws Exception {
         try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
-                {0, 139},
-                {1, 136},
-                {2, 182}
+                    {0, 139},
+                    {1, 136},
+                    {2, 182}
             };
             for (int[] inputs : inputAndExpected) {
                 int input = inputs[0];
@@ -148,13 +175,13 @@ public class ReaderTest {
     public void getFirstKeySnapshotBefore() throws Exception {
         try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
-                {0, 0},
-                {1, 0},
-                {2, 0},
-                {3, 0},
-                {4, 3},
-                {5, 3},
-                {6, 3}
+                    {0, 0},
+                    {1, 0},
+                    {2, 0},
+                    {3, 0},
+                    {4, 3},
+                    {5, 3},
+                    {6, 3}
             };
             for (int[] inputs : inputAndExpected) {
                 int input = inputs[0];
@@ -169,9 +196,9 @@ public class ReaderTest {
     public void getSnapshotSegmentsByRange() throws Exception {
         try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
-                {0, 3, 3},
-                {1, 2, 1},
-                {2, 6, 4},};
+                    {0, 3, 3},
+                    {1, 2, 1},
+                    {2, 6, 4},};
             for (int[] inputs : inputAndExpected) {
                 int start = inputs[0];
                 int end = inputs[1];
@@ -188,13 +215,13 @@ public class ReaderTest {
     public void getReplayableSnapshotSegmentsUntil() throws Exception {
         try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
-                {0, 1},
-                {1, 2},
-                {2, 3},
-                {3, 1},
-                {4, 2},
-                {5, 3},
-                {6, 1},};
+                    {0, 1},
+                    {1, 2},
+                    {2, 3},
+                    {3, 1},
+                    {4, 2},
+                    {5, 3},
+                    {6, 1},};
             for (int[] inputs : inputAndExpected) {
                 int end = inputs[0];
                 int count = inputs[1];
@@ -210,10 +237,10 @@ public class ReaderTest {
     public void getIndexBeforeOrEqualsTimestamp() throws Exception {
         try (Reader reader = new Reader(recorder.getFilePath().toFile())) {
             int[][] inputAndExpected = new int[][]{
-                {0, 0},
-                {1, 1},
-                {2, 2},
-                {3, 3}
+                    {0, 0},
+                    {1, 1},
+                    {2, 2},
+                    {3, 3}
             };
             for (int[] inputs : inputAndExpected) {
                 int timestamp = inputs[0];
