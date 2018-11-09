@@ -39,9 +39,11 @@ class ConvertToGitCommand extends Command {
                     Paths.get(inputFilePath),
                     outputPath,
                     (segment) ->
-                            System.out.printf("Committing timestamp: %d (type: %s)%n",
+                            System.out.format("Committing timestamp: %d (type: %s, size: %d, tag: %s)%n",
                                     segment.getTimestampSec(),
-                                    segment.getType() == 0 ? "Key snapshot" : "Patch snapshot"),
+                                    segment.getType() == 0 ? "Key snapshot" : "Patch snapshot",
+                                    segment.getSize(),
+                                    segment.getTag()),
                     !ignoreErrors
             );
             converter.convert();
