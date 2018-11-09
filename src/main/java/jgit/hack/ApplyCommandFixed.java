@@ -209,8 +209,6 @@ public class ApplyCommandFixed extends GitCommand<ApplyResult> {
         }
         if (!isNoNewlineAtEndOfFile(fh))
             newLines.add(""); //$NON-NLS-1$
-        if (!rt.isMissingNewlineAtEnd())
-            oldLines.add(""); //$NON-NLS-1$
         if (!isChanged(oldLines, newLines))
             return; // don't touch the file
         StringBuilder sb = new StringBuilder();

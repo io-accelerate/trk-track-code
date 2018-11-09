@@ -1,7 +1,6 @@
 package tdl.record.sourcecode;
 
 import org.eclipse.jgit.api.Git;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -10,7 +9,6 @@ import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -20,6 +18,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static support.TestUtils.exportToGit;
 import static support.TestUtils.writeFile;
 
 public class ConvertToGit_Rename_EdgeTest {
@@ -28,7 +27,7 @@ public class ConvertToGit_Rename_EdgeTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Rule
-    public TestGeneratedSrcsFile srcsFileWithRename = new TestGeneratedSrcsFile(Arrays.asList(
+    public TestGeneratedSrcsFile srcsFile = new TestGeneratedSrcsFile(Arrays.asList(
             (Path dst) -> {
                 writeFile(dst, "test.txt", "MSG1");
                 return SnapshotTypeHint.KEY;
@@ -43,12 +42,8 @@ public class ConvertToGit_Rename_EdgeTest {
 
     @Test
     public void patchWithRenameShouldIgnoreTheRename() throws Exception {
-        ConvertToGitCommand command = new ConvertToGitCommand();
         File outputDir = folder.newFolder();
-
-        command.inputFilePath = srcsFileWithRename.getFilePath().toString();
-        command.outputDirectoryPath = outputDir.toString();
-        command.run();
+        exportToGit(srcsFile, outputDir);
 
         Git git = Git.init().setDirectory(outputDir).call();
         assertThat("Does not have the commits",

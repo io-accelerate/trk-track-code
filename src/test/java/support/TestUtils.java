@@ -1,6 +1,7 @@
 package support;
 
 import org.apache.commons.io.FileUtils;
+import tdl.record.sourcecode.ConvertToGitCommand;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,5 +16,13 @@ public class TestUtils {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public static void exportToGit(TestGeneratedSrcsFile testSrcsFile, File outputDir) {
+        ConvertToGitCommand command = new ConvertToGitCommand();
+
+        command.inputFilePath = testSrcsFile.getFilePath().toString();
+        command.outputDirectoryPath = outputDir.toString();
+        command.run();
     }
 }

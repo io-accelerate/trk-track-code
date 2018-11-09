@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 
 @SuppressWarnings("WeakerAccess")
 @Parameters(commandDescription = "Convert a SRCS file to git repository.")
-class ConvertToGitCommand extends Command {
+public class ConvertToGitCommand extends Command {
 
     private Path outputPath;
 
