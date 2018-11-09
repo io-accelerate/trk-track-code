@@ -152,6 +152,23 @@ If you want to build the SNAPSHOT version locally you can install to the local M
 ./gradlew -x test clean install
 ```
 
+### Running tests
+
+#### JUnit tests
+
+```bash
+   ./gradlew clean test -i
+```
+
+### PIT tests
+
+```bash
+   ./gradlew clean pitest -i
+   ./gradlew clean pitest -i &> dev-sourcecode-record-pitTest.logs  ### save to output to log file
+```
+
+Reports generated in the `build/reports/pitest/` folder (html and xml format, see build.gradle to verify.)
+ 
 ### Release to jcenter and mavenCentral
 
 The CI server is configured to pushs release branches to Bintray.
