@@ -1,6 +1,7 @@
 package tdl.record.sourcecode.record;
 
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jgit.api.Git;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingListener;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
@@ -35,6 +36,18 @@ public class SourceCodeRecorder {
     private final AtomicBoolean shouldStopJob;
     private final SourceCodeRecordingListener sourceCodeRecordingListener;
     private Queue<String> tagQueue;
+
+    /**
+     * If this method fails, stop everything
+     */
+    public static void runSanityCheck() {
+        try {
+            Path gitDirectory = Files.createTempDirectory("sanity_check");
+            Git.init().setDirectory(gitDirectory.toFile()).call();
+        } catch (Exception e) {
+            throw new IllegalStateException("Not able to run the \"git init\" on temporary folder.", e);
+        }
+    }
 
     private SourceCodeRecorder(SourceCodeProvider sourceCodeProvider,
                                Path outputRecordingFilePath,

@@ -1,11 +1,15 @@
 package tdl.record.sourcecode;
 
 import com.beust.jcommander.JCommander;
+import tdl.record.sourcecode.record.SourceCodeRecorder;
+
 import java.util.Map;
 
 public class App {
 
     public static void main(final String[] argv) {
+        SourceCodeRecorder.runSanityCheck();
+
         Map<String, Command> commandMap = Command.getCommandMap();
 
         App app = new App();
