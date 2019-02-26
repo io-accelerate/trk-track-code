@@ -60,6 +60,10 @@ public class FileTestHelper {
         }
     }
 
+    public static void createDirectory(Path targetFolderPath) throws IOException {
+        Files.createDirectory(targetFolderPath);
+    }
+
     private static String createFileDigest(Path file) {
         //System.out.println(file);
         try {

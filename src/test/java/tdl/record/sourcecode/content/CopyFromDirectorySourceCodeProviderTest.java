@@ -1,20 +1,20 @@
 package tdl.record.sourcecode.content;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import tdl.record.sourcecode.test.FileTestHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class CopyFromDirectorySourceCodeProviderTest {
 
@@ -74,8 +74,20 @@ public class CopyFromDirectorySourceCodeProviderTest {
     public void shouldHonourGitignoreContent() throws IOException, GitAPIException {
         sourceFolder.createFiles(
                 "ok.txt",
+                "sourceFile.~java",
                 "file1.bak");
-        sourceFolder.appendTo(".gitignore", "*.bak");
+
+        sourceFolder.createFilesInFolder("ignoreFolder",
+                "ok.txt",
+                "sourceFile.~java",
+                "file1.bak");
+
+        sourceFolder.createFilesInFolder("includeFolder",
+                "include-ok.txt",
+                "ignore-sourceFile.~java",
+                "ignore-file1.bak");
+
+        sourceFolder.appendTo(".gitignore", "*.bak\n*.~*\nignoreFolder");
 
         git.add().addFilepattern(".").call();
         git.commit().setMessage("commit1").call();
@@ -86,10 +98,18 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
         assertExistsInDestination(
                 "ok.txt",
+                "includeFolder" + File.separator + "include-ok.txt",
                 ".gitignore");
         assertNotExistsInDestination(
                 "file1.bak",
-                "file2.bak");
+                "file2.bak",
+                "sourceFile.~java",
+                "ignoreFolder" + File.separator + "ok.txt",
+                "ignoreFolder" + File.separator + "sourceFile.~java",
+                "ignoreFolder" + File.separator + "file1.bak",
+                "includeFolder" + File.separator + "ignore-sourceFile.~java",
+                "includeFolder" + File.separator + "ignore-file1.bak"
+                );
     }
 
     @Test
@@ -145,6 +165,14 @@ public class CopyFromDirectorySourceCodeProviderTest {
         private void createFiles(String ... filesToCreate) throws IOException {
             for (String file : filesToCreate) {
                 FileTestHelper.appendStringToFile(sourceFolderPath, file, "TEST");
+            }
+        }
+
+        private void createFilesInFolder(String folderName, String ... filesToCreate) throws IOException {
+            Path targetFolderPath = sourceFolderPath.resolve(sourceFolderPath.toString() + File.separator + folderName);
+            FileTestHelper.createDirectory(targetFolderPath);
+            for (String file : filesToCreate) {
+                FileTestHelper.appendStringToFile(targetFolderPath, file, "TEST");
             }
         }
 

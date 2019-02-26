@@ -1,9 +1,6 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import tdl.record.sourcecode.snapshot.file.ToGitConverter;
-import tdl.record.sourcecode.snapshot.file.Writer;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
