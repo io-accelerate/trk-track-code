@@ -140,7 +140,7 @@ public class GitHelper {
                 .collect(Collectors.toList());
     }
 
-    public static List<String> getIgnoredFiles(Path sourceFolderPath) {
+    public static List<String> getIgnoredFiles(Path sourceFolderPath) throws IOException {
         List<String> results = new ArrayList<>();
         String pathToGitIgnore = sourceFolderPath.toString() + File.separator + ".gitignore";
         if (!new File(pathToGitIgnore).exists()) {
@@ -149,14 +149,10 @@ public class GitHelper {
 
         IgnoreNode ignoreNode = new IgnoreNode();
         InputStream gitignoreFileStream;
-        try {
-            gitignoreFileStream = new FileInputStream(new File(pathToGitIgnore));
-            ignoreNode.parse(gitignoreFileStream);
-            for(FastIgnoreRule rule: ignoreNode.getRules()) {
-                results.add(rule.toString());
-            }
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
+        gitignoreFileStream = new FileInputStream(new File(pathToGitIgnore));
+        ignoreNode.parse(gitignoreFileStream);
+        for(FastIgnoreRule rule: ignoreNode.getRules()) {
+            results.add(rule.toString());
         }
 
         return results;
