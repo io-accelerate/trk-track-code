@@ -9,7 +9,7 @@ import java.io.FileFilter;
 public class CombinedFileFilter implements FileFilter {
     private final ExcludeGitDirectoryFileFilter excludeGitDirectoryFileFilter;
     private final WildcardFileFilter ignoredFilesFilter;
-    private MinimumFileSizeFilter minimumFileSizeFilter;
+    private final MinimumFileSizeFilter minimumFileSizeFilter;
 
     CombinedFileFilter(ExcludeGitDirectoryFileFilter excludeGitDirectoryFileFilter,
                        WildcardFileFilter ignoredFilesFilter,

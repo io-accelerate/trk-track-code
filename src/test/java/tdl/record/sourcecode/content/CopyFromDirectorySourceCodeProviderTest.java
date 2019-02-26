@@ -113,6 +113,47 @@ public class CopyFromDirectorySourceCodeProviderTest {
     }
 
     @Test
+    public void ignoreLargeFiles2MBOrLargerInSize()  throws IOException, GitAPIException {
+        sourceFolder.appendTo("file-size-1MB.txt",
+            FileTestHelper.readFileFromResource("large-files/file-size-1MB.txt")
+        );
+        sourceFolder.appendTo("file-size-2MB.txt",
+            FileTestHelper.readFileFromResource("large-files/file-size-2MB.txt")
+        );
+        sourceFolder.appendTo("file-size-slightly-smaller-than-2MB.txt",
+            FileTestHelper.readFileFromResource("large-files/file-size-slightly-smaller-than-2MB.txt")
+        );
+        sourceFolder.appendTo("file-size-slightly-bigger-than-2MB.txt",
+            FileTestHelper.readFileFromResource("large-files/file-size-slightly-bigger-than-2MB.txt")
+        );
+        sourceFolder.appendTo("file-size-3MB.txt",
+            FileTestHelper.readFileFromResource("large-files/file-size-3MB.txt")
+        );
+        sourceFolder.appendTo("file-size-193K.txt",
+            FileTestHelper.readFileFromResource("large-files/file-size-193K.txt")
+        );
+
+        git.add().addFilepattern(".").call();
+        git.commit().setMessage("commit1").call();
+
+        sourceFolder.createFiles("file2.bak");
+
+        provider.retrieveAndSaveTo(destination);
+
+        assertExistsInDestination(
+            "file2.bak",
+            "file-size-1MB.txt",
+            "file-size-slightly-smaller-than-2MB.txt",
+            "file-size-2MB.txt",
+            "file-size-193K.txt"
+        );
+        assertNotExistsInDestination(
+            "file-size-slightly-bigger-than-2MB.txt",
+            "file-size-3MB.txt"
+        );
+    }
+
+    @Test
     public void shouldWorkWithDeletedFiles() throws IOException, GitAPIException {
         sourceFolder.createFiles(
                 "file.to.keep.txt",
