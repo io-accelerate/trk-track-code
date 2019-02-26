@@ -11,6 +11,8 @@ import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
+import static org.apache.commons.io.FileUtils.ONE_MB;
+
 public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
 
     private final Path sourceFolderPath;
@@ -39,8 +41,10 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
     private void copyDirectory(Path destinationFolder,
                                List<String> ignoredFilesPatternList) throws IOException {
         WildcardFileFilter ignoredFilesFilter = new WildcardFileFilter(ignoredFilesPatternList);
+        MinimumFileSizeFilter minimumFileSizeFilter = new MinimumFileSizeFilter(2 * ONE_MB);
 
-        CombinedFileFilter combinedFilter = new CombinedFileFilter(filter, ignoredFilesFilter);
+        CombinedFileFilter combinedFilter =
+                new CombinedFileFilter(filter, ignoredFilesFilter, minimumFileSizeFilter);
 
         FileUtils.copyDirectory(
                 sourceFolderPath.toFile(),
