@@ -41,10 +41,8 @@ public class CopyFromDirectorySourceCodeProviderTest {
     }
 
     @Test
-    public void shouldWorkWithEmptyRepo() throws IOException, GitAPIException {
+    public void shouldWorkWithEmptyRepo() throws IOException {
         sourceFolder.createFiles("file1.txt");
-
-        assertTrue(provider.isGit());
 
         provider.retrieveAndSaveTo(destination);
 
