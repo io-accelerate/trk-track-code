@@ -1,10 +1,5 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import tdl.record.sourcecode.snapshot.file.Writer;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 import org.junit.Rule;
 import org.junit.Test;
@@ -13,7 +8,13 @@ import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.time.TimeSource;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class WriterTest {
+    private int maximumFileSizeLimitInMB = 2;
 
     @Rule
     public TemporaryFolder sourceFolder = new TemporaryFolder();
@@ -28,7 +29,7 @@ public class WriterTest {
         Path sourceDir = sourceFolder.getRoot().toPath();
         FileUtils.copyDirectory(dirPath.toFile(), sourceDir.toFile());
 
-        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(sourceDir);
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(sourceDir, maximumFileSizeLimitInMB);
         TimeSource timeSource = new FakeTimeSource();
         long timestamp = System.currentTimeMillis() / 1000L;
         try (Writer writer = new Writer(output, sourceCodeProvider, timeSource, timestamp, 5, false)) {

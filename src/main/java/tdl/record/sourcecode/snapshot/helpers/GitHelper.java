@@ -6,6 +6,8 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.archive.ArchiveFormats;
 import org.eclipse.jgit.diff.DiffAlgorithm;
 import org.eclipse.jgit.errors.ConfigInvalidException;
+import org.eclipse.jgit.ignore.FastIgnoreRule;
+import org.eclipse.jgit.ignore.IgnoreNode;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -15,11 +17,9 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -138,5 +138,23 @@ public class GitHelper {
                 .map(Ref::getName)
                 .map(s -> s.replaceAll("refs/tags/", ""))
                 .collect(Collectors.toList());
+    }
+
+    public static List<String> getIgnoredFiles(Path sourceFolderPath) throws IOException {
+        List<String> results = new ArrayList<>();
+        String pathToGitIgnore = sourceFolderPath.toString() + File.separator + ".gitignore";
+        if (!new File(pathToGitIgnore).exists()) {
+            return results;
+        }
+
+        IgnoreNode ignoreNode = new IgnoreNode();
+        InputStream gitignoreFileStream;
+        gitignoreFileStream = new FileInputStream(new File(pathToGitIgnore));
+        ignoreNode.parse(gitignoreFileStream);
+        for(FastIgnoreRule rule: ignoreNode.getRules()) {
+            results.add(rule.toString());
+        }
+
+        return results;
     }
 }

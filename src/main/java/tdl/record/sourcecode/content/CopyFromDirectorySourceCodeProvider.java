@@ -1,58 +1,50 @@
 package tdl.record.sourcecode.content;
 
 import org.apache.commons.io.FileUtils;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.WildcardFileFilter;
 import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+
+import static org.apache.commons.io.FileUtils.ONE_MB;
+
 public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
 
     private final Path sourceFolderPath;
+    private final int maximumFileSizeLimitInMB;
+    private final ExcludeGitDirectoryFileFilter filter;
 
-    private final IOFileFilter filter;
-
-    private CopyFromGitSourceCodeProvider gitSourceCodeProvider;
-
-    public CopyFromDirectorySourceCodeProvider(Path sourceFolderPath) {
+    public CopyFromDirectorySourceCodeProvider(Path sourceFolderPath, int maximumFileSizeLimitInMB) {
         this.sourceFolderPath = sourceFolderPath;
+        this.maximumFileSizeLimitInMB = maximumFileSizeLimitInMB;
+
         filter = new ExcludeGitDirectoryFileFilter(sourceFolderPath);
-        try {
-            initGitIfAvailable();
-        } catch (IOException ex) {
-            //Do nothing.
-        }
-    }
-
-    private void initGitIfAvailable() throws IOException {
-        if (!GitHelper.isGitDirectory(sourceFolderPath)) {
-            return;
-        }
-        gitSourceCodeProvider = new CopyFromGitSourceCodeProvider(sourceFolderPath);
-    }
-
-    public boolean isGit() {
-        return gitSourceCodeProvider != null;
     }
 
     @Override
     public SnapshotTypeHint retrieveAndSaveTo(Path destinationFolder) throws IOException {
-        if (!isGit()) {
-            copyDirectory(destinationFolder);
-        } else {
-            gitSourceCodeProvider.retrieveAndSaveTo(destinationFolder);
-        }
+        List<String> ignoredFilesPatternList = GitHelper.getIgnoredFiles(sourceFolderPath);
+        copyDirectory(destinationFolder, ignoredFilesPatternList);
         return SnapshotTypeHint.ANY;
     }
 
-    private void copyDirectory(Path destinationFolder) throws IOException {
+    private void copyDirectory(Path destinationFolder,
+                               List<String> ignoredFilesPatternList) throws IOException {
+        final WildcardFileFilter ignoredFilesFilter = new WildcardFileFilter(ignoredFilesPatternList);
+        final MaximumFileSizeLimitFilter maximumFileSizeLimitFilter = new MaximumFileSizeLimitFilter(maximumFileSizeLimitInMB * ONE_MB);
+
+        final CombinedFileFilter combinedFilter =
+                new CombinedFileFilter(filter, ignoredFilesFilter, maximumFileSizeLimitFilter);
+
         FileUtils.copyDirectory(
                 sourceFolderPath.toFile(),
                 destinationFolder.toFile(),
-                filter
+                combinedFilter
         );
     }
+
 }

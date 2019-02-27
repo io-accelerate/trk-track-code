@@ -1,16 +1,7 @@
 package tdl.record.sourcecode.snapshot;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -18,7 +9,16 @@ import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 import tdl.record.sourcecode.test.FileTestHelper;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 public class SnapshotRecorderTest {
+    private int maximumFileSizeLimitInMB = 2;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -28,7 +28,7 @@ public class SnapshotRecorderTest {
         Path directory = Paths.get("./src/test/resources/diff/test1/dir1/");
         Path tmpDir = folder.getRoot().toPath();
         FileUtils.copyDirectory(directory.toFile(), tmpDir.toFile());
-        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
+        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir, maximumFileSizeLimitInMB), 5);
         recorder.init();
 
         Snapshot snapshot1 = recorder.takeSnapshot();
@@ -67,7 +67,7 @@ public class SnapshotRecorderTest {
     }
 
     private SnapshotRecorder createDefaultRecorder(Path tmpDir) throws Exception {
-        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir), 5);
+        SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir, maximumFileSizeLimitInMB), 5);
         recorder.init();
         return recorder;
     }

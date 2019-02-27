@@ -1,9 +1,6 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import tdl.record.sourcecode.snapshot.file.ToGitConverter;
-import tdl.record.sourcecode.snapshot.file.Writer;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -20,6 +17,8 @@ import java.nio.file.Paths;
 import static org.junit.Assert.assertTrue;
 
 public class ToGitConverterTest {
+
+    private int maximumFileSizeLimitInMB = 2; // in MB
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -48,7 +47,7 @@ public class ToGitConverterTest {
     }
 
     private void createRandomSnapshot(Path snapshotFile, Path workDir) throws Exception {
-        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir, maximumFileSizeLimitInMB);
         TimeSource timeSource = new FakeTimeSource();
         long timestamp = System.currentTimeMillis() / 1000L;
         try (Writer writer = new Writer(snapshotFile, sourceCodeProvider, timeSource, timestamp, 5, false)) {
