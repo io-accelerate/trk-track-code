@@ -13,10 +13,12 @@ import java.util.concurrent.TimeUnit;
 
 public class TestSourceStreamRecorder {
 
+    private static int maximumFileSizeLimitInMB = 2;
+
     public static void recordFolder(Path sourceFolderPath, Path outputFilePath,
                                     int numberOfSnapshots, int keySnapshotSpacing) throws Exception {
         SourceCodeProvider sourceCodeProvider =
-                new CopyFromDirectorySourceCodeProvider(sourceFolderPath);
+                new CopyFromDirectorySourceCodeProvider(sourceFolderPath, maximumFileSizeLimitInMB);
         SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)

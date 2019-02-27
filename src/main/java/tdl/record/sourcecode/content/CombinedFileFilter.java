@@ -9,20 +9,20 @@ import java.io.FileFilter;
 public class CombinedFileFilter implements FileFilter {
     private final ExcludeGitDirectoryFileFilter excludeGitDirectoryFileFilter;
     private final WildcardFileFilter ignoredFilesFilter;
-    private final MinimumFileSizeFilter minimumFileSizeFilter;
+    private final MaximumFileSizeLimitFilter maximumFileSizeLimitFilter;
 
     CombinedFileFilter(ExcludeGitDirectoryFileFilter excludeGitDirectoryFileFilter,
                        WildcardFileFilter ignoredFilesFilter,
-                       MinimumFileSizeFilter minimumFileSizeFilter) {
+                       MaximumFileSizeLimitFilter maximumFileSizeLimitFilter) {
         this.excludeGitDirectoryFileFilter = excludeGitDirectoryFileFilter;
         this.ignoredFilesFilter = ignoredFilesFilter;
-        this.minimumFileSizeFilter = minimumFileSizeFilter;
+        this.maximumFileSizeLimitFilter = maximumFileSizeLimitFilter;
     }
 
     @Override
     public boolean accept(File pathname) {
         return excludeGitDirectoryFileFilter.accept(pathname) &&
                 !ignoredFilesFilter.accept(pathname) &&
-                minimumFileSizeFilter.accept(pathname);
+                maximumFileSizeLimitFilter.accept(pathname);
     }
 }

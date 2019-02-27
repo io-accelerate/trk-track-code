@@ -17,6 +17,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class CopyFromDirectorySourceCodeProviderTest {
+    private int maximumFileSizeLimitInMB = 2;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
@@ -27,7 +28,6 @@ public class CopyFromDirectorySourceCodeProviderTest {
     private Path destination;
     private SourceFolder sourceFolder;
 
-
     @Before
     public void setUp() throws Exception {
         File sourceFolderFile = folder.newFolder();
@@ -37,7 +37,7 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
         git = Git.init().setDirectory(sourceFolderFile).call();
 
-        provider = new CopyFromDirectorySourceCodeProvider(this.sourceFolderPath);
+        provider = new CopyFromDirectorySourceCodeProvider(this.sourceFolderPath, maximumFileSizeLimitInMB);
     }
 
     @Test

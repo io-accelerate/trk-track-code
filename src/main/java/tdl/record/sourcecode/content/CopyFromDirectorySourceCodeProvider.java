@@ -15,11 +15,13 @@ import static org.apache.commons.io.FileUtils.ONE_MB;
 public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
 
     private final Path sourceFolderPath;
-
+    private final int maximumFileSizeLimitInMB;
     private final ExcludeGitDirectoryFileFilter filter;
 
-    public CopyFromDirectorySourceCodeProvider(Path sourceFolderPath) {
+    public CopyFromDirectorySourceCodeProvider(Path sourceFolderPath, int maximumFileSizeLimitInMB) {
         this.sourceFolderPath = sourceFolderPath;
+        this.maximumFileSizeLimitInMB = maximumFileSizeLimitInMB;
+
         filter = new ExcludeGitDirectoryFileFilter(sourceFolderPath);
         initGitIfAvailable();
     }
@@ -40,10 +42,10 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
     private void copyDirectory(Path destinationFolder,
                                List<String> ignoredFilesPatternList) throws IOException {
         final WildcardFileFilter ignoredFilesFilter = new WildcardFileFilter(ignoredFilesPatternList);
-        final MinimumFileSizeFilter minimumFileSizeFilter = new MinimumFileSizeFilter(2 * ONE_MB);
+        final MaximumFileSizeLimitFilter maximumFileSizeLimitFilter = new MaximumFileSizeLimitFilter(maximumFileSizeLimitInMB * ONE_MB);
 
         final CombinedFileFilter combinedFilter =
-                new CombinedFileFilter(filter, ignoredFilesFilter, minimumFileSizeFilter);
+                new CombinedFileFilter(filter, ignoredFilesFilter, maximumFileSizeLimitFilter);
 
         FileUtils.copyDirectory(
                 sourceFolderPath.toFile(),

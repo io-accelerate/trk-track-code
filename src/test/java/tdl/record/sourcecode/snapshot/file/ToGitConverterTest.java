@@ -18,6 +18,8 @@ import static org.junit.Assert.assertTrue;
 
 public class ToGitConverterTest {
 
+    private int maximumFileSizeLimitInMB = 2; // in MB
+
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
@@ -45,7 +47,7 @@ public class ToGitConverterTest {
     }
 
     private void createRandomSnapshot(Path snapshotFile, Path workDir) throws Exception {
-        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir);
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(workDir, maximumFileSizeLimitInMB);
         TimeSource timeSource = new FakeTimeSource();
         long timestamp = System.currentTimeMillis() / 1000L;
         try (Writer writer = new Writer(snapshotFile, sourceCodeProvider, timeSource, timestamp, 5, false)) {

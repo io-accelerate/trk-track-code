@@ -2,6 +2,11 @@ package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
+import lombok.extern.slf4j.Slf4j;
+import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
+import tdl.record.sourcecode.record.SourceCodeRecorder;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
+import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -9,12 +14,6 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
-
-import lombok.extern.slf4j.Slf4j;
-import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
-import tdl.record.sourcecode.record.SourceCodeRecorder;
-import tdl.record.sourcecode.record.SourceCodeRecorderException;
-import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 
 @Parameters(commandDescription = "Start a recording session")
 @Slf4j
@@ -32,6 +31,9 @@ class RecordCommand extends Command {
     @Parameter(names = {"-ks", "--key-spacing"}, description = "The spacing between two key snapshots")
     private Integer keySnapshotSpacing = 5;
 
+    @Parameter(names = {"-mxfs", "--max-allowed-file-size-mb"}, description = "Maximum allowed file size of source files to capture")
+    private int maximumFileSizeLimitInMB = 2;
+
     private SourceCodeRecorder sourceCodeRecorder;
     private Scanner stdin;
 
@@ -44,7 +46,7 @@ class RecordCommand extends Command {
     }
 
     private void doRun() throws SourceCodeRecorderException, InterruptedException {
-        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath));
+        CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath), maximumFileSizeLimitInMB);
         Path outputRecordingFilePath = Paths.get(outputPath);
         sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputRecordingFilePath)
                 .withTimeSource(new SystemMonotonicTimeSource())
