@@ -40,12 +40,12 @@ class RecordCommand extends Command {
     public void run() {
         try {
             doRun();
-        } catch (SourceCodeRecorderException | InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void doRun() throws SourceCodeRecorderException, InterruptedException {
+    private void doRun() throws InterruptedException {
         CopyFromDirectorySourceCodeProvider sourceCodeProvider = new CopyFromDirectorySourceCodeProvider(Paths.get(sourceCodePath), maximumFileSizeLimitInMB);
         Path outputRecordingFilePath = Paths.get(outputPath);
         sourceCodeRecorder = new SourceCodeRecorder.Builder(sourceCodeProvider, outputRecordingFilePath)

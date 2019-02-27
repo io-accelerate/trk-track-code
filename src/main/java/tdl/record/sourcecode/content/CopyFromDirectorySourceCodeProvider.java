@@ -23,13 +23,6 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
         this.maximumFileSizeLimitInMB = maximumFileSizeLimitInMB;
 
         filter = new ExcludeGitDirectoryFileFilter(sourceFolderPath);
-        initGitIfAvailable();
-    }
-
-    private void initGitIfAvailable() {
-        if (!GitHelper.isGitDirectory(sourceFolderPath)) {
-            return;
-        }
     }
 
     @Override

@@ -17,46 +17,48 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class CopyFromDirectorySourceCodeProviderTest {
-    private int maximumFileSizeLimitInMB = 2;
 
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
-    private Git git;
     private CopyFromDirectorySourceCodeProvider provider;
-    private Path sourceFolderPath;
     private Path destination;
     private SourceFolder sourceFolder;
 
     @Before
     public void setUp() throws Exception {
         File sourceFolderFile = folder.newFolder();
-        this.sourceFolderPath = sourceFolderFile.toPath();
+        Path sourceFolderPath = sourceFolderFile.toPath();
         destination = folder.newFolder().toPath();
         sourceFolder = new SourceFolder(sourceFolderPath);
 
-        git = Git.init().setDirectory(sourceFolderFile).call();
-
-        provider = new CopyFromDirectorySourceCodeProvider(this.sourceFolderPath, maximumFileSizeLimitInMB);
+        provider = new CopyFromDirectorySourceCodeProvider(sourceFolderPath, 2);
     }
 
     @Test
-    public void shouldWorkWithEmptyRepo() throws IOException {
+    public void shouldWorkWithSimpleFolder() throws IOException {
+        sourceFolder.createFiles("file1.txt");
+
+        provider.retrieveAndSaveTo(destination);
+
+        assertExistsInDestination("file1.txt");
+    }
+
+    @Test
+    public void shouldWorkWithGitFolder() throws IOException, GitAPIException {
+        Git.init().setDirectory(sourceFolder.sourceFolderPath.toFile()).call();
+
         sourceFolder.createFiles("file1.txt");
 
         provider.retrieveAndSaveTo(destination);
 
         assertNotExistsInDestination(".git");
-        assertExistsInDestination("file1.txt");
     }
 
+
     @Test
-    public void shouldWorkWithSubFolders() throws IOException, GitAPIException {
+    public void shouldWorkWithSubFolders() throws IOException {
         sourceFolder.createFiles("subdir1/file1.txt");
-
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("commit1").call();
-
         sourceFolder.createFiles("subdir1/untracked.txt");
         sourceFolder.createFiles("untracked_dir/untracked.txt");
 
@@ -71,7 +73,7 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
 
     @Test
-    public void shouldHonourGitignoreContent() throws IOException, GitAPIException {
+    public void shouldHonourGitignoreContent() throws IOException {
         sourceFolder.createFiles(
                 "ok.txt",
                 "sourceFile.~java",
@@ -88,9 +90,6 @@ public class CopyFromDirectorySourceCodeProviderTest {
                 "ignore-file1.bak");
 
         sourceFolder.appendTo(".gitignore", "*.bak\n*.~*\nignoreFolder");
-
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("commit1").call();
 
         sourceFolder.createFiles("file2.bak");
 
@@ -113,7 +112,7 @@ public class CopyFromDirectorySourceCodeProviderTest {
     }
 
     @Test
-    public void ignoreLargeFiles2MBOrLargerInSize()  throws IOException, GitAPIException {
+    public void ignoreLargeFiles2MBOrLargerInSize()  throws IOException {
         sourceFolder.appendTo("file-size-1MB.txt",
             FileTestHelper.readFileFromResource("large-files/file-size-1MB.txt")
         );
@@ -133,9 +132,6 @@ public class CopyFromDirectorySourceCodeProviderTest {
             FileTestHelper.readFileFromResource("large-files/file-size-193K.txt")
         );
 
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("commit1").call();
-
         sourceFolder.createFiles("file2.bak");
 
         provider.retrieveAndSaveTo(destination);
@@ -152,48 +148,6 @@ public class CopyFromDirectorySourceCodeProviderTest {
             "file-size-3MB.txt"
         );
     }
-
-    @Test
-    public void shouldWorkWithDeletedFiles() throws IOException, GitAPIException {
-        sourceFolder.createFiles(
-                "file.to.keep.txt",
-                "file.to.remove.tracked.txt",
-                "file.to.remove.untracked.txt");
-        git.add().addFilepattern(".").call();
-        git.commit().setMessage("commit1").call();
-
-        sourceFolder.deleteFiles("file.to.remove.tracked.txt");
-        git.add().addFilepattern(".").call();
-
-        sourceFolder.deleteFiles("file.to.remove.untracked.txt");
-
-
-        provider.retrieveAndSaveTo(destination);
-
-        assertExistsInDestination("file.to.keep.txt");
-        assertNotExistsInDestination(
-                "file.to.remove.tracked.txt",
-                "file.to.remove.untracked.txt"
-        );
-    }
-
-
-    @Test
-    public void shouldWorkWithUncommitedFiles() throws IOException, GitAPIException {
-        git.commit().setMessage("initialCommit").call();
-
-        sourceFolder.createFiles("uncommited.txt");
-        git.add().addFilepattern(".").call();
-
-        sourceFolder.createFiles("untracked.txt");
-
-        provider.retrieveAndSaveTo(destination);
-
-        assertExistsInDestination(
-                "uncommited.txt",
-                "untracked.txt");
-    }
-
 
     //~~~~~~~~~~~ Helpers
     static class SourceFolder {
@@ -222,11 +176,6 @@ public class CopyFromDirectorySourceCodeProviderTest {
             FileTestHelper.appendStringToFile(sourceFolderPath, file, content);
         }
 
-        private void deleteFiles(String ... filesToRemove) {
-            for (String fileToRemove : filesToRemove) {
-                FileTestHelper.deleteFile(sourceFolderPath, fileToRemove);
-            }
-        }
     }
 
 
@@ -235,7 +184,6 @@ public class CopyFromDirectorySourceCodeProviderTest {
             assertFalse("File "+fileToCheck+" found in destination",
                     exists(destination, fileToCheck));
         }
-        assertFalse(exists(destination, ".git"));
     }
 
     private void assertExistsInDestination(String ... filesToCheck) {
