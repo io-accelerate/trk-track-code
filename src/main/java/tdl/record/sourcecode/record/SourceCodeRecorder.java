@@ -147,6 +147,8 @@ public class SourceCodeRecorder {
         try {
             sourceCodeRecordingListener.notifyRecordingStart(outputRecordingFilePath);
             doRecord(writer, recordingDuration);
+        } catch (SnapshotRecorderException e) {
+            throw new SourceCodeRecorderException("Exception encountered while recording", e);
         } finally {
             sourceCodeRecordingListener.notifyRecordingEnd();
         }
@@ -158,7 +160,7 @@ public class SourceCodeRecorder {
         timeSource.wakeUpNow();
     }
 
-    private void doRecord(Writer writer, Duration recordingDuration) {
+    private void doRecord(Writer writer, Duration recordingDuration) throws SnapshotRecorderException {
         while (timeSource.currentTimeNano() < recordingDuration.toNanos()) {
             long timestampBeforeProcessing = timeSource.currentTimeNano();
             sourceCodeRecordingListener.notifySnapshotStart(timestampBeforeProcessing, TimeUnit.NANOSECONDS);

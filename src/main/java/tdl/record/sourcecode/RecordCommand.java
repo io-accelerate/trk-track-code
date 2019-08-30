@@ -4,7 +4,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
-import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 
 import java.nio.file.Path;
@@ -60,30 +59,16 @@ class RecordCommand extends Command {
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }});
+
         recordingThread.start();
-
-        // Read commands from standard input
-        System.out.println("Enter tag name to trigger a tagged snapshot or \"exit\" to stop recording");
-        stdin = new Scanner(System.in);
-        while(stdin.hasNextLine()) {
-            String line = stdin.nextLine();
-
-            if (line == null || line.startsWith("exit")) {
-                sourceCodeRecorder.stop();
-                break;
-            }
-            sourceCodeRecorder.tagCurrentState(line.trim());
-        }
-
-        //Wait for the recording to finish
         recordingThread.join();
     }
 
     private void registerSigtermHandler() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             sourceCodeRecorder.stop();
-            stdin.close();
             sourceCodeRecorder.close();
         }));
     }
+
 }

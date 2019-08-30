@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 @Parameters(commandDescription = "Export segments in a SCRS file into a separate SRCS file.")
 public class ExportSegmentsCommand extends Command {
 
-    public static final boolean APPEND_TO_THE_END_OF_THE_FILE = true;
+    private static final boolean APPEND_TO_THE_END_OF_THE_FILE = true;
     @Parameter(names = {"-i", "--input"}, required = true, description = "The SRCS input file.")
     private String inputFilePath;
 
@@ -74,7 +74,9 @@ public class ExportSegmentsCommand extends Command {
     private void writeSegmentsToFile(List<Segment> segmentsRetrieved) throws IOException {
         File outputFile = Paths.get(outputFilePath).toFile();
         if (outputFile.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             outputFile.delete();
+            //noinspection ResultOfMethodCallIgnored
             outputFile.createNewFile();
         }
         TagManager tagManager = new TagManager();
@@ -83,7 +85,13 @@ public class ExportSegmentsCommand extends Command {
         recordedTimestamp = timeStamp;
 
         if (outputFile.length() == 0) { //new file
-            writeHeader();
+            try {
+                writeHeader();
+            } catch (IOException ex) {
+                Logger.getLogger(Writer.class.getName()).log(Level.SEVERE,
+                        "Warning! Encountered exception while writing header. " +
+                                "Continuing to process the segments.", ex);
+            }
         }
 
         for (Segment segment : segmentsRetrieved) {
@@ -93,21 +101,19 @@ public class ExportSegmentsCommand extends Command {
                 }
                 IOUtils.write(segment.asBytes(), outputStream);
             } catch (IOException ex) {
-                Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Writer.class.getName()).log(Level.SEVERE,
+                        "Warning! Encountered exception while writing segments. " +
+                                "Continuing to process the rest of segments.", ex);
             }
         }
 
         IOUtils.closeQuietly(outputStream);
     }
 
-    private void writeHeader() {
-        try {
-            Header header = new Header();
-            header.setTimestamp(recordedTimestamp);
-            byte[] data = header.asBytes();
-            IOUtils.write(data, outputStream);
-        } catch (IOException ex) {
-            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    private void writeHeader() throws IOException {
+        Header header = new Header();
+        header.setTimestamp(recordedTimestamp);
+        byte[] data = header.asBytes();
+        IOUtils.write(data, outputStream);
     }
 }

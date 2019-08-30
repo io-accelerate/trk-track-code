@@ -1,17 +1,18 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import org.apache.commons.io.IOUtils;
+import tdl.record.sourcecode.content.SourceCodeProvider;
+import tdl.record.sourcecode.snapshot.KeySnapshot;
+import tdl.record.sourcecode.snapshot.Snapshot;
+import tdl.record.sourcecode.snapshot.SnapshotRecorder;
+import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
+import tdl.record.sourcecode.time.TimeSource;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.*;
-import org.apache.commons.io.IOUtils;
-import tdl.record.sourcecode.time.TimeSource;
 
 public final class Writer implements AutoCloseable {
 
@@ -47,22 +48,22 @@ public final class Writer implements AutoCloseable {
         tagManager = new TagManager();
     }
 
-    private void writeHeader() {
+    private void writeHeader() throws SnapshotRecorderException {
         try {
             Header header = new Header();
             header.setTimestamp(recordedTimestamp);
             byte[] data = header.asBytes();
             IOUtils.write(data, outputStream);
         } catch (IOException ex) {
-            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new SnapshotRecorderException(ex);
         }
     }
 
-    void takeSnapshot() {
+    void takeSnapshot() throws SnapshotRecorderException {
         takeSnapshotWithTag("");
     }
 
-    public void takeSnapshotWithTag(String tag) {
+    public void takeSnapshotWithTag(String tag) throws SnapshotRecorderException{
         try {
             Segment segment = createSnapshotFromRecorder();
             if (TagManager.isTag(tag)) {
@@ -70,7 +71,7 @@ public final class Writer implements AutoCloseable {
             }
             IOUtils.write(segment.asBytes(), outputStream);
         } catch (IOException ex) {
-            Logger.getLogger(Writer.class.getName()).log(Level.SEVERE, null, ex);
+            throw new SnapshotRecorderException(ex);
         }
     }
 
