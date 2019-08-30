@@ -1,12 +1,14 @@
 package tdl.record.sourcecode.metrics;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
+import static org.slf4j.LoggerFactory.*;
+
 public class SourceCodeRecordingMetricsCollector implements SourceCodeRecordingListener {
+    private static final Logger log = getLogger(SourceCodeRecordingMetricsCollector.class);
     private boolean isCurrentlyRecording;
     private int totalSnapshots;
     private long timestampBeforeProcessingNanos;

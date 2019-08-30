@@ -2,7 +2,6 @@ package tdl.record.sourcecode;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
-import lombok.extern.slf4j.Slf4j;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
@@ -16,7 +15,6 @@ import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 @Parameters(commandDescription = "Start a recording session")
-@Slf4j
 class RecordCommand extends Command {
 
     @Parameter(names = {"-s", "--source"}, description = "The target sourceCodeProvider that you want to record")

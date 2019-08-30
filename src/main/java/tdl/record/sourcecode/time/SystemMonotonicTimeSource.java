@@ -1,11 +1,13 @@
 package tdl.record.sourcecode.time;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
 import java.util.concurrent.TimeUnit;
 
-@Slf4j
+import static org.slf4j.LoggerFactory.*;
+
 public class SystemMonotonicTimeSource implements TimeSource {
+    private static final Logger log = getLogger(SystemMonotonicTimeSource.class);
     private final long referenceTime;
     private final Object lockObj;
 

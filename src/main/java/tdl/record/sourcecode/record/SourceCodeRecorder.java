@@ -1,7 +1,7 @@
 package tdl.record.sourcecode.record;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.Git;
+import org.slf4j.Logger;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingListener;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
@@ -22,9 +22,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.nio.file.StandardOpenOption.CREATE;
+import static org.slf4j.LoggerFactory.*;
 
-@Slf4j
 public class SourceCodeRecorder {
+    private static final Logger log = getLogger(SourceCodeRecorder.class);
     private static final int VERY_SHORT_DURATION = 1000;
 
     private final SourceCodeProvider sourceCodeProvider;
