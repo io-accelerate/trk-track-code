@@ -8,11 +8,11 @@ import java.io.FileFilter;
 
 public class CombinedFileFilter implements FileFilter {
     private final ExcludeGitDirectoryFileFilter excludeGitDirectoryFileFilter;
-    private final WildcardFileFilter ignoredFilesFilter;
+    private final IgnoreRulesFilter ignoredFilesFilter;
     private final MaximumFileSizeLimitFilter maximumFileSizeLimitFilter;
 
     CombinedFileFilter(ExcludeGitDirectoryFileFilter excludeGitDirectoryFileFilter,
-                       WildcardFileFilter ignoredFilesFilter,
+                       IgnoreRulesFilter ignoredFilesFilter,
                        MaximumFileSizeLimitFilter maximumFileSizeLimitFilter) {
         this.excludeGitDirectoryFileFilter = excludeGitDirectoryFileFilter;
         this.ignoredFilesFilter = ignoredFilesFilter;
@@ -22,7 +22,7 @@ public class CombinedFileFilter implements FileFilter {
     @Override
     public boolean accept(File pathname) {
         return excludeGitDirectoryFileFilter.accept(pathname) &&
-                !ignoredFilesFilter.accept(pathname) &&
+                ignoredFilesFilter.accept(pathname) &&
                 maximumFileSizeLimitFilter.accept(pathname);
     }
 }

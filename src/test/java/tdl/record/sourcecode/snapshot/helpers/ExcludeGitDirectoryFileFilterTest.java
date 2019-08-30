@@ -1,20 +1,16 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Arrays;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.commons.io.filefilter.IOFileFilter;
-import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import tdl.record.sourcecode.test.FileTestHelper;
+
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static tdl.record.sourcecode.test.FileTestHelper.applyIOFileFilter;
 
 public class ExcludeGitDirectoryFileFilterTest {
 
@@ -22,22 +18,27 @@ public class ExcludeGitDirectoryFileFilterTest {
     public TemporaryFolder folder = new TemporaryFolder();
 
     @Test
-    public void accept() throws IOException {
+    public void accept() {
         Path dir = folder.getRoot().toPath();
-        FileTestHelper.appendStringToFile(dir, "text1.txt", "Hello World!");
-        FileTestHelper.appendStringToFile(dir, "text2.txt", "Hello World!");
-        FileTestHelper.appendStringToFile(dir, ".git/text2.txt", "Hello World!");
-        FileTestHelper.appendStringToFile(dir, ".git/text3.txt", "Hello World!");
-        FileTestHelper.appendStringToFile(dir, "subdir/text4.txt", "Hello World!");
-        FileTestHelper.appendStringToFile(dir, "subdir/text5.txt", "Hello World!");
-        IOFileFilter filter = new ExcludeGitDirectoryFileFilter(dir);
-        String[] names = (String[]) FileUtils.listFiles(dir.toFile(), filter, TrueFileFilter.INSTANCE)
-                .stream()
-                .map(File::getName)
-                .toArray(String[]::new);
-        String[] expected = new String[]{"text1.txt", "text2.txt", "text4.txt", "text5.txt"};
-        Arrays.sort(names);
-        Arrays.sort(expected);
-        Assert.assertArrayEquals(names, expected);
+        List<String> filenames = Arrays.asList(
+                ".git/text2.txt",
+                ".git/text3.txt",
+                "subdir/text4.txt",
+                "subdir/text5.txt",
+                "text1.txt",
+                "text2.txt"
+        );
+
+        ExcludeGitDirectoryFileFilter filter = new ExcludeGitDirectoryFileFilter(dir);
+        List<String> actualNames = applyIOFileFilter(filter, dir, filenames);
+
+        List<String> expectedNames = Arrays.asList(
+                "subdir/text4.txt",
+                "subdir/text5.txt",
+                "text1.txt",
+                "text2.txt"
+        );
+        assertThat(actualNames, equalTo(expectedNames));
     }
+
 }

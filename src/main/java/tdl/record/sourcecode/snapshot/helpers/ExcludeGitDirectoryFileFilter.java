@@ -15,20 +15,18 @@ public class ExcludeGitDirectoryFileFilter implements FileFilter, IOFileFilter {
 
     @Override
     public boolean accept(File pathname) {
-        String relative = root.relativize(pathname.toPath()).toString();
-        return isPartOfGitInnerDir(pathname, relative);
+        Path relativePath = root.relativize(pathname.toPath());
+        return notPartOfGit(relativePath);
     }
 
     @Override
-    public boolean accept(File file, String string) {
-        Path path = file.toPath().resolve(string);
-        String relative = root.relativize(path).toString();
-        return isPartOfGitInnerDir(path.toFile(), relative);
+    public boolean accept(File directory, String filename) {
+        Path relativePath = root.relativize(directory.toPath()).resolve(filename);
+        return notPartOfGit(relativePath);
     }
 
-    private static boolean isPartOfGitInnerDir(File pathname, String relative) {
-        return !((pathname.isDirectory() && relative.equals(".git"))
-                || relative.startsWith(".git"+ File.separator));
+    private static boolean notPartOfGit(Path relativePath) {
+        return !relativePath.startsWith(".git"+ File.separator);
     }
 
 }

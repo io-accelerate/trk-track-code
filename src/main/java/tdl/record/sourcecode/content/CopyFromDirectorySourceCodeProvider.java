@@ -1,7 +1,7 @@
 package tdl.record.sourcecode.content;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.eclipse.jgit.ignore.FastIgnoreRule;
 import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
@@ -27,18 +27,18 @@ public class CopyFromDirectorySourceCodeProvider implements SourceCodeProvider {
 
     @Override
     public SnapshotTypeHint retrieveAndSaveTo(Path destinationFolder) throws IOException {
-        List<String> ignoredFilesPatternList = GitHelper.getIgnoredFiles(sourceFolderPath);
-        copyDirectory(destinationFolder, ignoredFilesPatternList);
+        List<FastIgnoreRule> ignoreRules = GitHelper.getIgnoredFiles(sourceFolderPath);
+        copyDirectory(destinationFolder, ignoreRules);
         return SnapshotTypeHint.ANY;
     }
 
     private void copyDirectory(Path destinationFolder,
-                               List<String> ignoredFilesPatternList) throws IOException {
-        final WildcardFileFilter ignoredFilesFilter = new WildcardFileFilter(ignoredFilesPatternList);
+                               List<FastIgnoreRule> ignoreRules) throws IOException {
+        final IgnoreRulesFilter ignoreRulesFilter = new IgnoreRulesFilter(ignoreRules);
         final MaximumFileSizeLimitFilter maximumFileSizeLimitFilter = new MaximumFileSizeLimitFilter(maximumFileSizeLimitInMB * ONE_MB);
 
         final CombinedFileFilter combinedFilter =
-                new CombinedFileFilter(filter, ignoredFilesFilter, maximumFileSizeLimitFilter);
+                new CombinedFileFilter(filter, ignoreRulesFilter, maximumFileSizeLimitFilter);
 
         FileUtils.copyDirectory(
                 sourceFolderPath.toFile(),
