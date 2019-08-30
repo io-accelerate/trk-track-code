@@ -17,7 +17,6 @@ import java.util.List;
 @Parameters(commandDescription = "List snapshots in the file.")
 public class ListCommand extends Command {
 
-    @SuppressWarnings("WeakerAccess")
     @Parameter(names = {"-i", "--input"}, description = "The SRCS input file.", required = true)
     public String inputFilePath;
     private List<String> gatheredInfo;
@@ -46,14 +45,14 @@ public class ListCommand extends Command {
     }
 
     private void printSnapshot() {
-        System.out.println(gatheredInfo);
+        gatheredInfo.forEach(System.out::println);
     }
 
     private void gatherInfo(Segment segment, int index) {
         String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
         long size = segment.getSize() + Segment.HEADER_SIZE;
         String checksum = Hex.encodeHexString(segment.getChecksum());
-        gatheredInfo.add(String.format("#%4d | time %4s | type %-5s | offset %5d | size %7d | checksum %8s.. | tag %s",
+        gatheredInfo.add(String.format("#%4d | time %4s | type %-5s | offset %10d | size %7d | checksum %8s.. | tag %s",
                 index, segment.getTimestampSec(), type, segment.getAddress(), size, checksum.substring(0, 8), segment.getTag()));
     }
 }
