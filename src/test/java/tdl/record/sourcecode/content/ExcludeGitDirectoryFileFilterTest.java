@@ -1,4 +1,4 @@
-package tdl.record.sourcecode.snapshot.helpers;
+package tdl.record.sourcecode.content;
 
 import org.junit.Rule;
 import org.junit.Test;

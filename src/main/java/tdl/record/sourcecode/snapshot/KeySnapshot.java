@@ -14,7 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
+import tdl.record.sourcecode.content.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class KeySnapshot extends Snapshot {

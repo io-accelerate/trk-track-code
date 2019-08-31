@@ -76,7 +76,11 @@ public class FileTestHelper {
     }
 
     public static void appendStringToFile(Path dir, String path, String text) throws IOException {
-        FileUtils.writeStringToFile(dir.resolve(path).toFile(), text, Charset.defaultCharset(), true);
+        appendStringToFile(dir.resolve(path),text);
+    }
+
+    public static void appendStringToFile(Path targetFile, String text) throws IOException {
+        FileUtils.writeStringToFile(targetFile.toFile(), text, Charset.defaultCharset(), true);
     }
 
     public static void changeContentOfFile(Path dir, String path, String text) throws IOException {
@@ -106,18 +110,27 @@ public class FileTestHelper {
     }
 
     public static List<String> applyIOFileFilter(IOFileFilter filter, Path dir, List<String> filenames) {
-        filenames.forEach(filename -> createFile(dir, filename));
-        return FileUtils.listFiles(dir.toFile(), filter, TrueFileFilter.INSTANCE)
-                .stream()
-                .map(file -> dir.relativize(file.toPath()))
+        // Identify
+        List<Path> targetPaths = filenames.stream()
+                .map(dir::resolve)
+                .map(Path::toAbsolutePath)
+                .collect(Collectors.toList());
+
+        // Create
+        targetPaths.forEach(FileTestHelper::createFile);
+
+        // Filter
+        return targetPaths.stream()
+                .filter(path -> filter.accept(path.toFile()))
+                .map(dir::relativize)
                 .map(Path::toString)
                 .sorted()
                 .collect(Collectors.toList());
     }
 
-    private static void createFile(Path dir, String subpath) {
+    private static void createFile(Path targetPath) {
         try {
-            FileTestHelper.appendStringToFile(dir, subpath, "Hello World!");
+            FileTestHelper.appendStringToFile(targetPath, "Hello World!");
         } catch (IOException e) {
             e.printStackTrace();
         }

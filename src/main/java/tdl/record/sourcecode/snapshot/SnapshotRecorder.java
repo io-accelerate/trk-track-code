@@ -13,7 +13,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
+import tdl.record.sourcecode.content.ExcludeGitDirectoryFileFilter;
 import tdl.record.sourcecode.snapshot.helpers.FileHelper;
 
 public class SnapshotRecorder implements AutoCloseable {

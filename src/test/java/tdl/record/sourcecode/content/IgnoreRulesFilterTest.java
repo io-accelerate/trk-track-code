@@ -33,7 +33,7 @@ public class IgnoreRulesFilterTest {
                 "keep/test.xml"
         );
 
-        IOFileFilter filter1 = new IgnoreRulesFilter(
+        IOFileFilter filter1 = new IgnoreRulesFilter(dir,
                 Arrays.asList(
                         new FastIgnoreRule("[Tt]est[Rr]esult*/"),
                         new FastIgnoreRule(".vs/"),

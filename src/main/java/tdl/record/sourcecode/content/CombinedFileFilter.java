@@ -1,8 +1,5 @@
 package tdl.record.sourcecode.content;
 
-import org.apache.commons.io.filefilter.WildcardFileFilter;
-import tdl.record.sourcecode.snapshot.helpers.ExcludeGitDirectoryFileFilter;
-
 import java.io.File;
 import java.io.FileFilter;
 
