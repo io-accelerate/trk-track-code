@@ -29,7 +29,7 @@ class RecordCommand extends Command {
     private Integer keySnapshotSpacing = 5;
 
     @Parameter(names = {"-mxfs", "--max-allowed-file-size-mb"}, description = "Maximum allowed file size of source files to capture")
-    private int maximumFileSizeLimitInMB = 2;
+    private int maximumFileSizeLimitInMB = 1;
 
     private SourceCodeRecorder sourceCodeRecorder;
     private Scanner stdin;

@@ -19,7 +19,7 @@ public class CombinedFileFilter implements FileFilter {
     @Override
     public boolean accept(File pathname) {
         return excludeGitDirectoryFileFilter.accept(pathname) &&
-                ignoredFilesFilter.accept(pathname) &&
-                maximumFileSizeLimitFilter.accept(pathname);
+                maximumFileSizeLimitFilter.accept(pathname) &&
+                ignoredFilesFilter.accept(pathname);
     }
 }

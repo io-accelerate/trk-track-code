@@ -31,8 +31,9 @@ class IgnoreRulesFilter implements FileFilter, IOFileFilter {
 
     private boolean matchesIgnoreRule(Path targetPath, boolean isDirectory) {
         boolean matchesIgnoreRule = false;
+        String pathAsString = targetPath.toString();
         for (FastIgnoreRule ignoreRule : this.ignoreRules) {
-            matchesIgnoreRule |= ignoreRule.isMatch(targetPath.toString(), isDirectory);
+            matchesIgnoreRule |= ignoreRule.isMatch(pathAsString, isDirectory);
         }
         return matchesIgnoreRule;
     }
