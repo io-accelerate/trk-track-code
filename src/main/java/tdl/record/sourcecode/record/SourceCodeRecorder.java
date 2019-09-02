@@ -169,17 +169,16 @@ public class SourceCodeRecorder {
 
             // Allow a different thread to stop the recording
             // This operation should be before wakeUp to allow a final snapshot to be taken ( if the time allows it )
-            if (shouldStopJob.get() && noTags()) {
+            if (shouldStopJob.get() && !hasTags()) {
                 break;
             }
 
             // Prepare the next timestamp
-            long timeToSleep = 0;
-            if (noTags()) {
-                timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
-            } else
-            if (tags()) {
+            long timeToSleep;
+            if (hasTags()) {
                 timeToSleep = TimeUnit.MILLISECONDS.toNanos(VERY_SHORT_DURATION);
+            } else {
+                timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
             }
             long nextTimestamp = timestampBeforeProcessing + timeToSleep;
             try {
@@ -190,11 +189,7 @@ public class SourceCodeRecorder {
         }
     }
 
-    private boolean noTags() {
-        return tagQueue.size() == 0;
-    }
-
-    private boolean tags() {
+    private boolean hasTags() {
         return tagQueue.size() > 0;
     }
 
