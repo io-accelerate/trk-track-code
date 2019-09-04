@@ -19,6 +19,10 @@ import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class KeySnapshot extends Snapshot {
 
+    private KeySnapshot() {
+        super(SnapshotType.KEY);
+    }
+
     public static KeySnapshot takeSnapshotFromGit(Git git) {
         KeySnapshot keySnapshot = new KeySnapshot();
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
@@ -47,14 +51,15 @@ public class KeySnapshot extends Snapshot {
 
     private void cleanDirectory(File directory) {
         IOFileFilter filter = new ExcludeGitDirectoryFileFilter(directory.toPath());
+        //noinspection ResultOfMethodCallIgnored
         FileUtils.listFiles(directory, filter, filter).forEach(File::delete);
     }
 
     public static int ZIP_BUFFER_SIZE = 1024;
 
-    public static void unzip(InputStream inputStream, File outputDir) {
+    private static void unzip(InputStream inputStream, File outputDir) {
         Path outputPath = outputDir.toPath();
-        try (ZipInputStream zis = new ZipInputStream(inputStream);) {
+        try (ZipInputStream zis = new ZipInputStream(inputStream)) {
             ZipEntry entry;
 
             while ((entry = zis.getNextEntry()) != null) {

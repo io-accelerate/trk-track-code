@@ -35,14 +35,14 @@ public class CanReadSourceStreamAccTest {
 
         Reader reader = new Reader(outputFile);
 
-        assertEquals(3, reader.getSnapshots().size());
-        boolean isAllIntact = reader.getSnapshots().stream().allMatch(this::isSnapshotIntact);
+        assertEquals(3, reader.getSegments().size());
+        boolean isAllIntact = reader.getSegments().stream().allMatch(this::isSnapshotIntact);
         assertTrue(isAllIntact);
     }
 
     @Ignore
     @Test
-    public void should_be_able_to_read_large_stream() throws Exception {
+    public void should_be_able_to_read_large_stream() {
         //TODO Read stream with large file without running out of memory (do not load all snapshots)
     }
 
@@ -58,7 +58,7 @@ public class CanReadSourceStreamAccTest {
         truncateFile(outputFile);
 
         Reader reader2 = new Reader(outputFile);
-        List<Segment> list2 = reader2.getSnapshots();
+        List<Segment> list2 = reader2.getSegments();
         assertEquals(5, list2.size());
         boolean isAllButLastIntact = list2.subList(0, 4).stream().allMatch(this::isSnapshotIntact);
         assertTrue(isAllButLastIntact);
@@ -73,7 +73,7 @@ public class CanReadSourceStreamAccTest {
     }
 
     private boolean isSnapshotIntact(Segment snapshot) {
-        if (!snapshot.isDataValid()) {
+        if (snapshot.isChecksumMismatch()) {
             return false;
         }
         int count = 0;
@@ -105,7 +105,7 @@ public class CanReadSourceStreamAccTest {
 
         long size1 = outputFile.length();
         Reader reader1 = new Reader(outputFile);
-        List<Segment> list1 = reader1.getSnapshots();
+        List<Segment> list1 = reader1.getSegments();
 
         int start = 4 //magit number
                 + Segment.HEADER_SIZE
@@ -120,7 +120,7 @@ public class CanReadSourceStreamAccTest {
         assertEquals(size1, size2);
 
         Reader reader2 = new Reader(outputFile);
-        List<Segment> list2 = reader2.getSnapshots();
+        List<Segment> list2 = reader2.getSegments();
         assertEquals(5, list2.size());
         assertTrue(isSnapshotIntact(list2.get(0)));
         boolean isSnapshot2Intact = isSnapshotIntact(list2.get(1));
@@ -132,13 +132,13 @@ public class CanReadSourceStreamAccTest {
 
     @Ignore
     @Test
-    public void should_be_resilient_to_key_snapshot_header_corruption() throws Exception {
+    public void should_be_resilient_to_key_snapshot_header_corruption() {
         //TODO On key snapshot corruption the reader should ignore all the other snapshots up to the next good key frame
     }
 
     @Ignore
     @Test
-    public void should_be_resilient_to_patch_snapshot_header_corruption() throws Exception {
+    public void should_be_resilient_to_patch_snapshot_header_corruption() {
         //TODO On patch snapshot corruption the reader should ignore all the other snapshots up to the next good key frame
     }
 

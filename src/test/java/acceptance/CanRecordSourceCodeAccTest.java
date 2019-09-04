@@ -16,6 +16,7 @@ import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
 import tdl.record.sourcecode.record.SourceCodeRecorder;
 import tdl.record.sourcecode.record.SourceCodeRecorderException;
+import tdl.record.sourcecode.snapshot.SnapshotType;
 import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.file.Reader;
 import tdl.record.sourcecode.snapshot.file.Segment;
@@ -40,8 +41,7 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
-import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_KEY;
-import static tdl.record.sourcecode.snapshot.file.Segment.TYPE_PATCH;
+import static tdl.record.sourcecode.snapshot.SnapshotType.*;
 
 public class CanRecordSourceCodeAccTest {
 
@@ -95,9 +95,10 @@ public class CanRecordSourceCodeAccTest {
 
         // Test the structure of the file
         try (Reader reader = new Reader(outputFilePath.toFile())) {
-            List<Segment> snapshots = reader.getSnapshots();
-            assertSnapshotTypesAre(Arrays.asList(TYPE_KEY, TYPE_PATCH, TYPE_PATCH, TYPE_KEY, TYPE_PATCH, TYPE_PATCH), snapshots);
-            assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, snapshots);
+            List<Segment> segments = reader.getSegments();
+            List<SnapshotType> snapshotTypes = segments.stream().map(Segment::getType).collect(Collectors.toList());
+            assertSnapshotTypesAre(Arrays.asList(KEY, PATCH, PATCH, KEY, PATCH, PATCH), snapshotTypes);
+            assertTimestampsAreConsistentWith(1, TimeUnit.SECONDS, segments);
         }
 
         // Test the contents of the file
@@ -141,7 +142,7 @@ public class CanRecordSourceCodeAccTest {
         recordingThread.join();
 
         try (Reader reader = new Reader(outputFilePath.toFile())) {
-            List<Segment> snapshots = reader.getSnapshots();
+            List<Segment> snapshots = reader.getSegments();
             assertThat(snapshots.size(), is(3)); // 1 initial + 1 tag + 1 final
             assertEquals(snapshots.get(1).getTag().trim(), "testTag");
         }
@@ -237,7 +238,7 @@ public class CanRecordSourceCodeAccTest {
     private List<String> extractTags(Path outputFilePath) throws IOException {
         List<String> tags;
         try (Reader reader = new Reader(outputFilePath.toFile())) {
-            List<Segment> snapshots = reader.getSnapshots();
+            List<Segment> snapshots = reader.getSegments();
             tags = snapshots.stream().map(Segment::getTag).map(String::trim).collect(Collectors.toList());
         }
         return tags;
@@ -248,10 +249,8 @@ public class CanRecordSourceCodeAccTest {
         FileUtils.writeStringToFile(newFile1, content, StandardCharsets.US_ASCII);
     }
 
-    private void assertSnapshotTypesAre(List<Integer> expectedSnapshotTypes, List<Segment> actualSnapshots) {
-        List<Integer> snapshotTypes = actualSnapshots.stream().map(Segment::getType)
-                .collect(Collectors.toList());
-        assertThat(snapshotTypes, equalTo(expectedSnapshotTypes));
+    private void assertSnapshotTypesAre(List<SnapshotType> expectedSnapshotTypes, List<SnapshotType> actualSnapshots) {
+        assertThat(actualSnapshots, equalTo(expectedSnapshotTypes));
     }
 
     private void assertContentMatches(List<SourceCodeProvider> sourceCodeHistory, File gitExportFolder) throws Exception {
@@ -269,7 +268,6 @@ public class CanRecordSourceCodeAccTest {
             sourceCodeHistory.get(i).retrieveAndSaveTo(expected);
             git.checkout().setName(commitIdsInChronologicalOrder.get(i)).call();
 
-            //noinspection ConstantConditions
             assertThat("Data of snapshot " + i, gitExportFolder.toPath(), hasSameData(expected));
         }
     }

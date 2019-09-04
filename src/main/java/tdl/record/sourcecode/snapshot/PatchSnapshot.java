@@ -11,14 +11,17 @@ import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class PatchSnapshot extends Snapshot {
 
+    private PatchSnapshot() {
+        super(SnapshotType.PATCH);
+    }
+
     public static PatchSnapshot takeSnapshotFromGit(Git git) {
         PatchSnapshot snapshot = new PatchSnapshot();
 
-        try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();) {
+        try (ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
             GitHelper.exportDiff(git, buffer);
             byte[] diff = buffer.toByteArray();
-            byte[] compressed = compress(diff);
-            snapshot.data = compressed;
+            snapshot.data = compress(diff);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

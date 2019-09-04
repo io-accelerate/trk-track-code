@@ -1,12 +1,12 @@
 package tdl.record.sourcecode.snapshot.file;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.*;
 import java.util.function.Consumer;
 import tdl.record.sourcecode.snapshot.KeySnapshot;
+import tdl.record.sourcecode.snapshot.SnapshotType;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
 public class Reader implements Iterator<Integer>, AutoCloseable {
@@ -129,7 +129,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
     public List<Segment> getReplayableSnapshotSegmentsUntil(int index) throws Exception {
         Segment snapshot = getSnapshotAt(index);
         if (snapshot.getSnapshot() instanceof KeySnapshot) {
-            return Arrays.asList(snapshot);
+            return Collections.singletonList(snapshot);
         }
         int first = getFirstKeySnapshotBefore(index);
         return getSnapshotSegmentsByRange(first, index + 1);
@@ -144,7 +144,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         reset();
         int index = 0;
         while (index < end) {
-            if (index >= start && index < end) {
+            if (index >= start) {
                 Segment snapshot = nextSegment();
                 list.add(snapshot);
             } else {
@@ -176,13 +176,13 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         randomAccessFile.seek(address);
         Segment segment = new Segment();
         segment.setAddress(address);
-        segment.setType(Segment.getTypeByteBytes(readBytes(Segment.MAGIC_BYTES_KEY.length)));
+        segment.setType(Segment.getTypeByteBytes(readBytes(SnapshotType.MAGIC_BYTES_LENGTH)));
         segment.setTimestampSec(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setTag(asString(readBytes(Segment.TAG_SIZE)));
         segment.setChecksum(readBytes(Segment.CHECKSUM_SIZE));
         segment.setData(readBytes((int) segment.getSize()));
-        if (!segment.isDataValid()) {
+        if (segment.isChecksumMismatch()) {
             throw new IOException("Checksum mismatch");
         }
         randomAccessFile.seek(lastPosition);
@@ -202,7 +202,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
 
     private Segment generateEmptySegment() {
         Segment segment = new Segment();
-        segment.setType(Segment.TYPE_KEY);
+        segment.setType(SnapshotType.EMPTY);
         byte[] bytes = new byte[0];
         segment.setData(bytes);
         segment.setTimestampSec(0);
@@ -223,7 +223,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         return snapshot;
     }
 
-    public List<Segment> getSnapshots() throws IOException {
+    public List<Segment> getSegments() throws IOException {
         List<Segment> list = new ArrayList<>();
         reset();
         forEachRemaining((address) -> {

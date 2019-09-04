@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-@SuppressWarnings("WeakerAccess")
 @Parameters(commandDescription = "Convert a SRCS file to git repository.")
 public class ConvertToGitCommand extends Command {
 
@@ -41,7 +40,7 @@ public class ConvertToGitCommand extends Command {
                     (segment) ->
                             System.out.format("Committing timestamp: %d (type: %s, size: %d, tag: %s)%n",
                                     segment.getTimestampSec(),
-                                    segment.getType() == 0 ? "Key snapshot" : "Patch snapshot",
+                                    segment.getType().name(),
                                     segment.getSize(),
                                     segment.getTag()),
                     !ignoreErrors

@@ -2,10 +2,7 @@ package tdl.record.sourcecode.snapshot.file;
 
 import org.apache.commons.io.IOUtils;
 import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.Snapshot;
-import tdl.record.sourcecode.snapshot.SnapshotRecorder;
-import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
+import tdl.record.sourcecode.snapshot.*;
 import tdl.record.sourcecode.time.TimeSource;
 
 import java.io.File;
@@ -77,11 +74,10 @@ public final class Writer implements AutoCloseable {
 
     private Segment createSnapshotFromRecorder() throws IOException {
         Snapshot snapshot = recorder.takeSnapshot();
-        int type = (snapshot instanceof KeySnapshot) ? Segment.TYPE_KEY : Segment.TYPE_PATCH;
         long timestampSec = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
         byte[] data = snapshot.getData();
         Segment segment = new Segment();
-        segment.setType(type);
+        segment.setType(snapshot.getType());
         segment.setTimestampSec(timestampSec);
         segment.setData(data);
         segment.generateFromData();

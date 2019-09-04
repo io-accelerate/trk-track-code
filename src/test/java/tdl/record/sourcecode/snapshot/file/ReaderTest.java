@@ -13,6 +13,8 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 import static support.TestUtils.writeFile;
+import static tdl.record.sourcecode.snapshot.SnapshotType.KEY;
+import static tdl.record.sourcecode.snapshot.SnapshotType.PATCH;
 
 public class ReaderTest {
 
@@ -80,38 +82,38 @@ public class ReaderTest {
             assertEquals(14, address1);
             Segment segment1 = reader.readSegmentByAddress(address1);
             assertNotNull(segment1);
-            assertEquals(Segment.TYPE_KEY, segment1.getType());
+            assertEquals(KEY, segment1.getType());
             assertEquals(139, segment1.getSize());
 
             int address2 = reader.next();
             assertEquals(259, address2);
             Segment segment2 = reader.readSegmentByAddress(address2);
             assertNotNull(segment2);
-            assertEquals(Segment.TYPE_PATCH, segment2.getType());
+            assertEquals(PATCH, segment2.getType());
 
             int address3 = reader.next();
             assertEquals(501, address3);
             Segment segment3 = reader.readSegmentByAddress(address3);
             assertNotNull(segment3);
-            assertEquals(Segment.TYPE_PATCH, segment3.getType());
+            assertEquals(PATCH, segment3.getType());
 
             int address4 = reader.next();
             assertEquals(789, address4);
             Segment segment4 = reader.readSegmentByAddress(address4);
             assertNotNull(segment4);
-            assertEquals(Segment.TYPE_KEY, segment4.getType());
+            assertEquals(KEY, segment4.getType());
 
             int address5 = reader.next();
             assertEquals(1276, address5);
             Segment segment5 = reader.readSegmentByAddress(address5);
             assertNotNull(segment5);
-            assertEquals(Segment.TYPE_PATCH, segment5.getType());
+            assertEquals(PATCH, segment5.getType());
 
             int address6 = reader.next();
             assertEquals(1565, address6);
             Segment segment6 = reader.readSegmentByAddress(address6);
             assertNotNull(segment6);
-            assertEquals(Segment.TYPE_PATCH, segment6.getType());
+            assertEquals(PATCH, segment6.getType());
         }
     }
 
