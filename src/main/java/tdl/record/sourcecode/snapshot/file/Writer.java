@@ -2,13 +2,17 @@ package tdl.record.sourcecode.snapshot.file;
 
 import org.apache.commons.io.IOUtils;
 import tdl.record.sourcecode.content.SourceCodeProvider;
-import tdl.record.sourcecode.snapshot.*;
+import tdl.record.sourcecode.snapshot.Snapshot;
+import tdl.record.sourcecode.snapshot.SnapshotRecorder;
+import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
 import tdl.record.sourcecode.time.TimeSource;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public final class Writer implements AutoCloseable {
@@ -56,24 +60,40 @@ public final class Writer implements AutoCloseable {
         }
     }
 
-    void takeSnapshot() throws SnapshotRecorderException {
-        takeSnapshotWithTag("");
-    }
-
-    public void takeSnapshotWithTag(String tag) throws SnapshotRecorderException{
+    public Snapshot takeSnapshot() throws SnapshotRecorderException {
         try {
-            Segment segment = createSnapshotFromRecorder();
-            if (TagManager.isTag(tag)) {
-                segment.setTag(tagManager.asValidTag(tag));
-            }
-            IOUtils.write(segment.asBytes(), outputStream);
-        } catch (IOException ex) {
-            throw new SnapshotRecorderException(ex);
+            return recorder.takeSnapshot();
+        } catch (IOException e) {
+            throw new SnapshotRecorderException(e);
         }
     }
 
-    private Segment createSnapshotFromRecorder() throws IOException {
-        Snapshot snapshot = recorder.takeSnapshot();
+    public void writeSnapshotWithTags(Snapshot snapshot, List<String> tags) throws SnapshotRecorderException {
+        // Ensure that the tags have at least one element
+        List<String> tagsToWrite;
+        if (tags.size() > 0) {
+            tagsToWrite = tags;
+        } else {
+            tagsToWrite = Collections.singletonList("");
+        }
+
+        // Write snapshots
+        Snapshot currentSnapshot = snapshot;
+        for (String tag : tagsToWrite) {
+            try {
+                Segment segment = createSegmentFromSnapshot(currentSnapshot);
+                if (TagManager.isTag(tag)) {
+                    segment.setTag(tagManager.asValidTag(tag));
+                }
+                IOUtils.write(segment.asBytes(), outputStream);
+            } catch (IOException ex) {
+                throw new SnapshotRecorderException(ex);
+            }
+            currentSnapshot = recorder.takeEmptySnapshot();
+        }
+    }
+
+    private Segment createSegmentFromSnapshot(Snapshot snapshot) {
         long timestampSec = TimeUnit.NANOSECONDS.toSeconds(timeSource.currentTimeNano());
         byte[] data = snapshot.getData();
         Segment segment = new Segment();
@@ -88,5 +108,4 @@ public final class Writer implements AutoCloseable {
     public void close() {
         IOUtils.closeQuietly(outputStream);
     }
-
 }

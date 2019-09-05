@@ -176,7 +176,7 @@ public class Reader implements Iterator<Integer>, AutoCloseable {
         randomAccessFile.seek(address);
         Segment segment = new Segment();
         segment.setAddress(address);
-        segment.setType(Segment.getTypeByteBytes(readBytes(SnapshotType.MAGIC_BYTES_LENGTH)));
+        segment.setType(SnapshotType.fromMagicBytes(readBytes(SnapshotType.MAGIC_BYTES_LENGTH)));
         segment.setTimestampSec(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setSize(ByteHelper.byteArrayToLittleEndianInt(readBytes(Segment.LONG_SIZE)));
         segment.setTag(asString(readBytes(Segment.TAG_SIZE)));

@@ -68,6 +68,7 @@ public class SnapshotRecorder implements AutoCloseable {
 
     private void cleanGitDirectory() {
         IOFileFilter filter = new ExcludeGitDirectoryFileFilter(gitDirectory);
+        //noinspection ResultOfMethodCallIgnored
         FileUtils.listFiles(gitDirectory.toFile(), filter, TrueFileFilter.INSTANCE)
                 .forEach(File::delete);
     }
@@ -93,13 +94,10 @@ public class SnapshotRecorder implements AutoCloseable {
         SnapshotTypeHint snapshotTypeHint = syncToGitDirectory();
         commitAllChanges();
 
-        switch (decideOnSnapshotType(snapshotTypeHint)) {
-            case PATCH:
-                snapshot = takePatchSnapshot();
-                break;
-            default:
-                snapshot = takeKeySnapshot();
-                break;
+        if (decideOnSnapshotType(snapshotTypeHint) == SnapshotTypeHint.PATCH) {
+            snapshot = takePatchSnapshot();
+        } else {
+            snapshot = takeKeySnapshot();
         }
         return snapshot;
     }
@@ -124,6 +122,10 @@ public class SnapshotRecorder implements AutoCloseable {
 
     private PatchSnapshot takePatchSnapshot() {
         return PatchSnapshot.takeSnapshotFromGit(git);
+    }
+
+    public EmptySnapshot takeEmptySnapshot() {
+        return EmptySnapshot.takeSnapshotFromGit(git);
     }
 
     @Override

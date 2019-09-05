@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingListener;
 import tdl.record.sourcecode.metrics.SourceCodeRecordingMetricsCollector;
+import tdl.record.sourcecode.snapshot.Snapshot;
 import tdl.record.sourcecode.snapshot.SnapshotRecorderException;
 import tdl.record.sourcecode.snapshot.file.Writer;
 import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
@@ -15,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -26,7 +29,6 @@ import static org.slf4j.LoggerFactory.*;
 
 public class SourceCodeRecorder {
     private static final Logger log = getLogger(SourceCodeRecorder.class);
-    private static final int VERY_SHORT_DURATION = 1000;
 
     private final SourceCodeProvider sourceCodeProvider;
     private final Path outputRecordingFilePath;
@@ -164,7 +166,8 @@ public class SourceCodeRecorder {
         while (timeSource.currentTimeNano() < recordingDuration.toNanos()) {
             long timestampBeforeProcessing = timeSource.currentTimeNano();
             sourceCodeRecordingListener.notifySnapshotStart(timestampBeforeProcessing, TimeUnit.NANOSECONDS);
-            writer.takeSnapshotWithTag(tagQueue.poll());
+            Snapshot snapshot = writer.takeSnapshot();
+            writer.writeSnapshotWithTags(snapshot, getAllEnqueuedTags());
             sourceCodeRecordingListener.notifySnapshotEnd(timeSource.currentTimeNano(), TimeUnit.NANOSECONDS);
 
             // Allow a different thread to stop the recording
@@ -174,12 +177,7 @@ public class SourceCodeRecorder {
             }
 
             // Prepare the next timestamp
-            long timeToSleep;
-            if (hasTags()) {
-                timeToSleep = TimeUnit.MILLISECONDS.toNanos(VERY_SHORT_DURATION);
-            } else {
-                timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
-            }
+            long timeToSleep = TimeUnit.MILLISECONDS.toNanos(snapshotIntervalMillis);
             long nextTimestamp = timestampBeforeProcessing + timeToSleep;
             try {
                 timeSource.wakeUpAt(nextTimestamp, TimeUnit.NANOSECONDS);
@@ -187,6 +185,14 @@ public class SourceCodeRecorder {
                 log.debug("Interrupted while sleeping", e);
             }
         }
+    }
+
+    private List<String> getAllEnqueuedTags() {
+        List<String> tags = new ArrayList<>();
+        while(tagQueue.peek() != null) {
+            tags.add(tagQueue.poll());
+        }
+        return tags;
     }
 
     private boolean hasTags() {

@@ -1,9 +1,6 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.PatchSnapshot;
-import tdl.record.sourcecode.snapshot.Snapshot;
-import tdl.record.sourcecode.snapshot.SnapshotType;
+import tdl.record.sourcecode.snapshot.*;
 import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
 import java.io.ByteArrayOutputStream;
@@ -154,20 +151,14 @@ public class Segment {
         return Arrays.copyOf(src, TAG_SIZE);
     }
 
-    static SnapshotType getTypeByteBytes(byte[] bytes) {
-        if (Arrays.equals(bytes, SnapshotType.KEY.getMagicBytes())) {
-            return SnapshotType.KEY;
-        } else if (Arrays.equals(bytes, SnapshotType.PATCH.getMagicBytes())) {
-            return SnapshotType.PATCH;
-        }
-        throw new RuntimeException("Unknown bytes: '" + new String(bytes) + "'");
-    }
-
     public Snapshot getSnapshot() {
-        if (getType() == SnapshotType.KEY) {
-            return KeySnapshot.createSnapshotFromBytes(getData());
-        } else if (getType() == SnapshotType.PATCH) {
-            return PatchSnapshot.createSnapshotFromBytes(getData());
+        switch (getType()) {
+            case KEY:
+                return KeySnapshot.createSnapshotFromBytes(getData());
+            case PATCH:
+                return PatchSnapshot.createSnapshotFromBytes(getData());
+            case EMPTY:
+                return EmptySnapshot.createSnapshotFromBytes(getData());
         }
         throw new RuntimeException("Cannot recognize type");
     }

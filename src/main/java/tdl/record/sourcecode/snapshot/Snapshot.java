@@ -14,7 +14,7 @@ abstract public class Snapshot {
         return type;
     }
 
-    protected byte[] data;
+    protected byte[] data = new byte[0];
 
     public byte[] getData() {
         return data;
