@@ -47,8 +47,8 @@ public class ExportCommandTest {
                 // Empty folder
                 return SnapshotTypeHint.PATCH;
             }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
+            asFrame(Arrays.asList("tag4", "tag5"), (Path dst) -> {
+                writeFile(dst, "test1.txt", "TEST_MULTI_TAG");
                 return SnapshotTypeHint.PATCH;
             }),
             asFrame((Path dst) -> {
@@ -103,6 +103,16 @@ public class ExportCommandTest {
         {
             Path destDir = exportTag(inputFilePath, "tag3");
             assertEquals("TEST3", readFile(destDir, "subdir/test3.txt"));
+        }
+
+        {
+            Path destDir = exportTag(inputFilePath, "tag4");
+            assertEquals("TEST_MULTI_TAG", readFile(destDir, "test1.txt"));
+        }
+
+        {
+            Path destDir = exportTag(inputFilePath, "tag5");
+            assertEquals("TEST_MULTI_TAG", readFile(destDir, "test1.txt"));
         }
     }
 
