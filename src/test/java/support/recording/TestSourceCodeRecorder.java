@@ -32,7 +32,7 @@ public class TestSourceCodeRecorder {
                 .build();
 
         seedRecorderWithFrame(getAndAdvance(recordingFrames));
-        fakeTimeSource.addWakeUpListener(() -> seedRecorderWithFrame(getAndAdvance(recordingFrames)));
+        fakeTimeSource.addWakeUpAtListener(() -> seedRecorderWithFrame(getAndAdvance(recordingFrames)));
     }
 
     private TestRecordingFrame getAndAdvance(List<TestRecordingFrame> recordingFrames) {

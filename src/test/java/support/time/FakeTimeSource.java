@@ -26,21 +26,20 @@ public class FakeTimeSource implements TimeSource {
     @Override
     public void wakeUpAt(long timestamp, TimeUnit timeUnit) {
         currentTimeNano = timeUnit.toNanos(timestamp);
-        notifyWakeUpListeners();
+        notifyWakeUpAtListeners();
     }
 
     @Override
     public void wakeUpNow() {
         currentTimeNano += incrementNanos;
-        notifyWakeUpListeners();
     }
 
 
-    public void addWakeUpListener(WakeUpListener wakeUpListener) {
+    public void addWakeUpAtListener(WakeUpListener wakeUpListener) {
         wakeUpListeners.add(wakeUpListener);
     }
 
-    private void notifyWakeUpListeners() {
+    private void notifyWakeUpAtListeners() {
         wakeUpListeners.forEach(WakeUpListener::wakeUpInvoked);
     }
 }
