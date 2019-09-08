@@ -12,7 +12,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
@@ -20,6 +19,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static support.TestUtils.exportToGit;
 import static support.TestUtils.writeFile;
+import static support.recording.TestRecordingFrame.asFrame;
 
 public class ConvertToGit_Rename_EdgeTest {
 
@@ -28,16 +28,16 @@ public class ConvertToGit_Rename_EdgeTest {
 
     @Rule
     public TestGeneratedSrcsFile srcsFile = new TestGeneratedSrcsFile(Arrays.asList(
-            (Path dst) -> {
+            asFrame((Path dst) -> {
                 writeFile(dst, "test.txt", "MSG1");
                 return SnapshotTypeHint.KEY;
-            },
+            }),
             // Case 1 = Patch with rename
-            (Path dst) -> {
+            asFrame((Path dst) -> {
                 writeFile(dst, "Test.txt", "MSG2");
                 return SnapshotTypeHint.PATCH;
-            }
-    ), Collections.emptyList());
+            })
+    ));
 
 
     @Test

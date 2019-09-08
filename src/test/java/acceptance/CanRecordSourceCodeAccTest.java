@@ -41,7 +41,8 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
-import static tdl.record.sourcecode.snapshot.SnapshotType.*;
+import static tdl.record.sourcecode.snapshot.SnapshotType.KEY;
+import static tdl.record.sourcecode.snapshot.SnapshotType.PATCH;
 
 public class CanRecordSourceCodeAccTest {
 
@@ -84,7 +85,8 @@ public class CanRecordSourceCodeAccTest {
                 });
 
         SourceCodeRecordingMetricsCollector sourceCodeRecordingListener = new SourceCodeRecordingMetricsCollector();
-        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
+        SourceCodeRecorder sourceCodeRecorder = new SourceCodeRecorder.Builder(
+                new MultiStepSourceCodeProvider(sourceCodeHistory), outputFilePath)
                 .withTimeSource(new FakeTimeSource())
                 .withSnapshotEvery(1, TimeUnit.SECONDS)
                 .withKeySnapshotSpacing(3)

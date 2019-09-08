@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static support.TestUtils.writeFile;
+import static support.recording.TestRecordingFrame.asFrame;
 
 public class ExportSegmentsCommandTest {
 
@@ -33,48 +35,48 @@ public class ExportSegmentsCommandTest {
 
     @Rule
     public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
-            (Path dst) -> {
+            asFrame(Collections.singletonList("tag1"), (Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("x"), (Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag12"), (Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag3"), (Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 writeFile(dst, "subdir/test3.txt", "TEST3");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag3"), (Path dst) -> {
                 // Empty folder
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            }
-    ), Arrays.asList("tag1", "x", "tag12", "tag3", "tag3"));
+            })
+    ));
 
     @Test
     public void run() throws IOException {
@@ -139,12 +141,10 @@ public class ExportSegmentsCommandTest {
     private void verifySegmentsInfo(Path newSrcsFilePath, List<String> searchValues) {
         List<String> info = listInfoFrom(newSrcsFilePath);
         assertThat(info.size(), is(greaterThan(0)));
-        for (String value: searchValues) {
+        for (String value : searchValues) {
             assertThat(String.format("%s could not be found", value),
-                    info.stream()
-                    .filter(eachString -> eachString.contains(value))
-                    .collect(Collectors.toList())
-                    .size(),
+                    (int) info.stream()
+                            .filter(eachString -> eachString.contains(value)).count(),
                     is(greaterThan(0)));
         }
     }

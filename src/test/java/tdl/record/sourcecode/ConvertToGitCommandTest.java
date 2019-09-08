@@ -11,10 +11,12 @@ import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.*;
 import static support.TestUtils.writeFile;
+import static support.recording.TestRecordingFrame.asFrame;
 import static tdl.record.sourcecode.test.FileTestHelper.appendStringToFile;
 import static tdl.record.sourcecode.test.FileTestHelper.doesFileExist;
 
@@ -25,48 +27,48 @@ public class ConvertToGitCommandTest {
 
     @Rule
     public TestGeneratedSrcsFile srcsFile = new TestGeneratedSrcsFile(Arrays.asList(
-            (Path dst) -> {
+            asFrame(Collections.singletonList("tag"), (Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag"), (Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 writeFile(dst, "subdir/test3.txt", "TEST3");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 // Empty folder
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            }
-    ), Arrays.asList("tag", "tag"));
+            })
+    ));
 
 
     @Test
@@ -110,7 +112,7 @@ public class ConvertToGitCommandTest {
         assertThat(GitHelper.getCommitCount(git), equalTo(11));
         assertThat(GitHelper.getTags(git), equalTo(Arrays.asList("tag", "tag_1", "tag_2", "tag_3")));
     }
-    
+
     @Test
     public void whenWipeTrue_runShouldRemoveGit() throws Exception {
         ConvertToGitCommand command = new ConvertToGitCommand();

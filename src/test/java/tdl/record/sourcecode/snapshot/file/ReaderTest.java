@@ -3,6 +3,7 @@ package tdl.record.sourcecode.snapshot.file;
 import org.junit.Rule;
 import org.junit.Test;
 import support.TestGeneratedSrcsFile;
+import support.recording.TestRecordingFrame;
 import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 
 import java.io.IOException;
@@ -13,6 +14,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 import static support.TestUtils.writeFile;
+import static support.recording.TestRecordingFrame.asFrame;
 import static tdl.record.sourcecode.snapshot.SnapshotType.KEY;
 import static tdl.record.sourcecode.snapshot.SnapshotType.PATCH;
 
@@ -20,46 +22,46 @@ public class ReaderTest {
 
     @Rule
     public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
-            (Path dst) -> {
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 writeFile(dst, "subdir/test3.txt", "TEST3");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {/* Empty folder */
+            }),
+            asFrame((Path dst) -> {/* Empty folder */
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            }
+            })
     ));
 
     @Test

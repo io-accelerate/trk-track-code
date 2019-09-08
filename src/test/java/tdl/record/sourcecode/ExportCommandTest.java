@@ -1,21 +1,23 @@
 package tdl.record.sourcecode;
 
+import org.apache.commons.io.FileUtils;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import org.apache.commons.io.FileUtils;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static support.TestUtils.*;
+import java.util.Collections;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import support.TestGeneratedSrcsFile;
-import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
+import static org.junit.Assert.assertEquals;
+import static support.TestUtils.writeFile;
+import static support.recording.TestRecordingFrame.asFrame;
 
 public class ExportCommandTest {
 
@@ -24,48 +26,48 @@ public class ExportCommandTest {
 
     @Rule
     public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
-            (Path dst) -> {
+            asFrame(Collections.singletonList("tag1"), (Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("x"), (Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag12"), (Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag3"), (Path dst) -> {
                 writeFile(dst, "test2.txt", "TEST1TEST2");
                 writeFile(dst, "subdir/test3.txt", "TEST3");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame(Collections.singletonList("tag3"), (Path dst) -> {
                 // Empty folder
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.PATCH;
-            },
-            (Path dst) -> {
+            }),
+            asFrame((Path dst) -> {
                 writeFile(dst, "test1.txt", "TEST1TEST2");
                 return SnapshotTypeHint.KEY;
-            }
-    ), Arrays.asList("tag1", "x", "tag12", "tag3", "tag3"));
+            })
+    ));
 
 
     @Test
@@ -121,7 +123,7 @@ public class ExportCommandTest {
     private String readFile(Path parent, String path) throws IOException {
         Path resolvedPath = parent.resolve(path);
         if (!Files.exists(resolvedPath)) {
-            throw new AssertionError("File does not exist: "+resolvedPath);
+            throw new AssertionError("File does not exist: " + resolvedPath);
         }
 
         File file = resolvedPath.toFile();
