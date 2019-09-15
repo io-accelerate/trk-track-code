@@ -49,7 +49,7 @@ public class ListCommand extends Command {
     }
 
     private void gatherInfo(Segment segment, int index) {
-        String type = segment.getSnapshot() instanceof KeySnapshot ? "KEY" : "PATCH";
+        String type = segment.getSnapshot().getType().name();
         long size = segment.getSize() + Segment.HEADER_SIZE;
         String checksum = Hex.encodeHexString(segment.getChecksum());
         gatheredInfo.add(String.format("#%4d | time %4s | type %-5s | offset %10d | size %7d | checksum %8s.. | tag %s",
