@@ -126,8 +126,8 @@ The SRCS file format is divided into two parts.
     | Magic bytes | 6      | String | This contains either `SRCKEY` or `SRCPTC` magic bytes. The first one means that the segment is Key Snapshot while the latter means Patch Snapshot. Key Snapshot is snapshot that contains the whole files in the working directory at the time snapshot was taken. While Patch Snapshot contains only the difference between the files in the directory and the files taken the previous snapshots. There can be more than one Patch Snapshot between two Key Snapshots. |
     | Timestamp   | 8      | Long   | This timestamp stores the number of seconds since the first snapshot was taken. Naturally the timestamp of the first snapshot is zero. |
     | Size        | 8      | Long   | This contains the size of the payload stored in the end of the segment. |
-    | Checksum    | 20     | Binary | This contains MD5 hash of the payload data for consistency checking. |
     | Tag         | 64     | String | This contains the tag name of the current snapshot. When the file is being exported to git repository, the tag will be used to make git tag of the snapshot's git commit. |
+    | Checksum    | 20     | Bina   ry | This contains MD5 hash of the payload data for consistency checking. |
     | Payload     | <Size> | Binary | For Key Snapshot, the payload contains Zip data containing the snapshot. As for Patch Snapshot, the payload contains patch in Diff format. The diff data is compressed using Gzip. |
 
 ## Development
