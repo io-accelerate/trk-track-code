@@ -1,20 +1,19 @@
 package tdl.record.sourcecode.snapshot;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Date;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-
-import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.content.ExcludeGitDirectoryFileFilter;
+import tdl.record.sourcecode.content.SourceCodeProvider;
 import tdl.record.sourcecode.snapshot.helpers.FileHelper;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Date;
 
 public class SnapshotRecorder implements AutoCloseable {
 

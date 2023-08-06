@@ -1,5 +1,7 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -7,7 +9,6 @@ import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.apache.commons.io.IOUtils;
 
 public class DirectoryZip implements AutoCloseable {
 

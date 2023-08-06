@@ -2,9 +2,8 @@ package tdl.record.sourcecode.snapshot;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 import tdl.record.sourcecode.test.FileTestHelper;
@@ -13,20 +12,18 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SnapshotRecorderTest {
     private int maximumFileSizeLimitInMB = 2;
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    Path folder;
 
     @Test
     public void takeSnapshot() throws Exception {
         Path directory = Paths.get("./src/test/resources/diff/test1/dir1/");
-        Path tmpDir = folder.getRoot().toPath();
+        Path tmpDir = Files.createTempDirectory(folder, "tmp");
         FileUtils.copyDirectory(directory.toFile(), tmpDir.toFile());
         SnapshotRecorder recorder = new SnapshotRecorder(new CopyFromDirectorySourceCodeProvider(tmpDir, maximumFileSizeLimitInMB), 5);
         recorder.init();
@@ -74,7 +71,7 @@ public class SnapshotRecorderTest {
 
     @Test
     public void constructShouldCreateGitDirectory() throws Exception {
-        Path tmpDir = folder.getRoot().toPath();
+        Path tmpDir = folder.getRoot();
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
             assertTrue(gitDir.toFile().exists());
@@ -84,7 +81,7 @@ public class SnapshotRecorderTest {
 
     @Test
     public void syncToGitDirectoryShouldCopyDirectory() throws Exception {
-        Path tmpDir = folder.getRoot().toPath();
+        Path tmpDir = Files.createTempDirectory(folder, "tmp");
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
 
@@ -116,7 +113,7 @@ public class SnapshotRecorderTest {
 
     @Test
     public void syncToGitDirectoryShouldCopyDirectoryWithDotGitignore() throws Exception {
-        Path tmpDir = folder.getRoot().toPath();
+        Path tmpDir = Files.createTempDirectory(folder, "tmp");
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
 
@@ -130,7 +127,7 @@ public class SnapshotRecorderTest {
 
     @Test
     public void syncToGitDirectoryShouldCopyDirectoryWithoutDotGitDirectory() throws Exception {
-        Path tmpDir = folder.getRoot().toPath();
+        Path tmpDir = Files.createTempDirectory(folder, "tmp");
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Path gitDir = recorder.getGitDirectory();
 
@@ -147,7 +144,7 @@ public class SnapshotRecorderTest {
 
     @Test
     public void commitAllChanges() throws Exception {
-        Path tmpDir = folder.getRoot().toPath();
+        Path tmpDir = Files.createTempDirectory(folder, "tmp");
         try (SnapshotRecorder recorder = createDefaultRecorder(tmpDir)) {
             Git git = recorder.getGit();
 

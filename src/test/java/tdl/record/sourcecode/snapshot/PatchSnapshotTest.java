@@ -1,22 +1,22 @@
 package tdl.record.sourcecode.snapshot;
 
-import java.io.File;
-import java.io.IOException;
-
+import org.eclipse.jgit.api.Git;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 import tdl.record.sourcecode.test.FileTestHelper;
-import org.eclipse.jgit.api.Git;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PatchSnapshotTest {
 
-    @Rule
-    public TemporaryFolder temporary = new TemporaryFolder();
+    @TempDir
+    Path temporary;
 
     @Test
     public void compressAndDecompress() throws IOException {
@@ -39,8 +39,8 @@ public class PatchSnapshotTest {
 
     @Test
     public void takeAndRestoreSnapshotFromGit() throws Exception {
-        File directory1 = temporary.newFolder();
-        File directory2 = temporary.newFolder();
+        File directory1 = temporary.resolve("directory1").toFile();
+        File directory2 = temporary.resolve("directory2").toFile();
 
         Git git1 = Git.init().setDirectory(directory1).call();
         GitHelper.addAndCommit(git1);

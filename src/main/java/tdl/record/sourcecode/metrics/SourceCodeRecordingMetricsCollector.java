@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 
-import static org.slf4j.LoggerFactory.*;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class SourceCodeRecordingMetricsCollector implements SourceCodeRecordingListener {
     private static final Logger log = getLogger(SourceCodeRecordingMetricsCollector.class);

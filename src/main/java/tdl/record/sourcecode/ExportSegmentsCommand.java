@@ -3,11 +3,7 @@ package tdl.record.sourcecode;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import org.apache.commons.io.IOUtils;
-import tdl.record.sourcecode.snapshot.file.Header;
-import tdl.record.sourcecode.snapshot.file.Reader;
-import tdl.record.sourcecode.snapshot.file.Segment;
-import tdl.record.sourcecode.snapshot.file.TagManager;
-import tdl.record.sourcecode.snapshot.file.Writer;
+import tdl.record.sourcecode.snapshot.file.*;
 
 import java.io.File;
 import java.io.FileOutputStream;

@@ -1,9 +1,10 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 public class FileHelper {
 

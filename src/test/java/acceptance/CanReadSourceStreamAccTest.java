@@ -1,12 +1,11 @@
 package acceptance;
 
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import support.TestSourceStreamRecorder;
-import tdl.record.sourcecode.snapshot.file.Segment;
 import tdl.record.sourcecode.snapshot.file.Reader;
+import tdl.record.sourcecode.snapshot.file.Segment;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -16,20 +15,19 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CanReadSourceStreamAccTest {
 
-    @Rule
-    public TemporaryFolder sourceCodeFolder = new TemporaryFolder();
+    @TempDir
+    Path sourceCodeFolder;
 
-    @Rule
-    public TemporaryFolder outputFolder = new TemporaryFolder();
-
+    @TempDir
+    Path outputFolder;
 
     @Test
     public void should_be_able_to_read_source_stream() throws Exception {
-        Path outputFilePath = outputFolder.newFile("output.srcs").toPath();
+        Path outputFilePath = outputFolder.resolve("output.srcs");
         File outputFile = outputFilePath.toFile();
         TestSourceStreamRecorder.recordRandom(outputFilePath, 3, 1);
 
@@ -40,7 +38,7 @@ public class CanReadSourceStreamAccTest {
         assertTrue(isAllIntact);
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void should_be_able_to_read_large_stream() {
         //TODO Read stream with large file without running out of memory (do not load all snapshots)
@@ -48,7 +46,7 @@ public class CanReadSourceStreamAccTest {
 
     @Test
     public void should_be_resilient_to_truncation() throws Exception {
-        Path outputFilePath = outputFolder.newFile("output.srcs").toPath();
+        Path outputFilePath = outputFolder.resolve("output.srcs");
         File outputFile = outputFilePath.toFile();
 
         TestSourceStreamRecorder.recordRandom(outputFilePath, 5, 1);
@@ -98,7 +96,7 @@ public class CanReadSourceStreamAccTest {
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     @Test
     public void should_be_resilient_to_snapshot_data_corruption() throws Exception {
-        Path outputFilePath = outputFolder.newFile("output.srcs").toPath();
+        Path outputFilePath = outputFolder.resolve("output.srcs");
         File outputFile = outputFilePath.toFile();
 
         TestSourceStreamRecorder.recordRandom(outputFilePath, 5, 1);
@@ -130,13 +128,13 @@ public class CanReadSourceStreamAccTest {
     }
 
 
-    @Ignore
+    @Disabled
     @Test
     public void should_be_resilient_to_key_snapshot_header_corruption() {
         //TODO On key snapshot corruption the reader should ignore all the other snapshots up to the next good key frame
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void should_be_resilient_to_patch_snapshot_header_corruption() {
         //TODO On patch snapshot corruption the reader should ignore all the other snapshots up to the next good key frame

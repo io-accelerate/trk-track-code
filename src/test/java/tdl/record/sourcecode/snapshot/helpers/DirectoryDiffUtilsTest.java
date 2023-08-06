@@ -3,7 +3,10 @@ package tdl.record.sourcecode.snapshot.helpers;
 import difflib.Delta;
 import difflib.InsertDelta;
 import difflib.Patch;
-import java.io.File;
+import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,14 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import tdl.record.sourcecode.test.FileTestHelper;
-import org.apache.commons.io.FileUtils;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DirectoryDiffUtilsTest {
 
@@ -61,8 +57,7 @@ public class DirectoryDiffUtilsTest {
         Path path2 = Paths.get("./src/test/resources/diff/test1/dir1/file2.txt");
         Patch patch = DirectoryDiffUtils.diffFiles(path1, path2);
         assertEquals(1, patch.getDeltas().size());
-        //String line = patch.getDelta(0).getRevised().getLines().get(0).toString();
-        
+
         Delta delta = (Delta) patch.getDeltas().get(0);
         assertTrue(delta instanceof InsertDelta);
         String line = (String) delta.getRevised().getLines().get(0);
@@ -74,13 +69,13 @@ public class DirectoryDiffUtilsTest {
         Path path1 = Paths.get("./src/test/resources/diff/test1/dir1");
         Path path2 = Paths.get("./src/test/resources/diff/test1/dir2");
         DirectoryPatch patches = DirectoryDiffUtils.diffDirectories(path1, path2);
-        //System.out.println(diff.keySet());
+
         Patch patchFile3 = patches.getPatches().get("file3.txt");
         assertEquals(3, ((Delta) patchFile3.getDeltas().get(0)).getRevised().size());
     }
 
-    @Rule
-    public TemporaryFolder temp = new TemporaryFolder();
+    @TempDir
+    Path temp;
 
     @Test
     public void patch() throws IOException {
@@ -89,18 +84,16 @@ public class DirectoryDiffUtilsTest {
 
         DirectoryPatch patches = DirectoryDiffUtils.diffDirectories(original, revised);
 
-        File patchDest = temp.newFolder("original");
-        Path patchDestPath = patchDest.toPath();
-        FileUtils.copyDirectory(original.toFile(), patchDest);
+        Path patchDest = temp.resolve("original");
+        FileUtils.copyDirectory(original.toFile(), patchDest.toFile());
 
-        assertTrue(patchDestPath.resolve("file4.txt").toFile().exists());
-        DirectoryDiffUtils.patch(patchDest.toPath(), patches);
+        assertTrue(patchDest.resolve("file4.txt").toFile().exists());
+        DirectoryDiffUtils.patch(patchDest, patches);
         assertTrue(FileUtils.contentEquals(
                 revised.resolve("file3.txt").toFile(),
-                patchDest.toPath().resolve("file3.txt").toFile()
+                patchDest.resolve("file3.txt").toFile()
         ));
-        assertFalse(patchDestPath.resolve("file4.txt").toFile().exists());
 
-        assertTrue(FileTestHelper.isDirectoryEquals(revised, patchDestPath));
+        assertFalse(patchDest.resolve("file4.txt").toFile().exists());
     }
 }

@@ -2,10 +2,9 @@ package tdl.record.sourcecode.content;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import tdl.record.sourcecode.test.FileTestHelper;
 
 import java.io.File;
@@ -13,23 +12,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CopyFromDirectorySourceCodeProviderTest {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    public Path folder;
 
     private CopyFromDirectorySourceCodeProvider provider;
     private Path destination;
     private SourceFolder sourceFolder;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
-        File sourceFolderFile = folder.newFolder();
+        File sourceFolderFile = folder.resolve("source").toFile();
         Path sourceFolderPath = sourceFolderFile.toPath();
-        destination = folder.newFolder().toPath();
+        destination = folder.resolve("destination");
         sourceFolder = new SourceFolder(sourceFolderPath);
 
         provider = new CopyFromDirectorySourceCodeProvider(sourceFolderPath, 2);
@@ -108,28 +107,28 @@ public class CopyFromDirectorySourceCodeProviderTest {
                 "ignoreFolder" + File.separator + "file1.bak",
                 "includeFolder" + File.separator + "ignore-sourceFile.~java",
                 "includeFolder" + File.separator + "ignore-file1.bak"
-                );
+        );
     }
 
     @Test
     public void ignoreLargeFiles2MBOrLargerInSize()  throws IOException {
         sourceFolder.appendTo("file-size-1MB.txt",
-            FileTestHelper.readFileFromResource("large-files/file-size-1MB.txt")
+                FileTestHelper.readFileFromResource("large-files/file-size-1MB.txt")
         );
         sourceFolder.appendTo("file-size-2MB.txt",
-            FileTestHelper.readFileFromResource("large-files/file-size-2MB.txt")
+                FileTestHelper.readFileFromResource("large-files/file-size-2MB.txt")
         );
         sourceFolder.appendTo("file-size-slightly-smaller-than-2MB.txt",
-            FileTestHelper.readFileFromResource("large-files/file-size-slightly-smaller-than-2MB.txt")
+                FileTestHelper.readFileFromResource("large-files/file-size-slightly-smaller-than-2MB.txt")
         );
         sourceFolder.appendTo("file-size-slightly-bigger-than-2MB.txt",
-            FileTestHelper.readFileFromResource("large-files/file-size-slightly-bigger-than-2MB.txt")
+                FileTestHelper.readFileFromResource("large-files/file-size-slightly-bigger-than-2MB.txt")
         );
         sourceFolder.appendTo("file-size-3MB.txt",
-            FileTestHelper.readFileFromResource("large-files/file-size-3MB.txt")
+                FileTestHelper.readFileFromResource("large-files/file-size-3MB.txt")
         );
         sourceFolder.appendTo("file-size-193K.txt",
-            FileTestHelper.readFileFromResource("large-files/file-size-193K.txt")
+                FileTestHelper.readFileFromResource("large-files/file-size-193K.txt")
         );
 
         sourceFolder.createFiles("file2.bak");
@@ -137,15 +136,15 @@ public class CopyFromDirectorySourceCodeProviderTest {
         provider.retrieveAndSaveTo(destination);
 
         assertExistsInDestination(
-            "file2.bak",
-            "file-size-1MB.txt",
-            "file-size-slightly-smaller-than-2MB.txt",
-            "file-size-2MB.txt",
-            "file-size-193K.txt"
+                "file2.bak",
+                "file-size-1MB.txt",
+                "file-size-slightly-smaller-than-2MB.txt",
+                "file-size-2MB.txt",
+                "file-size-193K.txt"
         );
         assertNotExistsInDestination(
-            "file-size-slightly-bigger-than-2MB.txt",
-            "file-size-3MB.txt"
+                "file-size-slightly-bigger-than-2MB.txt",
+                "file-size-3MB.txt"
         );
     }
 
@@ -181,15 +180,13 @@ public class CopyFromDirectorySourceCodeProviderTest {
 
     private void assertNotExistsInDestination(String ... filesToCheck) {
         for (String fileToCheck : filesToCheck) {
-            assertFalse("File "+fileToCheck+" found in destination",
-                    exists(destination, fileToCheck));
+            assertFalse(exists(destination, fileToCheck), "File "+fileToCheck+" found in destination");
         }
     }
 
     private void assertExistsInDestination(String ... filesToCheck) {
         for (String fileToCheck : filesToCheck) {
-            assertTrue("File "+fileToCheck+" not present in destination",
-                    exists(destination, fileToCheck));
+            assertTrue(exists(destination, fileToCheck),"File "+fileToCheck+" not present in destination");
         }
     }
 

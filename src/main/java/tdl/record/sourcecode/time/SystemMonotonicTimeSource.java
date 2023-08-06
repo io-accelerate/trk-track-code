@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.slf4j.LoggerFactory.*;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class SystemMonotonicTimeSource implements TimeSource {
     private static final Logger log = getLogger(SystemMonotonicTimeSource.class);

@@ -1,9 +1,10 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import support.TestGeneratedSrcsFile;
-import support.recording.TestRecordingFrame;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 
 import java.io.IOException;
@@ -12,7 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static support.TestUtils.writeFile;
 import static support.recording.TestRecordingFrame.asFrame;
 import static tdl.record.sourcecode.snapshot.SnapshotType.KEY;
@@ -20,49 +22,59 @@ import static tdl.record.sourcecode.snapshot.SnapshotType.PATCH;
 
 public class ReaderTest {
 
-    @Rule
-    public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1");
-                return SnapshotTypeHint.KEY;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test2.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test2.txt", "TEST1TEST2");
-                writeFile(dst, "subdir/test3.txt", "TEST3");
-                return SnapshotTypeHint.KEY;
-            }),
-            asFrame((Path dst) -> {/* Empty folder */
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.KEY;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.KEY;
-            })
-    ));
+    private TestGeneratedSrcsFile recorder;
+
+    @BeforeEach
+    public void setUp() throws SourceCodeRecorderException, IOException {
+        recorder = new TestGeneratedSrcsFile(Arrays.asList(
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1");
+                    return SnapshotTypeHint.KEY;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test2.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test2.txt", "TEST1TEST2");
+                    writeFile(dst, "subdir/test3.txt", "TEST3");
+                    return SnapshotTypeHint.KEY;
+                }),
+                asFrame((Path dst) -> {/* Empty folder */
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.KEY;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.KEY;
+                })
+        ));
+        recorder.beforeEach();
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        recorder.afterEach();
+    }
 
     @Test
     public void getSegmentAddresses() throws IOException {
@@ -70,7 +82,7 @@ public class ReaderTest {
             List<Integer> addresses = reader.getSegmentAddresses();
             System.out.println(addresses);
             Integer[] expected = new Integer[]{14, 259, 501, 789, 1276, 1565, 1813, 2061, 2187, 2313};
-            assertArrayEquals(addresses.toArray(), expected);
+            assertThat(addresses.toArray(), equalTo(expected));
         }
     }
 

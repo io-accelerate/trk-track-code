@@ -2,9 +2,8 @@ package tdl.record.sourcecode.content;
 
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.eclipse.jgit.ignore.FastIgnoreRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -16,12 +15,12 @@ import static tdl.record.sourcecode.test.FileTestHelper.applyIOFileFilter;
 
 public class IgnoreRulesFilterTest {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    public Path folder;
 
     @Test
     public void accept() {
-        Path dir = folder.getRoot().toPath();
+        Path dir = folder.getRoot();
         List<String> filenames = Arrays.asList(
                 "TestResultX/1.txt",
                 "testresultY/2.txt",

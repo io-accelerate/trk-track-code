@@ -1,10 +1,13 @@
 package tdl.record.sourcecode;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import support.TestGeneratedSrcsFile;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
 import tdl.record.sourcecode.snapshot.SnapshotTypeHint;
 import tdl.record.sourcecode.snapshot.file.ToGitConverter;
 
@@ -16,13 +19,11 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static support.TestUtils.writeFile;
 import static support.recording.TestRecordingFrame.asFrame;
 
@@ -30,53 +31,63 @@ public class ExportSegmentsCommandTest {
 
     private static final boolean STOP_ON_ERRORS = true;
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    Path folder;
 
-    @Rule
-    public TestGeneratedSrcsFile recorder = new TestGeneratedSrcsFile(Arrays.asList(
-            asFrame(Collections.singletonList("tag1"), (Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1");
-                return SnapshotTypeHint.KEY;
-            }),
-            asFrame(Collections.singletonList("x"), (Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame(Collections.singletonList("tag12"), (Path dst) -> {
-                writeFile(dst, "test2.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame(Collections.singletonList("tag3"), (Path dst) -> {
-                writeFile(dst, "test2.txt", "TEST1TEST2");
-                writeFile(dst, "subdir/test3.txt", "TEST3");
-                return SnapshotTypeHint.KEY;
-            }),
-            asFrame(Collections.singletonList("tag3"), (Path dst) -> {
-                // Empty folder
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.KEY;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.PATCH;
-            }),
-            asFrame((Path dst) -> {
-                writeFile(dst, "test1.txt", "TEST1TEST2");
-                return SnapshotTypeHint.KEY;
-            })
-    ));
+    private TestGeneratedSrcsFile recorder;
+
+    @BeforeEach
+    public void setUp() throws SourceCodeRecorderException, IOException {
+        recorder = new TestGeneratedSrcsFile(Arrays.asList(
+                asFrame(Collections.singletonList("tag1"), (Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1");
+                    return SnapshotTypeHint.KEY;
+                }),
+                asFrame(Collections.singletonList("x"), (Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame(Collections.singletonList("tag12"), (Path dst) -> {
+                    writeFile(dst, "test2.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame(Collections.singletonList("tag3"), (Path dst) -> {
+                    writeFile(dst, "test2.txt", "TEST1TEST2");
+                    writeFile(dst, "subdir/test3.txt", "TEST3");
+                    return SnapshotTypeHint.KEY;
+                }),
+                asFrame(Collections.singletonList("tag3"), (Path dst) -> {
+                    // Empty folder
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.KEY;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.PATCH;
+                }),
+                asFrame((Path dst) -> {
+                    writeFile(dst, "test1.txt", "TEST1TEST2");
+                    return SnapshotTypeHint.KEY;
+                })
+        ));
+        recorder.beforeEach();
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        recorder.afterEach();
+    }
 
     @Test
     public void run() throws IOException {
@@ -150,7 +161,7 @@ public class ExportSegmentsCommandTest {
     }
 
     private void verifyFileAndFileContents(Path newSrcsFilePath, String fileName, String fileContent) throws IOException {
-        Path outputDir = folder.newFolder().toPath();
+        Path outputDir = Files.createTempDirectory(folder, "dir");
         ToGitConverter toGitConverter = new ToGitConverter(
                 newSrcsFilePath,
                 outputDir,
@@ -167,7 +178,7 @@ public class ExportSegmentsCommandTest {
                     FileUtils.readFileToString(targetFile.toFile(), StandardCharsets.UTF_8),
                     is(fileContent));
         } catch (Exception e) {
-            fail("Failed to convert the srcs file due to: " + e.getMessage());
+            Assertions.fail("Failed to convert the srcs file due to: " + e.getMessage());
         }
     }
 
@@ -183,14 +194,14 @@ public class ExportSegmentsCommandTest {
     }
 
     private Path exportTimestamp(Path inputFilePath, int timestamp) throws IOException {
-        Path filePath = folder.newFile().toPath();
+        Path filePath = Files.createTempFile(folder, "someFile", "test");
         ExportSegmentsCommand exportSegmentsCommand = new ExportSegmentsCommand(inputFilePath.toString(), filePath.toString(), timestamp);
         exportSegmentsCommand.run();
         return filePath;
     }
 
     private Path exportTag(Path inputFilePath, String tag) throws IOException {
-        Path filePath = folder.newFile().toPath();
+        Path filePath = Files.createTempFile(folder, "someFile", "test");
         ExportSegmentsCommand exportSegmentsCommand = new ExportSegmentsCommand(inputFilePath.toString(), filePath.toString(), tag);
         exportSegmentsCommand.run();
         return filePath;

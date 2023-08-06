@@ -6,9 +6,8 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import support.TestSourceStreamRecorder;
 import support.content.MultiStepSourceCodeProvider;
 import support.time.FakeTimeSource;
@@ -29,6 +28,7 @@ import tdl.record.sourcecode.time.SystemMonotonicTimeSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -40,7 +40,7 @@ import java.util.stream.Collectors;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static tdl.record.sourcecode.snapshot.SnapshotType.KEY;
 import static tdl.record.sourcecode.snapshot.SnapshotType.PATCH;
 
@@ -49,12 +49,13 @@ public class CanRecordSourceCodeAccTest {
     private static final int TIME_TO_TAKE_A_SNAPSHOT = 1000;
     private static final Duration INDEFINITE = Duration.of(999, ChronoUnit.HOURS);
 
-    @Rule
-    public TemporaryFolder testFolder = new TemporaryFolder();
+
+    @TempDir
+    Path testFolder;
 
     @Test
     public void should_be_able_to_record_history_at_a_given_rate() throws Exception {
-        Path outputFilePath = testFolder.newFile("output.srcs").toPath();
+        Path outputFilePath = testFolder.resolve("output.srcs");
 
         List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
                 (Path dst) -> {
@@ -104,7 +105,7 @@ public class CanRecordSourceCodeAccTest {
         }
 
         // Test the contents of the file
-        File gitExportFolder = testFolder.newFolder();
+        File gitExportFolder = Files.createTempDirectory(testFolder, "dir").toFile();
         ToGitConverter converter = new ToGitConverter(outputFilePath, gitExportFolder.toPath());
         converter.convert();
         assertContentMatches(sourceCodeHistory, gitExportFolder);
@@ -116,7 +117,7 @@ public class CanRecordSourceCodeAccTest {
 
     @Test
     public void should_be_able_to_tag_a_particular_moment() throws Exception {
-        Path outputFilePath = testFolder.newFile("tagged_snapshots.srcs").toPath();
+        Path outputFilePath = testFolder.resolve("tagged_snapshots.srcs");
 
         List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
                 (Path dst) -> {
@@ -148,7 +149,7 @@ public class CanRecordSourceCodeAccTest {
             assertThat(snapshots.size(), is(3)); // 1 initial + 1 tag + 1 final
             assertEquals(snapshots.get(1).getTag().trim(), "testTag");
         }
-        File gitDir = testFolder.newFolder();
+        File gitDir = Files.createTempDirectory(testFolder, "dir").toFile();
         ToGitConverter converter = new ToGitConverter(outputFilePath, gitDir.toPath());
         converter.convert();
 
@@ -160,7 +161,7 @@ public class CanRecordSourceCodeAccTest {
 
     @Test
     public void on_stop_should_process_all_the_tags_before_stopping() throws Exception {
-        Path outputFilePath = testFolder.newFile("burst_tags.srcs").toPath();
+        Path outputFilePath = testFolder.resolve("burst_tags.srcs");
 
         List<SourceCodeProvider> sourceCodeHistory = Arrays.asList(
                 dst -> {
@@ -196,8 +197,8 @@ public class CanRecordSourceCodeAccTest {
 
     @Test
     public void should_minimize_the_size_of_the_stream() throws Exception {
-        Path onlyKeySnapshotsPath = testFolder.newFile("only_key_snapshots.bin").toPath();
-        Path patchesAndKeySnapshotsPath = testFolder.newFile("patches_and_snapshots.bin").toPath();
+        Path onlyKeySnapshotsPath = testFolder.resolve("only_key_snapshots.bin");
+        Path patchesAndKeySnapshotsPath = testFolder.resolve("patches_and_snapshots.bin");
 
         Path staticFolder = Paths.get("./src/test/resources/large_folder");
         int numberOfSnapshots = 10;
@@ -266,7 +267,7 @@ public class CanRecordSourceCodeAccTest {
         assertThat("Number of captured snapshots", commitIdsInChronologicalOrder.size(), equalTo(sourceCodeHistory.size()));
         Path expected;
         for (int i = 0; i < commitIdsInChronologicalOrder.size(); i++) {
-            expected = testFolder.newFolder().toPath();
+            expected = Files.createTempDirectory(testFolder, "dir");
             sourceCodeHistory.get(i).retrieveAndSaveTo(expected);
             git.checkout().setName(commitIdsInChronologicalOrder.get(i)).call();
 

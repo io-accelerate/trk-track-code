@@ -1,9 +1,8 @@
 package tdl.record.sourcecode.snapshot.file;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import support.time.FakeTimeSource;
 import tdl.record.sourcecode.content.CopyFromDirectorySourceCodeProvider;
 import tdl.record.sourcecode.time.TimeSource;
@@ -11,24 +10,25 @@ import tdl.record.sourcecode.time.TimeSource;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ToGitConverterTest {
 
     private int maximumFileSizeLimitInMB = 2; // in MB
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    public Path folder;
 
     @Test
     public void runOnEmptyDirectory() throws Exception {
         Path original = Paths.get("src/test/resources/directory_snapshot/dir1");
-        File snapshotFile = folder.newFile();
-        Path workDir = folder.newFolder().toPath();
-        Path gitDir = folder.newFolder().toPath();
+        File snapshotFile = folder.resolve("snapshot").toFile();
+        Path workDir = Files.createTempDirectory(folder, "workDir");
+        Path gitDir = Files.createTempDirectory(folder, "gitDir");
 
         FileUtils.copyDirectory(original.toFile(), workDir.toFile());
         createRandomSnapshot(snapshotFile.toPath(), workDir);
@@ -40,7 +40,7 @@ public class ToGitConverterTest {
         //FileUtils.copyDirectory(gitDir.toFile(), new File("/tmp/test"));
         assertTrue(gitDir.resolve(".git").toFile().exists());
     }
-    
+
     @Test
     public void runOnExistingGitRepo() throws Exception {
         //TODO

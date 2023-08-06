@@ -5,65 +5,56 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ConfigConstants;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.util.FileUtils;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import tdl.record.sourcecode.test.FileTestHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.stream.Stream;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
-@RunWith(Parameterized.class)
 public class JGitUnsupportedDiffAlgoIssueTest {
 
-    private File directory;
-    private Git git;
-    private final String diffAlgorithm;
+    @TempDir
+    Path folder;
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][]{
-                { "patience" },
-                { "myers" },
-                { "histogram" },
-                { "xxxx" },
-                { "" },
-                { " " },
-                { null },
-        });
+    private static Stream<Arguments> diffAlgorithm() {
+        return Stream.of(
+                Arguments.of("patience"),
+                Arguments.of("myers"),
+                Arguments.of("histogram"),
+                Arguments.of("xxxx"),
+                Arguments.of(""),
+                Arguments.of(" "),
+                Arguments.of(null, "argAddedInOrderToPassNull")
+        );
     }
 
-    public JGitUnsupportedDiffAlgoIssueTest(String diffAlgorithm) {
-        this.diffAlgorithm = diffAlgorithm;
-    }
-
-    @Before
-    public void setup() throws IOException, GitAPIException {
-        directory = folder.newFolder();
-        git = Git.init().setDirectory(directory).call();
+    private Git initialiseGit(File directory, String diffAlgorithm) throws GitAPIException {
+        Git git = Git.init().setDirectory(directory).call();
         Repository repository = git.getRepository();
         repository.getConfig().setString(
             ConfigConstants.CONFIG_DIFF_SECTION,
             null,
             ConfigConstants.CONFIG_KEY_ALGORITHM,
                 diffAlgorithm);
+        return git;
     }
 
-    @Test
-    public void exportPatchAndApply() throws Exception {
+    @ParameterizedTest
+    @MethodSource("diffAlgorithm")
+    public void exportPatchAndApply(String diffAlgorithm) throws Exception {
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
+        Git git = initialiseGit(directory, diffAlgorithm);
         addAndCommit(git);
 
         try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
@@ -92,8 +83,11 @@ public class JGitUnsupportedDiffAlgoIssueTest {
         }
     }
 
-    @Test
-    public void exportDiffOnEmptyFiles() throws Exception {
+    @ParameterizedTest
+    @MethodSource("diffAlgorithm")
+    public void exportDiffOnEmptyFiles(String diffAlgorithm) throws Exception {
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
+        Git git = initialiseGit(directory, diffAlgorithm);
         addAndCommit(git);
         //
         File newFile = new File(directory, "testfile.txt");
@@ -108,8 +102,8 @@ public class JGitUnsupportedDiffAlgoIssueTest {
 
     @Test
     public void applyPatch() throws Exception {
-        File directory1 = folder.newFolder();
-        File directory2 = folder.newFolder();
+        File directory1 = folder.resolve("directory1").toFile();
+        File directory2 = folder.resolve("directory2").toFile();
 
         Git git1 = Git.init().setDirectory(directory1).call();
         addAndCommit(git1);

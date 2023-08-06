@@ -1,49 +1,44 @@
 package tdl.record.sourcecode.snapshot.file;
 
-import com.tngtech.java.junit.dataprovider.DataProvider;
-import com.tngtech.java.junit.dataprovider.DataProviderRunner;
-import com.tngtech.java.junit.dataprovider.UseDataProvider;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-@RunWith(DataProviderRunner.class)
 public class TagManagerTest {
 
-    @DataProvider
-    public static Object[][] dataProvider_isTag() {
-        // @formatter:off
-        return new Object[][]{
-                {null, false},
-                {"", false},
-                {"   ", false},
-                {"ref", true},
-        };
+    private static Stream<Arguments> dataProvider_isTag() {
+        return Stream.of(
+                Arguments.of(null, false),
+                Arguments.of("", false),
+                Arguments.of("   ", false),
+                Arguments.of("ref", true)
+        );
     }
 
-    @Test
-    @UseDataProvider("dataProvider_isTag")
+    @ParameterizedTest
+    @MethodSource("dataProvider_isTag")
     public void isTag(String tagName, boolean expectedAnswer) {
         assertThat(TagManager.isTag(tagName), is(expectedAnswer));
     }
 
-    @DataProvider
-    public static Object[][] dataProvider_asValidTag() {
-        // @formatter:off
-        return new Object[][]{
-                {"keep normal tag", "tag1", "tag1"},
-                {"trim large tag", String.format("%0200d", 0), String.format("%064d", 0)},
-                {"trim leading spaces", "  tag   ", "tag"},
-                {"replace dodgy characters", "@@a_\\//@  #(x)  *<t>", "a_/#(x)_t"},
-        };
+    private static Stream<Arguments> dataProvider_asValidTag() {
+        return Stream.of(
+                Arguments.of("keep normal tag", "tag1", "tag1"),
+                Arguments.of("trim large tag", String.format("%0200d", 0), String.format("%064d", 0)),
+                Arguments.of("trim leading spaces", "  tag   ", "tag"),
+                Arguments.of("replace dodgy characters", "@@a_\\//@  #(x)  *<t>", "a_/#(x)_t")
+        );
     }
 
-    @Test
-    @UseDataProvider("dataProvider_asValidTag")
+    @ParameterizedTest
+    @MethodSource("dataProvider_asValidTag")
     public void asValidTag(String testName, String tagName, String expectedTag) {
         assertThat(testName, new TagManager().asValidTag(tagName), is(expectedTag));
     }

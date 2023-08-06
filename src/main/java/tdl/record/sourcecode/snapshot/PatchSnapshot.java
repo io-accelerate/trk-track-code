@@ -1,13 +1,14 @@
 package tdl.record.sourcecode.snapshot;
 
+import org.apache.commons.io.IOUtils;
+import org.eclipse.jgit.api.Git;
+import tdl.record.sourcecode.snapshot.helpers.GitHelper;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import org.apache.commons.io.IOUtils;
-import org.eclipse.jgit.api.Git;
-import tdl.record.sourcecode.snapshot.helpers.GitHelper;
 
 public class PatchSnapshot extends Snapshot {
 

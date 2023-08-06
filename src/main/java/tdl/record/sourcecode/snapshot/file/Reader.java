@@ -1,13 +1,14 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.KeySnapshot;
+import tdl.record.sourcecode.snapshot.SnapshotType;
+import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.*;
 import java.util.function.Consumer;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
-import tdl.record.sourcecode.snapshot.SnapshotType;
-import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
 public class Reader implements Iterator<Integer>, AutoCloseable {
 

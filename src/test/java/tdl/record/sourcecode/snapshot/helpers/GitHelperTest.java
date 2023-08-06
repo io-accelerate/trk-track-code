@@ -3,26 +3,27 @@ package tdl.record.sourcecode.snapshot.helpers;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.util.FileUtils;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import tdl.record.sourcecode.test.FileTestHelper;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static tdl.record.sourcecode.snapshot.helpers.GitHelper.addAndCommit;
 
 public class GitHelperTest {
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    Path folder;
 
     @Test
     public void isGitDirectoryShouldReturnTrue() throws IOException, GitAPIException {
-        File directory = folder.newFolder();
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
         Git.init().setDirectory(directory).call();
 
         assertTrue(GitHelper.isGitDirectory(directory.toPath()));
@@ -30,7 +31,7 @@ public class GitHelperTest {
 
     @Test
     public void isGitDirectoryShouldReturnFalse() throws IOException {
-        File directory = folder.newFolder();
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
 
         assertFalse(GitHelper.isGitDirectory(directory.toPath()));
 
@@ -41,7 +42,7 @@ public class GitHelperTest {
 
     @Test
     public void exportGitArchive() throws IOException, GitAPIException {
-        File directory = folder.newFolder();
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
         Git git = Git.init().setDirectory(directory).call();
         git.commit().setAll(true).setMessage("Commit").call();
 
@@ -53,7 +54,7 @@ public class GitHelperTest {
                 .call();
         git.commit().setAll(true).setMessage("Commit").call();
 
-        File archive = folder.newFile();
+        File archive = Files.createTempFile(folder, "someFile", "test").toFile();
         try (OutputStream fos = new FileOutputStream(archive)) {
             GitHelper.exportArchive(git, fos);
         }
@@ -67,7 +68,7 @@ public class GitHelperTest {
 
     @Test
     public void exportPatchAndApply() throws Exception {
-        File directory = folder.newFolder();
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
         Git git = Git.init().setDirectory(directory).call();
         addAndCommit(git);
 
@@ -99,7 +100,7 @@ public class GitHelperTest {
 
     @Test
     public void exportDiffOnEmptyFiles() throws Exception {
-        File directory = folder.newFolder();
+        File directory = Files.createTempDirectory(folder, "dir").toFile();
         Git git = Git.init()
                 .setDirectory(directory)
                 .call();
@@ -117,8 +118,8 @@ public class GitHelperTest {
 
     @Test
     public void applyPatch() throws Exception {
-        File directory1 = folder.newFolder();
-        File directory2 = folder.newFolder();
+        File directory1 = folder.resolve("directory1").toFile();
+        File directory2 = folder.resolve("directory2").toFile();
 
         Git git1 = Git.init().setDirectory(directory1).call();
         addAndCommit(git1);

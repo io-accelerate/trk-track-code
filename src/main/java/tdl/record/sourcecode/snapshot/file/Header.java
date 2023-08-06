@@ -1,9 +1,10 @@
 package tdl.record.sourcecode.snapshot.file;
 
+import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import tdl.record.sourcecode.snapshot.helpers.ByteHelper;
 
 public class Header {
 

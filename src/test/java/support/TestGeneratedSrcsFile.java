@@ -1,34 +1,34 @@
 package support;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TemporaryFolder;
 import support.recording.TestRecordingFrame;
 import support.recording.TestSourceCodeRecorder;
+import tdl.record.sourcecode.record.SourceCodeRecorderException;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-public class TestGeneratedSrcsFile extends ExternalResource {
+public class TestGeneratedSrcsFile {
 
-    private final TemporaryFolder temp = new TemporaryFolder();
     private final List<TestRecordingFrame> recordingFrames;
 
     private Path outputFilePath;
 
-    public TestGeneratedSrcsFile(List<TestRecordingFrame> recordingFrames) {
-        this.recordingFrames = recordingFrames;
-    }
+    public Path temp;
 
+    public TestGeneratedSrcsFile(List<TestRecordingFrame> recordingFrames) throws IOException {
+        this.recordingFrames = recordingFrames;
+        this.temp = Files.createTempDirectory("TestGeneratedSrcsFile_");
+    }
 
     public Path getFilePath() {
         return outputFilePath;
     }
 
-    @Override
-    protected void before() throws Throwable {
-        temp.create();
-        outputFilePath = temp.newFile("output.bin").toPath();
+    public void beforeEach() throws SourceCodeRecorderException {
+        outputFilePath = temp.resolve("output.bin");
 
         TestSourceCodeRecorder recorder =
                 new TestSourceCodeRecorder(outputFilePath, recordingFrames);
@@ -37,10 +37,7 @@ public class TestGeneratedSrcsFile extends ExternalResource {
         recorder.close();
     }
 
-    @Override
-    protected void after() {
+    public void afterEach() throws IOException {
         FileUtils.deleteQuietly(outputFilePath.toFile());
-        temp.delete();
     }
-
 }

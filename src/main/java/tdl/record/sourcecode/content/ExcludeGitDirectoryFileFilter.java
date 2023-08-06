@@ -1,9 +1,10 @@
 package tdl.record.sourcecode.content;
 
+import org.apache.commons.io.filefilter.IOFileFilter;
+
 import java.io.File;
 import java.io.FileFilter;
 import java.nio.file.Path;
-import org.apache.commons.io.filefilter.IOFileFilter;
 
 public class ExcludeGitDirectoryFileFilter implements FileFilter, IOFileFilter {
 

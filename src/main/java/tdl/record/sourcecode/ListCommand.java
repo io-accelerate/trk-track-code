@@ -3,7 +3,6 @@ package tdl.record.sourcecode;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 import org.apache.commons.codec.binary.Hex;
-import tdl.record.sourcecode.snapshot.KeySnapshot;
 import tdl.record.sourcecode.snapshot.file.Reader;
 import tdl.record.sourcecode.snapshot.file.Segment;
 

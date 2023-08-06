@@ -1,61 +1,57 @@
 package tdl.record.sourcecode.snapshot.helpers;
 
-import com.tngtech.java.junit.dataprovider.DataProvider;
-import com.tngtech.java.junit.dataprovider.DataProviderRunner;
-import com.tngtech.java.junit.dataprovider.UseDataProvider;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@RunWith(DataProviderRunner.class)
+import java.util.stream.Stream;
+
 public class ByteHelperTest {
 
-    @DataProvider
-    public static Object[][] dataProvider_littleEndianIntToByteArray() {
-        // @formatter:off
-        return new Object[][]{
-            {1, new byte[]{1, 0, 0, 0}},
-            {2, new byte[]{2, 0, 0, 0}},
-            {127, new byte[]{127, 0, 0, 0}},
-            {128, new byte[]{-128, 0, 0, 0}},
-            {129, new byte[]{-127, 0, 0, 0}},
-            {256, new byte[]{0, 1, 0, 0}},
-            {1024, new byte[]{0, 4, 0, 0}},
-            {65536, new byte[]{0, 0, 1, 0}},
-            {16777216, new byte[]{0, 0, 0, 1}},};
+    private static Stream<Arguments> dataProvider_littleEndianIntToByteArray() {
+        return Stream.of(
+            Arguments.of(1, new byte[]{1, 0, 0, 0}),
+            Arguments.of(2, new byte[]{2, 0, 0, 0}),
+            Arguments.of(127, new byte[]{127, 0, 0, 0}),
+            Arguments.of(128, new byte[]{-128, 0, 0, 0}),
+            Arguments.of(129, new byte[]{-127, 0, 0, 0}),
+            Arguments.of(256, new byte[]{0, 1, 0, 0}),
+            Arguments.of(1024, new byte[]{0, 4, 0, 0}),
+            Arguments.of(65536, new byte[]{0, 0, 1, 0}),
+            Arguments.of(16777216, new byte[]{0, 0, 0, 1})
+            );
     }
 
-    @Test
-    @UseDataProvider("dataProvider_littleEndianIntToByteArray")
+    @ParameterizedTest
+    @MethodSource("dataProvider_littleEndianIntToByteArray")
     public void littleEndianIntToByteArray(int number, byte[] expected) {
         byte[] actuals = ByteHelper.littleEndianIntToByteArray(number, 4);
-        Assert.assertArrayEquals(expected, actuals);
+        Assertions.assertArrayEquals(expected, actuals);
         int number2 = ByteHelper.byteArrayToLittleEndianInt(actuals);
-        Assert.assertEquals(number, number2);
+        Assertions.assertEquals(number, number2);
     }
     
-    @DataProvider
-    public static Object[][] dataProvider_littleEndianLongToByteArray() {
-        // @formatter:off
-        return new Object[][]{
-            {1L, new byte[]{1, 0, 0, 0, 0, 0, 0, 0}},
-            {2L, new byte[]{2, 0, 0, 0, 0, 0, 0, 0}},
-            {127L, new byte[]{127, 0, 0, 0, 0, 0, 0, 0}},
-            {128L, new byte[]{-128, 0, 0, 0, 0, 0, 0, 0}},
-            {129L, new byte[]{-127, 0, 0, 0, 0, 0, 0, 0}},
-            {256L, new byte[]{0, 1, 0, 0, 0, 0, 0, 0}},
-            {1024L, new byte[]{0, 4, 0, 0, 0, 0, 0, 0}},
-            {65536L, new byte[]{0, 0, 1, 0, 0, 0, 0, 0}},
-            {16777216L, new byte[]{0, 0, 0, 1, 0, 0, 0, 0}}
-        };
+    private static Stream<Arguments>  dataProvider_littleEndianLongToByteArray() {
+        return Stream.of(
+            Arguments.of(1L, new byte[]{1, 0, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(2L, new byte[]{2, 0, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(127L, new byte[]{127, 0, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(128L, new byte[]{-128, 0, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(129L, new byte[]{-127, 0, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(256L, new byte[]{0, 1, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(1024L, new byte[]{0, 4, 0, 0, 0, 0, 0, 0}),
+            Arguments.of(65536L, new byte[]{0, 0, 1, 0, 0, 0, 0, 0}),
+            Arguments.of(16777216L, new byte[]{0, 0, 0, 1, 0, 0, 0, 0})
+        );
     }
     
-    @Test
-    @UseDataProvider("dataProvider_littleEndianLongToByteArray")
+    @ParameterizedTest
+    @MethodSource("dataProvider_littleEndianLongToByteArray")
     public void littleEndianLongToByteArray(long number, byte[] expected) {
         byte[] actuals = ByteHelper.littleEndianLongToByteArray(number, 8);
-        Assert.assertArrayEquals(expected, actuals);
+        Assertions.assertArrayEquals(expected, actuals);
         long number2 = ByteHelper.byteArrayToLittleEndianLong(actuals);
-        Assert.assertEquals(number, number2);
+        Assertions.assertEquals(number, number2);
     }
 }
