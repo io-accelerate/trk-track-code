@@ -4,6 +4,7 @@ plugins {
     id 'application'
     id 'signing'
     id 'maven-publish'
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 sourceCompatibility = JavaVersion.VERSION_1_8

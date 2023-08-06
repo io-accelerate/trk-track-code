@@ -141,7 +141,7 @@ This will create a runnable fat jar:
 
 You can use the app to record changes in a folder
 ```
-java -jar build/libs/dev-sourcecode-record-0.0.2-SNAPSHOT-all.jar record \
+java -jar build/libs/dev-sourcecode-record-0.0.25-all.jar record \
     --source xyz/a_source --output snapshot.srcs
 ```
 
