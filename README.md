@@ -154,7 +154,7 @@ If you want to build the SNAPSHOT version locally you can install to the local M
 #### JUnit tests
 
 ```bash
-   ./gradlew clean test -i
+./gradlew clean test -i
 ```
 
 ### Publish to Maven Central
