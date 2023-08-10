@@ -1,7 +1,4 @@
 [![Java Version](http://img.shields.io/badge/Java-1.8-blue.svg)](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
-[![Download](https://api.bintray.com/packages/julianghionoiu/maven/dev-sourcecode-record/images/download.svg)](https://bintray.com/julianghionoiu/maven/dev-sourcecode-record/_latestVersion)
-[![Codeship Status for julianghionoiu/dev-sourcecode-record](https://img.shields.io/codeship/0d0facf0-757b-0135-e8f7-4a0a8123458a/master.svg)](https://codeship.com/projects/244257)
-[![Coverage Status](https://img.shields.io/codecov/c/github/julianghionoiu/dev-sourcecode-record.svg)](https://codecov.io/gh/julianghionoiu/dev-sourcecode-record)
 
 Library designed for recording the source code history of a programming sessions.
 The file generated is a SRCS file enabled for streaming. (Fragmented Snapshots)
@@ -176,4 +173,4 @@ To promote to the Live repo, do the following:
 - "Release" the repo
 - wait between 15 mins and up to 2 hours for the new version to appear in Central
 - first check the Web UI: https://oss.sonatype.org/#view-repositories;releases~browsestorage
-- then check: https://repo1.maven.org/maven2/ro/ghionoiu/tdl-client-java/
+- then check: https://repo1.maven.org/maven2/ro/ghionoiu/dev-sourcecode-record/
