@@ -14,7 +14,7 @@ jobs:
           java-version: '8'
           cache: 'gradle'
       - name: Display Java version
-        run: java --version
+        run: java -version
       - name: Test
         run: |
           ./gradlew clean test -i
