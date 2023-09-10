@@ -1,4 +1,4 @@
-name: Java Junit5 test
+name: Build and maybe deploy
 
 on: [push]
 
@@ -13,15 +13,15 @@ jobs:
           distribution: 'corretto'
           java-version: '8'
           cache: 'gradle'
-      - name: Display Java version
+      - name: Display Java Version
         run: java -version
       - name: Test
         run: |
           ./gradlew clean test -i
-      - name: Build fat JAR
+      - name: Build Application JAR
         run: |
           ./gradlew build shadowJar -i
-      - name: Archive binary
+      - name: Archive Binary
         uses: actions/upload-artifact@v3
         with:
           name: application-jar
@@ -35,7 +35,7 @@ jobs:
     needs: build-and-test
     if: startsWith(github.ref, 'refs/heads/v')
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v2
       - name: Download the binary from previous step
         uses: actions/download-artifact@v3
