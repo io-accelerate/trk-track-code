@@ -1,4 +1,4 @@
-name: Build and maybe deploy
+name: Build and deploy
 
 on: [push]
 
@@ -21,9 +21,6 @@ jobs:
       - name: Build Application JAR
         run: |
           ./gradlew build shadowJar -i
-      - name: Store binary name
-        run: |
-          ./gradlew clean test -i
       - name: Archive Binary
         uses: actions/upload-artifact@v3
         with:
