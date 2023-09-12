@@ -40,7 +40,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    systemProperty("cucumber.junit-platform.naming-strategy", "long")
     testLogging {
         events "passed", "skipped", "failed"
     }
