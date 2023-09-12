@@ -17,10 +17,10 @@ jobs:
         run: java -version
       - name: Test
         run: |
-          ./gradlew clean test -i
+          ./gradlew clean build test -i
       - name: Build Application JAR
         run: |
-          ./gradlew build shadowJar -i
+          ./gradlew shadowJar -x test
       - name: Archive Binary
         uses: actions/upload-artifact@v3
         with:
