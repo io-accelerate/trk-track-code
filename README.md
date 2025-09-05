@@ -7,12 +7,12 @@ The file generated is a SRCS file enabled for streaming. (Fragmented Snapshots)
 
 ### Add as Maven dependency
 
-Add a dependency to `tdl:dev-sourcecode-record` in `compile` scope. See `bintray` shield for latest release number.
+Add a dependency to `io.accelerate:code-track` in `compile` scope. See `Central` shield for latest release number.
 ```xml
 <dependency>
-  <groupId>ro.ghionoiu</groupId>
-  <artifactId>dev-sourcecode-record</artifactId>
-  <version>X.Y.Z</version>
+    <groupId>io.accelerate</groupId>
+    <artifactId>code-track</artifactId>
+    <version>X.Y.Z</version>
 </dependency>
 ```
 
@@ -157,23 +157,37 @@ If you want to build the SNAPSHOT version locally you can install to the local M
 ./gradlew clean test -i
 ```
 
-### Publish to Maven Central
+### Release
 
-Publish to Maven Central Staging repo
+Configure the version inside the "gradle.properties" file
+
+Create publishing bundle into Maven Local
 ```bash
-./gradlew publish
+./gradlew publishToMavenLocal
 ```
 
-A Staging repository is created automatically:
-https://oss.sonatype.org/#stagingRepositories
+Check Maven Local contains release version:
+```
+CURRENT_VERSION=$(cat gradle.properties | grep version | cut -d "=" -f2)
 
-To promote to the Live repo, do the following:
-- "Close" the Staging repo, Sonatype Lift will scan the repo for vuln, check the email
-- "Refresh" the Staging repos
-- "Release" the repo
-- wait between 15 mins and up to 2 hours for the new version to appear in Central
-- first check the Web UI: https://oss.sonatype.org/#view-repositories;releases~browsestorage
-- then check: https://repo1.maven.org/maven2/ro/ghionoiu/dev-sourcecode-record/
+ls -l $HOME/.m2/repository/io/accelerate/code-track/${CURRENT_VERSION}
+```
+
+Publish to Maven Central Staging repo
+
+### Publish to Maven Central - the manual way
+
+At this point publishing to Maven Central from Gradle is only possible manually.
+Things might have changed, check this page:
+https://central.sonatype.org/publish/publish-portal-gradle/
+
+Generate the Maven Central bundle:
+```
+./generateMavenCentralBundle.sh
+```
+
+Upload the bundle to Maven Central by clicking the "Publish Component" button.
+https://central.sonatype.com/publishing
 
 ### To build artifacts in Github
 

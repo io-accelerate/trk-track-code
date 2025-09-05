@@ -1,1 +1,3 @@
-rootProject.name='trk-code-track'
+include 'build-logic'
+include 'code-track-cli'
+include 'code-track'
