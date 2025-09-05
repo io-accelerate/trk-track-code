@@ -8,7 +8,7 @@ plugins {
 }
 
 application {
-    mainClass = "tdl.record.sourcecode.App"
+    mainClass = "io.accelerate.tracking.code.App"
 }
 
 apply from: project(':build-logic').file('shared.gradle')
