@@ -16,6 +16,6 @@ apply from: project(':build-logic').file('application.gradle')
 apply from: project(':build-logic').file('publish.gradle')
 
 dependencies {
-    implementation(project(':code-track'))
+    implementation(project(':track-code'))
 }
 

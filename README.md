@@ -7,11 +7,11 @@ The file generated is a SRCS file enabled for streaming. (Fragmented Snapshots)
 
 ### Add as Maven dependency
 
-Add a dependency to `io.accelerate:code-track` in `compile` scope. See `Central` shield for latest release number.
+Add a dependency to `io.accelerate:track-code` in `compile` scope. See `Central` shield for latest release number.
 ```xml
 <dependency>
     <groupId>io.accelerate</groupId>
-    <artifactId>code-track</artifactId>
+    <artifactId>track-code</artifactId>
     <version>X.Y.Z</version>
 </dependency>
 ```
@@ -170,7 +170,7 @@ Check Maven Local contains release version:
 ```
 CURRENT_VERSION=$(cat gradle.properties | grep version | cut -d "=" -f2)
 
-ls -l $HOME/.m2/repository/io/accelerate/code-track/${CURRENT_VERSION}
+ls -l $HOME/.m2/repository/io/accelerate/track-code/${CURRENT_VERSION}
 ```
 
 Publish to Maven Central Staging repo

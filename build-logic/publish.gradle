@@ -8,7 +8,7 @@ publishing {
             pom {
                 name = 'Programming Session Recorder'
                 description = 'Library designed for recording source code from programming sessions.'
-                url = 'https://github.com/io-accelerate/trk-code-track'
+                url = 'https://github.com/io-accelerate/trk-track-code'
                 licenses {
                     license {
                         name = 'Apache License, Version 2.0'
@@ -24,9 +24,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection = 'scm:git:git@github.com:io-accelerate/trk-code-track.git'
-                    developerConnection = 'scm:git:git@github.com:io-accelerate/trk-code-track.git'
-                    url = 'git@github.com:io-accelerate/trk-code-track.git'
+                    connection = 'scm:git:git@github.com:io-accelerate/trk-track-code.git'
+                    developerConnection = 'scm:git:git@github.com:io-accelerate/trk-track-code.git'
+                    url = 'git@github.com:io-accelerate/trk-track-code.git'
                 }
             }
         }
