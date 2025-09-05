@@ -3,9 +3,9 @@ package acceptance;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import tdl.record.sourcecode.test.support.TestSourceStreamRecorder;
-import tdl.record.sourcecode.snapshot.file.Reader;
-import tdl.record.sourcecode.snapshot.file.Segment;
+import io.accelerate.track.code.test.support.TestSourceStreamRecorder;
+import io.accelerate.track.code.snapshot.file.Reader;
+import io.accelerate.track.code.snapshot.file.Segment;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
