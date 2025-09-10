@@ -1,5 +1,6 @@
 package io.accelerate.tracking.code.snapshot.helpers;
 
+import io.accelerate.tracking.code.record.SourceCodeRecorder;
 import jgit.hack.ApplyCommandFixed;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -12,6 +13,7 @@ import org.eclipse.jgit.lib.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.slf4j.Logger;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -19,7 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 public class GitHelper {
+    private static final Logger log = getLogger(GitHelper.class);
 
     private static String ARCHIVE_FORMAT_ZIP = "zip";
 
@@ -93,8 +98,8 @@ public class GitHelper {
                         FALLBACK_DIFF_ALGORITHM
                 );
 
-                System.out.println("Warning: local or global git config file is set to use an unsupported diff algorithm: " + configuredDiffAlgorithm);
-                System.out.println("It has been overridden to use the 'histogram' diff algorithm.");
+                log.debug("Warning: local or global git config file is set to use an unsupported diff algorithm: {}", configuredDiffAlgorithm);
+                log.debug("It has been overridden to use the 'histogram' diff algorithm.");
             }
         }
     }
